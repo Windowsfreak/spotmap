@@ -1,0 +1,44 @@
+{
+  "name": "spotmap",
+  "description": "Parkour.org Spotmap",
+  "version": "0.1.0",
+  "homepage": "https://github.com/windowsfreak/spotmap",
+  "author": {
+    "name": "Björn Eberhardt",
+    "email": "info@parkour.org",
+    "url": "https://www.parkourg.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/windowsfreak/spotmap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/windowsfreak/spotmap/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/windowsfreak/spotmap/blob/master/LICENSE"
+    }
+  ],
+  "main": "src/scripts/base",
+  "engines": {
+    "node": ">=7.0.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": ">=6.22.0",
+    "grunt": ">=1.0.1",
+    "grunt-babel": ">=6.0.0",
+    "grunt-contrib-concat": ">=1.0.1",
+    "grunt-contrib-copy": ">=1.0.0",
+    "grunt-contrib-jshint": ">=1.1.0",
+    "grunt-contrib-uglify": ">=2.1.0",
+    "grunt-contrib-watch": ">=1.0.0",
+    "grunt-mocha": ">=1.0.4",
+    "grunt-mocha-test": ">=0.13.2"
+  },
+  "keywords": []
+}
