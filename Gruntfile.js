@@ -20,12 +20,14 @@ module.exports = function(grunt) {
         stripBanners: {all: true},
         process: function(src, filepath) {
           const classname = /^(?:.*\/)(.*?)(?:\.js)$/.exec(filepath)[1].replace(/[.-]/, '_');
+          const isGlobal = src.includes('// global');
           return '// Source: ' + filepath + '\n' +
             src.replace(/^[ \t]*\/\*[\s\S]*?\*\/\s*/, '')
                .replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1')
-               .replace(/(^|\n)[ \t]*(\(\s*function\s*\(\s*exports\s*\)\s*\{\s*)/g, `const ${classname} = {}; (function (exports) {\n`)
-               .replace(/(^|\n)[ \t]*(let|var|const).*require\(.*\);?/g, '')
-               .replace(/\(\s*typeof\s+exports[^)]*this\)\s*\)\s*;\s*/g, `(${classname})); if (typeof exports !== 'undefined') exports.${classname} = ${classname};`);
+               .replace(/(^|\n)[ \t]*(\(\s*function\s*\(\s*exports\s*\)\s*\{\s*)/g, isGlobal ? `(function ($) {\n` : `const ${classname} = {}; (function (exports) {\n`)
+               .replace(/(^|\n)[ \t]*((let|var|const) .*)?require\(.*\);?/g, '')
+               .replace(/(^|\n)[ \t]*const .* = window/g, '')
+               .replace(/\(\s*typeof\s+exports[^)]*this\)\s*\)\s*;\s*/g, isGlobal ? `(window));` : `(${classname})); if (typeof exports !== 'undefined') exports.${classname} = ${classname};`);
         }
       },
       dist: {
@@ -47,7 +49,7 @@ module.exports = function(grunt) {
           {expand: true, cwd: 'src/', src: ['index.htm'], dest: 'dist/', filter: 'isFile'}
         ],
         options: {
-          process: function(src, filePath) {
+          process: function(src) {
             return src
                 .replace(/<!-- development[\s\S]*\/development -->\s+/g, '')
                 .replace(/<!-- production\s+/g, '')

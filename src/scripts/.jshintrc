@@ -1,5 +1,7 @@
 {
   "esversion": 6,
+  "browser": true,
+  "devel": true,
   "curly": true,
   "eqeqeq": true,
   "immed": true,
@@ -10,5 +12,5 @@
   "undef": true,
   "boss": true,
   "eqnull": true,
-  "predef": ["exports", "require"]
+  "predef": ["exports", "require", "google"]
 }

@@ -1,4 +1,3 @@
-'use strict';
 const lang = {
     search_keyword: 'Search keyword',
     username: 'Username',

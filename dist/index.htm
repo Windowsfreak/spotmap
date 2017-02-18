@@ -15,100 +15,100 @@
 
 <!-- This is the top navigation bar -->
 <nav class="navbar" role="navigation">
-    <button type="button" onclick="navigate('')">&#x1f30d;</button>
-    <button type="button" onclick="navigate('#search')">&#x1f50d;</button>
-    <button type="button" onclick="navigate('#login')">&#x1f464;</button>
-    <button type="button" onclick="goTab('menu', 3)">&#9776;</button>
+    <button type="button" onclick="Nav.navigate('')">&#x1f30d;</button>
+    <button type="button" onclick="Nav.navigate('#search')">&#x1f50d;</button>
+    <button type="button" onclick="Nav.navigate('#login')">&#x1f464;</button>
+    <button type="button" onclick="Nav.goTab('menu', 3)">&#9776;</button>
 </nav>
-<nav id="notice" onclick="noticeHide(true)" class="show hide vanish"><span id="notice-text"></span></nav>
+<nav id="notice" onclick="Nav.noticeHide(true)" class="show hide vanish"><span id="notice-text"></span></nav>
 
 <section id="content">
-<section id="search">
-    <button type="button" onclick="resetTab()">&#10060;</button>
-    <div class="grid">
-    <input id="search-text" type="text" placeholder="Suchbegriff" data-translate="search_keyword" onkeydown="if (event.keyCode == 13) _('#search-submit').click();">
-    <button id="search-submit" type="button" class="no-grow">&#x1f50d;</button>
-    </div>
-    <div id="search-page"></div>
-</section>
-
-<section id="login">
-    <button type="button" onclick="resetTab()">&#10060;</button>
-    <section id="login-form">
+    <section id="search">
+        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
         <div class="grid">
-            <div class="form">
-                <label for="login-username" data-translate="username"></label>
-                <input id="login-username" type="text" placeholder="Benutzername" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-password').focus();">
+            <input id="search-text" type="text" placeholder="Suchbegriff" data-translate="search_keyword" onkeydown="if (event.keyCode == 13) _('#search-submit').click();">
+            <button id="search-submit" type="button" class="no-grow">&#x1f50d;</button>
+        </div>
+        <div id="search-page"></div>
+    </section>
+
+    <section id="login">
+        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+        <section id="login-form">
+            <div class="grid">
+                <div class="form">
+                    <label for="login-username" data-translate="username"></label>
+                    <input id="login-username" type="text" placeholder="Benutzername" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-password').focus();">
+                </div>
+                <div class="form">
+                    <label for="login-password" data-translate="password"></label>
+                    <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
+                </div>
+                <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_login">login</span></button>
             </div>
-            <div class="form">
-                <label for="login-password" data-translate="password"></label>
-                <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
-            </div>
-            <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_login">login</span></button>
+        </section>
+        <section id="logout-form">
+            <p><span data-translate="label_username">Hi</span> <span id="username"></span>.</p>
+            <button id="logout-submit" type="button">&#x1f3c3; <span data-translate="btn_logout">logout</span></button>
+        </section>
+    </section>
+
+    <section id="spot">
+        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+        <h1 id="spot-title"></h1>
+        <p id="spot-type"></p>
+        <p id="spot-body"></p>
+        <p id="spot-images"></p>
+
+        <div id="spot-geo">
+            <p data-translate="label_location">Standort:</p>
+            <p><span data-translate="label_lat">lat:</span> <span id="spot-lat">LAT</span></p>
+            <p><span data-translate="label_lng">lng:</span> <span id="spot-lng">LNG</span></p>
+        </div>
+        <div class="grid">
+            <button id="spot-map" type="button">&#x1f30d; <span data-translate="btn_show_on_map">auf Karte zeigen</span></button>
+            <form id="spot-maps-form" action="//maps.google.com/maps" target="_blank" method="get">
+                <input type="hidden" name="q" id="spot-maps-formdata">
+                <button id="spot-maps" type="submit">&#x1f30d; <span data-translate="btn_show_on_maps"></span></button>
+            </form>
+            <button id="spot-web" type="button">&#x261e; <span data-translate="btn_show_on_web">zur Webseite</span></button>
+            <button id="spot-add-event" class="addhere" onclick="Form.add_here('event')">&#x2795; <span data-translate="add_event_here"></span></button>
+            <button id="spot-add-group" class="addhere" onclick="Form.add_here('group')">&#x2795; <span data-translate="add_group_here"></span></button>
+            <button id="spot-add-spot" class="addhere" onclick="Form.add_here('spot')">&#x2795; <span data-translate="add_spot_here"></span></button>
         </div>
     </section>
-    <section id="logout-form">
-        <p><span data-translate="label_username">Hi</span> <span id="username"></span>.</p>
-        <button id="logout-submit" type="button">&#x1f3c3; <span data-translate="btn_logout">logout</span></button>
+
+    <section id="form">
+        <button type="button" onclick="Nav.goTab('map', 0)">&#10060;</button>
+        <h1><span id="form-type"></span> <input id="form-title" oninput="Form.backup()" type="text" placeholder="Name" data-translate="form_name"></h1>
+        <textarea id="form-text" oninput="Form.backup()" placeholder="Beschreibung" data-translate="form_description"></textarea>
+        <p data-translate="label_complete_later">Weitere Details können nach dem Speichern ergänzt werden.</p>
+        <button id="form-save" type="button" onclick="Form.save()">&#9997; <span data-translate="btn_save">Speichern</span></button>
+        <button id="form-delete" type="button" onclick="Form.remove()">&#10060; <span data-translate="btn_delete">Entwurf l&ouml;schen</span></button>
     </section>
-</section>
 
-<section id="spot">
-    <button type="button" onclick="resetTab()">&#10060;</button>
-    <h1 id="spot-title"></h1>
-    <p id="spot-type"></p>
-    <p id="spot-body"></p>
-    <p id="spot-images"></p>
+    <section id="menu">
+        <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } else { Nav.goTab('map', 0) }">&#10060;</button>
+        <p>
+            <button type="button" onclick="location.href='//www.parkour.org/';"><img src="images/logo48.png"></button>
+            <button type="button" onclick="setLang('de')"><img src="flags/de.png"></button>
+            <button type="button" onclick="setLang('en')"><img src="flags/en.png"></button>
+            <button type="button" onclick="setLang('fr')"><img src="flags/fr.png"></button>
+        </p>
+        <p>
+            <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } Maps.track('yes');">&#9974; <span data-translate="locate"></span></button>
+        </p>
+    </section>
 
-    <div id="spot-geo">
-        <p data-translate="label_location">Standort:</p>
-        <p><span data-translate="label_lat">lat:</span> <span id="spot-lat">LAT</span></p>
-        <p><span data-translate="label_lng">lng:</span> <span id="spot-lng">LNG</span></p>
-    </div>
-    <div class="grid">
-        <button id="spot-map" type="button">&#x1f30d; <span data-translate="btn_show_on_map">auf Karte zeigen</span></button>
-        <form id="spot-maps-form" action="//maps.google.com/maps" target="_blank" method="get">
-            <input type="hidden" name="q" id="spot-maps-formdata">
-            <button id="spot-maps" type="submit">&#x1f30d; <span data-translate="btn_show_on_maps"></span></button>
-        </form>
-        <button id="spot-web" type="button">&#x261e; <span data-translate="btn_show_on_web">zur Webseite</span></button>
-        <button id="spot-add-event" class="addhere" onclick="add_here('event')">&#x2795; <span data-translate="add_event_here"></span></button>
-        <button id="spot-add-group" class="addhere" onclick="add_here('group')">&#x2795; <span data-translate="add_group_here"></span></button>
-        <button id="spot-add-spot" class="addhere" onclick="add_here('spot')">&#x2795; <span data-translate="add_spot_here"></span></button>
-    </div>
-</section>
-
-<section id="form">
-    <button type="button" onclick="goTab('map', 0)">&#10060;</button>
-    <h1><span id="form-type"></span> <input id="form-title" oninput="backup()" type="text" placeholder="Name" data-translate="form_name"></h1>
-    <textarea id="form-text" oninput="backup()" placeholder="Beschreibung" data-translate="form_description"></textarea>
-    <p data-translate="label_complete_later">Weitere Details können nach dem Speichern ergänzt werden.</p>
-    <button id="form-save" type="button" onclick="save()">&#9997; <span data-translate="btn_save">Speichern</span></button>
-    <button id="form-delete" type="button" onclick="remove()">&#10060; <span data-translate="btn_delete">Entwurf l&ouml;schen</span></button>
-</section>
-
-<section id="menu">
-    <button type="button" onclick="goTab('map', 0)">&#10060;</button>
-    <p>
-        <button type="button" onclick="location.href='//www.parkour.org/';"><img src="images/logo48.png"></button>
-        <button type="button" onclick="setLang('de')"><img src="flags/de.png"></button>
-        <button type="button" onclick="setLang('en')"><img src="flags/en.png"></button>
-        <button type="button" onclick="setLang('fr')"><img src="flags/fr.png"></button>
-    </p>
-    <p>
-    <button type="button" onclick="track('yes')">&#9974; <span data-translate="locate"></span></button>
-    </p>
-</section>
-
-<section id="map">
-</section>
+    <section id="map">
+    </section>
 </section>
 
 <!-- Always put your scripts at the bottom of the page -->
 <script>
     function initMap() {
         window.mapLoaded = true;
-        if (window.mapScripts) initMapInternal();
+        if (window.mapScripts) Maps.initMapInternal();
     }
     let l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
     l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
