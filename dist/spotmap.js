@@ -6,7 +6,7 @@
 // Source: src/scripts/base.js
 // global
 // {_, t, strip, setLang, ready} = window;
-($ => {
+($ => {;
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);

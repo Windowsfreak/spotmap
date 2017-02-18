@@ -11,6 +11,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 (function ($) {
 
+    ;
     $.ready = [];
     $.runLater = function () {
         return ($.ready = $.ready.map(function (item) {

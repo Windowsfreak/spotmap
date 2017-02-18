@@ -2,7 +2,8 @@
 // {_, t, strip, setLang, ready} = window;
 ($ => {
     'use strict';
-    const {lang} = require('./lang_en.js');
+    require('./lang_en.js');
+    const {lang} = window;
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);

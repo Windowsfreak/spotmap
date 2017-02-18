@@ -89,8 +89,22 @@
 
     <section id="menu">
         <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } else { Nav.goTab('map', 0) }">&#10060;</button>
+        <div class="grid">
+            <button type="button" style="font-size: 24px; padding: 0" onclick="location.href='//www.parkour.org/';"><img src="images/logo32.png" style="vertical-align: text-bottom;"> www.parkour.org</button>
+        </div>
+        <div class="grid menu">
+            <button onclick="Nav.navigate('#login')">&#x1f464; <span data-translate="btn_login">Login</span></button>
+            <button onclick="location.href='//www.parkour.org/members';">&#x1f30d; <span data-translate="btn_members">Members</span></button>
+        </div>
+        <div class="grid menu">
+            <button onclick="location.href='//www.parkour.org/events';">&#x1f30d; <span data-translate="btn_events">Events</span></button>
+            <button onclick="location.href='//www.parkour.org/spots';">&#x1f30d; <span data-translate="btn_spots">Spots</span></button>
+            <button onclick="location.href='//www.parkour.org/groups';">&#x1f30d; <span data-translate="btn_groups">Groups</span></button>
+            <button onclick="location.href='//www.parkour.org/articles';">&#x1f30d; <span data-translate="btn_articles">Articles</span></button>
+            <button onclick="location.href='//www.parkour.org/moves';">&#x1f30d; <span data-translate="btn_moves">Moves</span></button>
+            <button onclick="location.href='//www.parkour.org/videos';">&#x1f30d; <span data-translate="btn_videos">Videos</span></button>
+        </div>
         <p>
-            <button type="button" onclick="location.href='//www.parkour.org/';"><img src="images/logo48.png"></button>
             <button type="button" onclick="setLang('de')"><img src="flags/de.png"></button>
             <button type="button" onclick="setLang('en')"><img src="flags/en.png"></button>
             <button type="button" onclick="setLang('fr')"><img src="flags/fr.png"></button>
@@ -115,6 +129,11 @@
     document.write('<sc' + `ript defer src="scripts/lang_${l}.js"><\/script>`);
 </script>
 <!-- development -->
+<script>
+    function require() {
+        return window;
+    }
+</script>
 <script defer src="scripts/base.js"></script>
 <script defer src="scripts/http.js"></script>
 <script defer src="scripts/geohash.js"></script>
@@ -124,10 +143,9 @@
 <script defer src="scripts/spot.js"></script>
 <script defer src="scripts/form.js"></script>
 <script defer src="scripts/search.js"></script>
-<script defer src="scripts/map.js"></script>
+<script defer src="scripts/maps.js"></script>
 <script defer src="scripts/proximity.js"></script>
 <script async defer src="//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap"></script>
-<script defer src="scripts/boot.js"></script>
 <!-- /development -->
 <!-- production
 <script defer src="spotmap.es5.js"></script>

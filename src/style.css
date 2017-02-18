@@ -346,3 +346,7 @@ button, a[onclick], .clickable, .filterBtn, article
 .spot-type-spot #spot-add-spot {
     display: none;
 }
+.grid.menu button {
+    height: 56px;
+    text-align: left;
+}
