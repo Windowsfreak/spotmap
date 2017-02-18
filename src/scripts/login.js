@@ -1,9 +1,9 @@
+/* globals _, t, ready, Http, Nav */
 const Login = {}; ($ => {
     'use strict';
     require('./base.js');
     require('./http.js');
     require('./nav.js');
-    const {_, t, ready, Http, Nav} = window;
 
     ready.push(() => {
         Nav.events.login_show = () => {

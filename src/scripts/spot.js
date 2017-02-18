@@ -1,3 +1,4 @@
+/* globals l, _, strip, t, ready, Http, Maps, Nav */
 const Spot = {}; ($ => {
     'use strict';
 
@@ -5,7 +6,6 @@ const Spot = {}; ($ => {
     require('./http.js');
     require('./map.js');
     require('./nav.js');
-    const {l, _, strip, t, ready, Http, Maps, Nav} = window;
 
     $.spot = {};
 

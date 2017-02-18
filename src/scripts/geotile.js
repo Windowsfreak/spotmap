@@ -1,3 +1,4 @@
+/* globals t, Geohash, Http, Nav */
 const Geotile = {}; ($ => {
     'use strict';
 
@@ -5,7 +6,6 @@ const Geotile = {}; ($ => {
     require('./geohash.js');
     require('./http.js');
     require('./nav.js');
-    const {Geohash, Http, Nav, t} = window;
 
     const cache = {};
     const g_size = [

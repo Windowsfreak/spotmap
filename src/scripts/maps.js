@@ -1,3 +1,4 @@
+/* globals _, t, ready, Form, Geotile, Nav, Proximity, Spot */
 const Maps = {}; (function($) {
     'use strict';
 
@@ -7,7 +8,6 @@ const Maps = {}; (function($) {
     require('./nav.js');
     require('./proximity.js');
     require('./spot.js');
-    const {_, t, ready, Form, Geotile, Nav, Proximity, Spot} = window;
 
     ready.push(() => {
         Nav.events.map_show = () => {

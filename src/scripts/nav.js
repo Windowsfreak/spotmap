@@ -1,9 +1,9 @@
+/* globals _, t, ready, Spot, Search */
 const Nav = {}; ($ => {
     'use strict';
     require('./base.js');
     require('./spot.js');
     require('./search.js');
-    const {_, t, ready, Spot, Search} = window;
     $.events = {};
     $.isLite = false;
 

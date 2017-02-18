@@ -1,10 +1,10 @@
+/* globals _, t, strip, Http, Nav, Spot */
 const Search = {}; ($ => {
     'use strict';
     require('./base.js');
     require('./http.js');
     require('./nav.js');
     require('./spot.js');
-    const {_, t, strip, Http, Nav, Spot} = window;
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
@@ -31,7 +31,7 @@ const Search = {}; ($ => {
             for (const s of Spot.find('nid|\\d+|value', spot)) {
                 nid = s;
             }
-            text += `<article onclick="navigate('#spot/${nid}');">`;
+            text += `<article onclick="Nav.navigate('#spot/${nid}');">`;
 
             for (const s of Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)) {
                 text += `<div class="in-place cover" style="background-image: url(${s});"></div>`;

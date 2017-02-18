@@ -1,9 +1,9 @@
+/* globals t, Nav */
 const Http = {}; (function($) {
     'use strict';
 
     require('./geohash.js');
     require('./nav.js');
-    const {t, Nav} = window;
 
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 

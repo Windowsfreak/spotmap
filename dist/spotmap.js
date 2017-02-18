@@ -5,8 +5,8 @@
 
 // Source: src/scripts/base.js
 // global
-// {_, t, strip, setLang, ready} = window;
-($ => {;
+/* globals lang */
+($ => {
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
@@ -40,7 +40,7 @@
     $.t_html();
 })(window);
 // Source: src/scripts/form.js
-const Form = {}; ($ => {;
+const Form = {}; ($ => {
 
     ready.push(() => {
         Nav.events.form_show = () => {
@@ -265,7 +265,7 @@ const Geohash = {}; ($ => {
     };
 })(Geohash);
 // Source: src/scripts/geotile.js
-const Geotile = {}; ($ => {;
+const Geotile = {}; ($ => {
 
     const cache = {};
     const g_size = [
@@ -421,7 +421,7 @@ const Geotile = {}; ($ => {;
     };
 })(Geotile);
 // Source: src/scripts/http.js
-const Http = {}; (function($) {;
+const Http = {}; (function($) {
 
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
@@ -511,7 +511,7 @@ const Http = {}; (function($) {;
     $.del = (url, params, headers) => $.http('REMOVE', url, params, headers);
 })(Http);
 // Source: src/scripts/login.js
-const Login = {}; ($ => {;
+const Login = {}; ($ => {
 
     ready.push(() => {
         Nav.events.login_show = () => {
@@ -547,7 +547,7 @@ const Login = {}; ($ => {;
     };
 })(Login);
 // Source: src/scripts/maps.js
-const Maps = {}; (function($) {;
+const Maps = {}; (function($) {
 
     ready.push(() => {
         Nav.events.map_show = () => {
@@ -854,7 +854,7 @@ const Maps = {}; (function($) {;
 
 })(Maps);
 // Source: src/scripts/nav.js
-const Nav = {}; ($ => {;
+const Nav = {}; ($ => {
     $.events = {};
     $.isLite = false;
 
@@ -954,7 +954,7 @@ const Nav = {}; ($ => {;
 
 })(Nav);
 // Source: src/scripts/proximity.js
-const Proximity = {}; ($ => {;
+const Proximity = {}; ($ => {
     $.getCloseNodes = (lat, lng) => {
         const bounds = {lat: [lat - 0.0001, lat + 0.0001], lng: [lng - 0.0001, lng + 0.0001]};
         Geotile.loadBounds(bounds, data => {
@@ -979,7 +979,7 @@ const Proximity = {}; ($ => {;
     };
 })(Proximity);
 // Source: src/scripts/search.js
-const Search = {}; ($ => {;
+const Search = {}; ($ => {
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
@@ -1033,7 +1033,7 @@ const Search = {}; ($ => {;
     };
 })(Search);
 // Source: src/scripts/spot.js
-const Spot = {}; ($ => {;
+const Spot = {}; ($ => {
 
     $.spot = {};
 

@@ -1,3 +1,4 @@
+/* globals _, t, ready, Http, Spot, Maps, Nav */
 const Form = {}; ($ => {
     'use strict';
 
@@ -6,7 +7,6 @@ const Form = {}; ($ => {
     require('./map.js');
     require('./nav.js');
     require('./spot.js');
-    const {_, t, Http, Spot, Maps, Nav, ready} = window;
 
     ready.push(() => {
         Nav.events.form_show = () => {

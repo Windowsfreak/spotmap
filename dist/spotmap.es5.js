@@ -5,13 +5,12 @@
 
 // Source: src/scripts/base.js
 // global
-// {_, t, strip, setLang, ready} = window;
+/* globals lang */
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 (function ($) {
 
-    ;
     $.ready = [];
     $.runLater = function () {
         return ($.ready = $.ready.map(function (item) {
@@ -75,8 +74,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 })(window);
 // Source: src/scripts/form.js
 var Form = {};(function ($) {
-
-    ;
 
     ready.push(function () {
         Nav.events.form_show = function () {
@@ -309,8 +306,6 @@ var Geohash = {};(function ($) {
 // Source: src/scripts/geotile.js
 var Geotile = {};(function ($) {
 
-    ;
-
     var cache = {};
     var g_size = [[180, 360], [45, 45], [5.625, 11.25], [1.40625, 1.40625], [0.17578125, 0.3515625], [0.0439453125, 0.0439453125], [0.0054931640625, 0.010986328125], [0.001373291015625, 0.001373291015625], [0.000171661376953125, 0.00034332275390625], [0.00004291534423828125, 0.00004291534423828125], [0.000005364418029785156, 0.000010728836059570312], [0.000001341104507446289, 0.000001341104507446289], [1.6763806343078613e-7, 3.3527612686157227e-7]];
 
@@ -504,8 +499,6 @@ var Geotile = {};(function ($) {
 // Source: src/scripts/http.js
 var Http = {};(function ($) {
 
-    ;
-
     $.b64a = function (text) {
         return btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, function (match, p1) {
             return String.fromCharCode('0x' + p1);
@@ -620,8 +613,6 @@ var Http = {};(function ($) {
 // Source: src/scripts/login.js
 var Login = {};(function ($) {
 
-    ;
-
     ready.push(function () {
         Nav.events.login_show = function () {
             if (Http.getUser() !== null) {
@@ -657,8 +648,6 @@ var Login = {};(function ($) {
 })(Login);
 // Source: src/scripts/maps.js
 var Maps = {};(function ($) {
-
-    ;
 
     ready.push(function () {
         Nav.events.map_show = function () {
@@ -962,7 +951,6 @@ var Maps = {};(function ($) {
 // Source: src/scripts/nav.js
 var Nav = {};(function ($) {
 
-    ;
     $.events = {};
     $.isLite = false;
 
@@ -1077,7 +1065,6 @@ var Nav = {};(function ($) {
 // Source: src/scripts/proximity.js
 var Proximity = {};(function ($) {
 
-    ;
     $.getCloseNodes = function (lat, lng) {
         var bounds = { lat: [lat - 0.0001, lat + 0.0001], lng: [lng - 0.0001, lng + 0.0001] };
         Geotile.loadBounds(bounds, function (data) {
@@ -1106,7 +1093,6 @@ var Proximity = {};(function ($) {
 // Source: src/scripts/search.js
 var Search = {};(function ($) {
 
-    ;
     var search = {};
     _('#search-submit').onclick = function () {
         var text = _('#search-text').value;
@@ -1268,8 +1254,6 @@ var Search = {};(function ($) {
 })(Search);
 // Source: src/scripts/spot.js
 var Spot = {};(function ($) {
-
-    ;
 
     $.spot = {};
 
