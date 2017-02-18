@@ -135,7 +135,7 @@ const Maps = {}; (function($) {
             $.map.panTo(marker.getPosition());
             $.map.setZoom($.map.getZoom() + 2);
         } else {
-            $.infoWindow.setContent(`<a onclick="navigate('#spot/${marker.data.id}');"><img class="type" src="${$.icons[marker.data.type].url}">${marker.data.title}</a>`);
+            $.infoWindow.setContent(`<a onclick="Nav.navigate('#spot/${marker.data.id}');"><img class="type" src="${$.icons[marker.data.type].url}">${marker.data.title}</a>`);
             $.infoWindow.setPosition(marker.getPosition());
             $.infoWindow.open($.map);
             Proximity.getCloseNodes(marker.data.lat, marker.data.lng);

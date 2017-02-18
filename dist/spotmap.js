@@ -675,7 +675,7 @@ const Maps = {}; (function($) {
             $.map.panTo(marker.getPosition());
             $.map.setZoom($.map.getZoom() + 2);
         } else {
-            $.infoWindow.setContent(`<a onclick="navigate('#spot/${marker.data.id}');"><img class="type" src="${$.icons[marker.data.type].url}">${marker.data.title}</a>`);
+            $.infoWindow.setContent(`<a onclick="Nav.navigate('#spot/${marker.data.id}');"><img class="type" src="${$.icons[marker.data.type].url}">${marker.data.title}</a>`);
             $.infoWindow.setPosition(marker.getPosition());
             $.infoWindow.open($.map);
             Proximity.getCloseNodes(marker.data.lat, marker.data.lng);
@@ -972,7 +972,7 @@ const Proximity = {}; ($ => {
             entries.sort((a, b) => order[a.type] - order[b.type]);
             for (const item in entries) {
                 const entry = entries[item];
-                text += `<a class="entry" onclick="navigate('#spot/${entry.id}');"><img class="type" src="${Maps.icons[entry.type].url}">${entry.title}</a>`;
+                text += `<a class="entry" onclick="Nav.navigate('#spot/${entry.id}');"><img class="type" src="${Maps.icons[entry.type].url}">${entry.title}</a>`;
             }
             Maps.infoWindow.setContent(text);
         });

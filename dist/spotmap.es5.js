@@ -771,7 +771,7 @@ var Maps = {};(function ($) {
             $.map.panTo(marker.getPosition());
             $.map.setZoom($.map.getZoom() + 2);
         } else {
-            $.infoWindow.setContent('<a onclick="navigate(\'#spot/' + marker.data.id + '\');"><img class="type" src="' + $.icons[marker.data.type].url + '">' + marker.data.title + '</a>');
+            $.infoWindow.setContent('<a onclick="Nav.navigate(\'#spot/' + marker.data.id + '\');"><img class="type" src="' + $.icons[marker.data.type].url + '">' + marker.data.title + '</a>');
             $.infoWindow.setPosition(marker.getPosition());
             $.infoWindow.open($.map);
             Proximity.getCloseNodes(marker.data.lat, marker.data.lng);
@@ -1084,7 +1084,7 @@ var Proximity = {};(function ($) {
             });
             for (var _item in entries) {
                 var _entry = entries[_item];
-                text += '<a class="entry" onclick="navigate(\'#spot/' + _entry.id + '\');"><img class="type" src="' + Maps.icons[_entry.type].url + '">' + _entry.title + '</a>';
+                text += '<a class="entry" onclick="Nav.navigate(\'#spot/' + _entry.id + '\');"><img class="type" src="' + Maps.icons[_entry.type].url + '">' + _entry.title + '</a>';
             }
             Maps.infoWindow.setContent(text);
         });
@@ -1148,7 +1148,7 @@ var Search = {};(function ($) {
                     }
                 }
 
-                text += '<article onclick="navigate(\'#spot/' + nid + '\');">';
+                text += '<article onclick="Nav.navigate(\'#spot/' + nid + '\');">';
 
                 var _iteratorNormalCompletion6 = true;
                 var _didIteratorError6 = false;

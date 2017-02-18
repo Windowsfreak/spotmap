@@ -20,7 +20,7 @@ const Proximity = {}; ($ => {
             entries.sort((a, b) => order[a.type] - order[b.type]);
             for (const item in entries) {
                 const entry = entries[item];
-                text += `<a class="entry" onclick="navigate('#spot/${entry.id}');"><img class="type" src="${Maps.icons[entry.type].url}">${entry.title}</a>`;
+                text += `<a class="entry" onclick="Nav.navigate('#spot/${entry.id}');"><img class="type" src="${Maps.icons[entry.type].url}">${entry.title}</a>`;
             }
             Maps.infoWindow.setContent(text);
         });
