@@ -410,7 +410,7 @@ const Geotile = {}; ($ => {
 
         let tmp = Object.keys($.filter(result, (key, val) => (val === undefined) ? key : undefined)).map(key => key);
         if (tmp.length) {
-            Http.get('//www.parkour.org/map/query5j.php', {tiles: tmp.join(','), zoom: zoom}).then(data =>{
+            Http.get('//www.parkour.org/map/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
                 Object.assign(cache[zoom], data);
                 Object.assign(result, data);
                 callback(result);
@@ -639,9 +639,9 @@ const Maps = {}; (function($) {
         }, {enableHighAccuracy: true});
     };
 
-    let markers = [];
+    $.markers = {};
 
-    $.load = function(data) {
+    $.load = function(data, list) {
         const marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
@@ -651,7 +651,7 @@ const Maps = {}; (function($) {
             icon: data.type.startsWith('multi') ? $.icons.zoom : (data.type.includes('group') ? $.icons.group : (data.type.includes('event') ? $.icons.event : $.icons.spot)),
             shape: data.type.startsWith('multi') ? $.shapes.zoom : $.shapes.spot
         });
-        markers.push(marker);
+        list.push(marker);
 
         google.maps.event.addListener(marker, 'click', $.show);
     };
@@ -683,13 +683,26 @@ const Maps = {}; (function($) {
     };
 
     $.loadAll = function(data) {
-        for (const marker in markers) {
-            markers[marker].setMap(null);
-        }
-        markers = [];
         for (const tile in data) {
-            for (const entry in data[tile]) {
-                $.load(data[tile][entry]);
+            if (!$.markers[tile] || (data[tile] && $.markers[tile].length !== data[tile].length)) {
+                const newTile = [];
+                for (const entry in data[tile]) {
+                    $.load(data[tile][entry], newTile);
+                }
+                if ($.markers[tile]) {
+                    for (const marker in $.markers[tile]) {
+                        $.markers[tile][marker].setMap(null);
+                    }
+                }
+                $.markers[tile] = newTile;
+            }
+        }
+        for (const tile in $.markers) {
+            if (!data[tile]) {
+                for (const marker in $.markers[tile]) {
+                    $.markers[tile][marker].setMap(null);
+                }
+                delete $.markers[tile];
             }
         }
     };
@@ -974,7 +987,9 @@ const Proximity = {}; ($ => {
                 const entry = entries[item];
                 text += `<a class="entry" onclick="Nav.navigate('#spot/${entry.id}');"><img class="type" src="${Maps.icons[entry.type].url}">${entry.title}</a>`;
             }
-            Maps.infoWindow.setContent(text);
+            if (text !== '') {
+                Maps.infoWindow.setContent(text);
+            }
         });
     };
 })(Proximity);

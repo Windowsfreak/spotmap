@@ -484,7 +484,7 @@ var Geotile = {};(function ($) {
             return key;
         });
         if (tmp.length) {
-            Http.get('//www.parkour.org/map/query5j.php', { tiles: tmp.join(','), zoom: zoom }).then(function (data) {
+            Http.get('//www.parkour.org/map/query5j.php', { tiles: tmp.join(','), zoom: zoom }, { Authorization: false }).then(function (data) {
                 Object.assign(cache[zoom], data);
                 Object.assign(result, data);
                 callback(result);
@@ -738,9 +738,9 @@ var Maps = {};(function ($) {
         }, { enableHighAccuracy: true });
     };
 
-    var markers = [];
+    $.markers = {};
 
-    $.load = function (data) {
+    $.load = function (data, list) {
         var marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
@@ -750,7 +750,7 @@ var Maps = {};(function ($) {
             icon: data.type.startsWith('multi') ? $.icons.zoom : data.type.includes('group') ? $.icons.group : data.type.includes('event') ? $.icons.event : $.icons.spot,
             shape: data.type.startsWith('multi') ? $.shapes.zoom : $.shapes.spot
         });
-        markers.push(marker);
+        list.push(marker);
 
         google.maps.event.addListener(marker, 'click', $.show);
     };
@@ -779,13 +779,26 @@ var Maps = {};(function ($) {
     };
 
     $.loadAll = function (data) {
-        for (var marker in markers) {
-            markers[marker].setMap(null);
-        }
-        markers = [];
         for (var tile in data) {
-            for (var entry in data[tile]) {
-                $.load(data[tile][entry]);
+            if (!$.markers[tile] || data[tile] && $.markers[tile].length !== data[tile].length) {
+                var newTile = [];
+                for (var entry in data[tile]) {
+                    $.load(data[tile][entry], newTile);
+                }
+                if ($.markers[tile]) {
+                    for (var marker in $.markers[tile]) {
+                        $.markers[tile][marker].setMap(null);
+                    }
+                }
+                $.markers[tile] = newTile;
+            }
+        }
+        for (var _tile in $.markers) {
+            if (!data[_tile]) {
+                for (var _marker in $.markers[_tile]) {
+                    $.markers[_tile][_marker].setMap(null);
+                }
+                delete $.markers[_tile];
             }
         }
     };
@@ -1086,7 +1099,9 @@ var Proximity = {};(function ($) {
                 var _entry = entries[_item];
                 text += '<a class="entry" onclick="Nav.navigate(\'#spot/' + _entry.id + '\');"><img class="type" src="' + Maps.icons[_entry.type].url + '">' + _entry.title + '</a>';
             }
-            Maps.infoWindow.setContent(text);
+            if (text !== '') {
+                Maps.infoWindow.setContent(text);
+            }
         });
     };
 })(Proximity);

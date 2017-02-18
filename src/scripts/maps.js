@@ -99,9 +99,9 @@ const Maps = {}; (function($) {
         }, {enableHighAccuracy: true});
     };
 
-    let markers = [];
+    $.markers = {};
 
-    $.load = function(data) {
+    $.load = function(data, list) {
         const marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
@@ -111,7 +111,7 @@ const Maps = {}; (function($) {
             icon: data.type.startsWith('multi') ? $.icons.zoom : (data.type.includes('group') ? $.icons.group : (data.type.includes('event') ? $.icons.event : $.icons.spot)),
             shape: data.type.startsWith('multi') ? $.shapes.zoom : $.shapes.spot
         });
-        markers.push(marker);
+        list.push(marker);
 
         google.maps.event.addListener(marker, 'click', $.show);
     };
@@ -143,13 +143,26 @@ const Maps = {}; (function($) {
     };
 
     $.loadAll = function(data) {
-        for (const marker in markers) {
-            markers[marker].setMap(null);
-        }
-        markers = [];
         for (const tile in data) {
-            for (const entry in data[tile]) {
-                $.load(data[tile][entry]);
+            if (!$.markers[tile] || (data[tile] && $.markers[tile].length !== data[tile].length)) {
+                const newTile = [];
+                for (const entry in data[tile]) {
+                    $.load(data[tile][entry], newTile);
+                }
+                if ($.markers[tile]) {
+                    for (const marker in $.markers[tile]) {
+                        $.markers[tile][marker].setMap(null);
+                    }
+                }
+                $.markers[tile] = newTile;
+            }
+        }
+        for (const tile in $.markers) {
+            if (!data[tile]) {
+                for (const marker in $.markers[tile]) {
+                    $.markers[tile][marker].setMap(null);
+                }
+                delete $.markers[tile];
             }
         }
     };

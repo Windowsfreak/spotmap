@@ -22,7 +22,9 @@ const Proximity = {}; ($ => {
                 const entry = entries[item];
                 text += `<a class="entry" onclick="Nav.navigate('#spot/${entry.id}');"><img class="type" src="${Maps.icons[entry.type].url}">${entry.title}</a>`;
             }
-            Maps.infoWindow.setContent(text);
+            if (text !== '') {
+                Maps.infoWindow.setContent(text);
+            }
         });
     };
 })(Proximity);
