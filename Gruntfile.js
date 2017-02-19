@@ -23,17 +23,17 @@ module.exports = function(grunt) {
           const isGlobal = src.includes('// global');
           return '// Source: ' + filepath + '\n' +
             src.replace(/^[ \t]*\/\*[\s\S]*?\*\/\s*/, '')
-               .replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1')
                .replace(/(^|\n)[ \t]*(\(\s*function\s*\(\s*exports\s*\)\s*\{\s*)/g, isGlobal ? `(function ($) {\n` : `const ${classname} = {}; (function (exports) {\n`)
-               .replace(/(^|\n)[ \t]*((let|var|const) .*)?require\(.*\);?/g, '')
+               .replace(/(^|\n)[ \t]*((let|var|const|\/\/) .*)?require\(.*\);?/g, '')
                .replace(/(^|\n)[ \t]*const .* = window/g, '')
+               .replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*\n/g, '$1')
                .replace(/\(\s*typeof\s+exports[^)]*this\)\s*\)\s*;\s*/g, isGlobal ? `(window));` : `(${classname})); if (typeof exports !== 'undefined') exports.${classname} = ${classname};`);
         }
       },
       dist: {
         src: ['src/scripts/*.js', '!src/scripts/lang*.js', '!src/scripts/tictactoe.js'],
         dest: 'dist/<%= pkg.name %>.js'
-      },
+      }
     },
     copy: {
       main: {
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
           // includes files within path
           {expand: true, cwd: 'src/', src: ['*.php', 'manifest.json', '.htaccess', '*.css'], dest: 'dist/', filter: 'isFile'},
           // includes files within path and its sub-directories
-          {expand: true, cwd: 'src/', src: ['flags/*', 'images/*', 'scripts/lang*.js'], dest: 'dist/'},
+          {expand: true, cwd: 'src/', src: ['flags/*', 'images/*', 'scripts/lang*.js'], dest: 'dist/'}
         ]
       },
       html: {
@@ -75,7 +75,7 @@ module.exports = function(grunt) {
       dist: {
         src: 'dist/<%= pkg.name %>.es5.js',
         dest: 'dist/<%= pkg.name %>.min.js'
-      },
+      }
     },
     mochaTest: {
       test: {
@@ -106,7 +106,7 @@ module.exports = function(grunt) {
       },
       test: {
         src: ['test/**/*.js']
-      },
+      }
     },
     watch: {
       gruntfile: {
@@ -120,7 +120,7 @@ module.exports = function(grunt) {
       test: {
         files: '<%= jshint.test.src %>',
         tasks: ['jshint:test', 'mochaTest:test']
-      },
+      }
     }
   });
 

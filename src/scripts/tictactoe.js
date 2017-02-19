@@ -1,10 +1,10 @@
 /* globals ready, Geohash, Geotile, Nav */
 const Tictactoe = {}; ($ => {
     'use strict';
-    require('./base.js');
-    require('./geohash.js');
-    require('./geotile.js');
-    require('./nav.js');
+    // require('./base.js');
+    // require('./geohash.js');
+    // require('./geotile.js');
+    // require('./nav.js');
 
     let rects = [];
 

@@ -2,11 +2,11 @@
 const Form = {}; ($ => {
     'use strict';
 
-    require('./base.js');
-    require('./http.js');
-    require('./map.js');
-    require('./nav.js');
-    require('./spot.js');
+    // require('./base.js');
+    // require('./http.js');
+    // require('./map.js');
+    // require('./nav.js');
+    // require('./spot.js');
 
     ready.push(() => {
         Nav.events.form_show = () => {
@@ -29,7 +29,7 @@ const Form = {}; ($ => {
     });
 
     $.add_here = type => {
-        Maps.newMarker({latLng: {lat: Spot.spot.lat, lng: Spot.spot.lng}}, true);
+        Maps.newMarker(Spot.spot, true);
         $.add(type);
     };
 
@@ -64,8 +64,8 @@ const Form = {}; ($ => {
                 type: localStorage.getItem('form_type')
             };
             window.panToPosition = false;
-            Maps.newMarker({latLng: {lat: Spot.marker.lat, lng: Spot.marker.lng}}, true);
-            Maps.map.panTo({lat: Spot.marker.lat, lng: Spot.marker.lng});
+            Maps.newMarker(Spot.marker, true);
+            Maps.map.panTo(Spot.marker);
             $.add(Spot.marker.type);
             google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
                 Maps.map.panTo(Maps.marker.getPosition());
@@ -102,7 +102,7 @@ const Form = {}; ($ => {
                     lat: Spot.marker.lat,
                     lon: Spot.marker.lng,
                     value: 'POINT (' + Spot.marker.lng + ' ' + Spot.marker.lat + ')'
-                }],
+                }]
             }), {'Content-Type': 'application/hal+json', 'X-CSRF-Token': csrf.message}).then(data => {
                 Nav.success(t('node_added'));
                 location.href = '//www.parkour.org/de/node/' + Spot.find('nid|\\d+|value', data)[0] + '/edit';

@@ -1,12 +1,12 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-02-18
+/*! spotmap - v0.1.0 - 2017-02-19
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
 // Source: src/scripts/base.js
 // global
 /* globals lang */
-($ => {
+($ => {
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
@@ -40,8 +40,7 @@
     $.t_html();
 })(window);
 // Source: src/scripts/form.js
-const Form = {}; ($ => {
-
+const Form = {}; ($ => {
     ready.push(() => {
         Nav.events.form_show = () => {
             _('#map').style.display = 'block';
@@ -63,7 +62,7 @@ const Form = {}; ($ => {
     });
 
     $.add_here = type => {
-        Maps.newMarker({latLng: {lat: Spot.spot.lat, lng: Spot.spot.lng}}, true);
+        Maps.newMarker(Spot.spot, true);
         $.add(type);
     };
 
@@ -98,8 +97,8 @@ const Form = {}; ($ => {
                 type: localStorage.getItem('form_type')
             };
             window.panToPosition = false;
-            Maps.newMarker({latLng: {lat: Spot.marker.lat, lng: Spot.marker.lng}}, true);
-            Maps.map.panTo({lat: Spot.marker.lat, lng: Spot.marker.lng});
+            Maps.newMarker(Spot.marker, true);
+            Maps.map.panTo(Spot.marker);
             $.add(Spot.marker.type);
             google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
                 Maps.map.panTo(Maps.marker.getPosition());
@@ -136,7 +135,7 @@ const Form = {}; ($ => {
                     lat: Spot.marker.lat,
                     lon: Spot.marker.lng,
                     value: 'POINT (' + Spot.marker.lng + ' ' + Spot.marker.lat + ')'
-                }],
+                }]
             }), {'Content-Type': 'application/hal+json', 'X-CSRF-Token': csrf.message}).then(data => {
                 Nav.success(t('node_added'));
                 location.href = '//www.parkour.org/de/node/' + Spot.find('nid|\\d+|value', data)[0] + '/edit';
@@ -147,7 +146,7 @@ const Form = {}; ($ => {
 })(Form);
 // Source: src/scripts/geohash.js
 const Geohash = {}; ($ => {
-// Geohash library for Javascript
+    // Geohash library for Javascript
     // (c) 2008 David Troy
     // Distributed under the MIT License
 
@@ -265,8 +264,7 @@ const Geohash = {}; ($ => {
     };
 })(Geohash);
 // Source: src/scripts/geotile.js
-const Geotile = {}; ($ => {
-
+const Geotile = {}; ($ => {
     const cache = {};
     const g_size = [
         [180, 360],
@@ -359,7 +357,7 @@ const Geotile = {}; ($ => {
         len++;
         let matrix;
 
-        while (true) {
+        while (len > 0) {
             len--;
 
             const size = g_size[len];
@@ -421,8 +419,7 @@ const Geotile = {}; ($ => {
     };
 })(Geotile);
 // Source: src/scripts/http.js
-const Http = {}; (function($) {
-
+const Http = {}; (function($) {
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
     $.getUser = () => localStorage.getItem('d8_user');
@@ -459,10 +456,10 @@ const Http = {}; (function($) {
                     } catch (e) {
                         Nav.error(t('error_server_request'));
                         resolve({
-                            method: method,
-                            url: url,
-                            params: params,
-                            headers: headers,
+                            method,
+                            url,
+                            params,
+                            headers,
                             status: this.status,
                             statusText: xhr.statusText,
                             message: xhr.response
@@ -475,10 +472,10 @@ const Http = {}; (function($) {
             xhr.onerror = () => {
                 Nav.error(t('error_server_request'));
                 const data = {
-                    method: method,
-                    url: url,
-                    params: params,
-                    headers: headers,
+                    method,
+                    url,
+                    params,
+                    headers,
                     status: this.status,
                     statusText: xhr.statusText,
                     message: xhr.response
@@ -511,8 +508,7 @@ const Http = {}; (function($) {
     $.del = (url, params, headers) => $.http('REMOVE', url, params, headers);
 })(Http);
 // Source: src/scripts/login.js
-const Login = {}; ($ => {
-
+const Login = {}; ($ => {
     ready.push(() => {
         Nav.events.login_show = () => {
             if (Http.getUser() !== null) {
@@ -547,8 +543,7 @@ const Login = {}; ($ => {
     };
 })(Login);
 // Source: src/scripts/maps.js
-const Maps = {}; (function($) {
-
+const Maps = {}; ($ => {
     ready.push(() => {
         Nav.events.map_show = () => {
             if (window.google) {
@@ -571,7 +566,7 @@ const Maps = {}; (function($) {
     $.icons = {};
     $.shapes = {};
 
-    $.setGpsObj = function(position) {
+    $.setGpsObj = position => {
         if (gpsObj) {
             gpsObj.setMap(null);
         }
@@ -588,7 +583,7 @@ const Maps = {}; (function($) {
         });
     };
 
-    $.updateGpsObj = function(position) {
+    $.updateGpsObj = position => {
         if (!gpsObj || gpsObj.position.coords.accuracy > position.coords.accuracy || gpsObj.position.timestamp < position.timestamp - 3000) {
             $.setGpsObj(position);
             return true;
@@ -596,52 +591,35 @@ const Maps = {}; (function($) {
         return false;
     };
 
-    $.pan = function(position) {
-        $.map.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
-        $.map.setZoom(position.coords.accuracy < 200 ? 17 : position.coords.accuracy < 500 ? 16 : position.coords.accuracy < 2000 ? 15 : 13);
-        google.maps.event.addListenerOnce($.map, 'idle', function () {
+    $.pan = position => {
+        const pan = () => {
             $.map.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
             $.map.setZoom(position.coords.accuracy < 200 ? 17 : position.coords.accuracy < 500 ? 16 : position.coords.accuracy < 2000 ? 15 : 13);
-        });
+        };
+        pan();
+        google.maps.event.addListenerOnce($.map, 'idle', pan);
     };
 
-    $.afterTrack = function() {
-        //_('button')[3].blur();
-        //goTab('map', 0);
-    };
-
-    $.track = function(force) {
+    $.track = force => {
         if (force === 'yes') {
             window.panToPosition = true;
             Nav.goTab('map', 0);
         }
-        navigator.geolocation.getCurrentPosition(function (position) {
-            //$.marker.setPosition({lat: position.coords.latitude, lng: position.coords.longitude});
+        const checkPan = position => {
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
                 if (force === 'yes' || (!location.hash.startsWith('#map') && window.panToPosition)) {
                     $.pan(position);
                 }
             }
-        }, function () {
-            // console.log('error1', arguments);
-        }, {timeout: 250});
+        };
+        navigator.geolocation.getCurrentPosition(checkPan, () => false, {timeout: 250});
 
-        navigator.geolocation.getCurrentPosition(function (position) {
-            if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || (!location.hash.startsWith('#map') && window.panToPosition)) {
-                    $.pan(position);
-                }
-            }
-            $.afterTrack();
-        }, function () {
-            // console.log('error2', arguments);
-            $.afterTrack();
-        }, {enableHighAccuracy: true});
+        navigator.geolocation.getCurrentPosition(checkPan, () => false, {enableHighAccuracy: true});
     };
 
     $.markers = {};
 
-    $.load = function(data, list) {
+    $.load = (data, list) => {
         const marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
@@ -682,7 +660,7 @@ const Maps = {}; (function($) {
         }
     };
 
-    $.loadAll = function(data) {
+    $.loadAll = data => {
         for (const tile in data) {
             if (!$.markers[tile] || (data[tile] && $.markers[tile].length !== data[tile].length)) {
                 const newTile = [];
@@ -707,7 +685,7 @@ const Maps = {}; (function($) {
         }
     };
 
-    $.initMapInternal = function() {
+    $.initMapInternal = () => {
         const h = location.hash;
         const bounds = new google.maps.LatLngBounds({lat: 49, lng: 6}, {lat: 55, lng: 15});
         const mapOptions = {
@@ -721,24 +699,24 @@ const Maps = {}; (function($) {
             const coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
             $.map.setCenter({lat: parseFloat(coords[2]), lng: parseFloat(coords[3])});
             if (coords[4]) {
-                $.map.setZoom(parseInt(coords[4]));
+                $.map.setZoom(parseInt(coords[4], 10));
             }
         } else if (!window.panToPosition) {
             $.map.setZoom(15);
             if (typeof Spot.spot.lat !== 'undefined') {
-                $.map.setCenter({lat: Spot.spot.lat, lng: Spot.spot.lng});
+                $.map.setCenter(Spot.spot);
             }
         } else {
             $.map.fitBounds(bounds);
         }
 
-        google.maps.event.addDomListener(window, 'resize', function () {
+        google.maps.event.addDomListener(window, 'resize', () => {
             const center = $.map.getCenter();
             google.maps.event.trigger($.map, 'resize');
             $.map.setCenter(center);
         });
 
-        google.maps.event.addListener($.map, 'bounds_changed', function () {
+        google.maps.event.addListener($.map, 'bounds_changed', () => {
             const bounds = $.map.getBounds();
             Geotile.loadBounds(bounds, $.loadAll);
             const center = $.map.getCenter();
@@ -751,7 +729,7 @@ const Maps = {}; (function($) {
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
         const filterDiv = document.createElement('div');
-        const filter = new $.Filter(filterDiv, $.map);
+        $.filter(filterDiv);
 
         filterDiv.index = 1;
         $.map.controls[google.maps.ControlPosition.LEFT_TOP].push(filterDiv);
@@ -806,7 +784,10 @@ const Maps = {}; (function($) {
         Form.restore();
     };
 
-    $.newMarker = function(event, force) {
+    $.newMarker = (event, force) => {
+        if (!event.latLng) {
+            event.latLng = {lat: event.lat, lng: event.lng};
+        }
         if (!force && Nav.isLite) {
             return;
         }
@@ -834,20 +815,16 @@ const Maps = {}; (function($) {
         Form.backup();
     };
 
-    $.dragMarker = function(event) {
-        Nav.success(`${t('position')}: ${$.marker.getPosition().lat().toFixed(5)} ${$.marker.getPosition().lng().toFixed(5)}`);
-    };
+    $.dragMarker = event => Nav.success(`${t('position')}: ${$.marker.getPosition().lat().toFixed(5)} ${$.marker.getPosition().lng().toFixed(5)}`);
 
-    $.endMarker = function(event) {
+    $.endMarker = event => {
         $.map.panTo($.marker.getPosition());
         Form.backup();
     };
 
-    $.clickMarker = function(event) {
-        $.show($.marker);
-    };
+    $.clickMarker = event => $.show($.marker);
 
-    $.Filter = function(filterDiv, map) {
+    $.filter = (filterDiv) => {
         filterDiv.className = 'filterDiv';
         const controlUI = document.createElement('div');
         controlUI.className = 'filterBtn';
@@ -858,16 +835,15 @@ const Maps = {}; (function($) {
         filterDiv.appendChild(filterBox);
         filterBox.innerHTML = `Zeige:<br /><span class="yes">${t('spot')}</span><br /><span class="no">${t('event')}</span><br /><span class="yes">${t('group')}</span>`;
 
-        controlUI.addEventListener('click', function () {
+        controlUI.addEventListener('click', () => {
             const elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
-            //map.setCenter(chicago);
         });
     };
 
 })(Maps);
 // Source: src/scripts/nav.js
-const Nav = {}; ($ => {
+const Nav = {}; ($ => {
     $.events = {};
     $.isLite = false;
 
@@ -951,7 +927,7 @@ const Nav = {}; ($ => {
                 if (Map.map) {
                     Map.map.panTo({lat: parseFloat(coords[2]), lng: parseFloat(coords[3])});
                     if (coords[4]) {
-                        Map.map.setZoom(parseInt(coords[4]));
+                        Map.map.setZoom(parseInt(coords[4], 10));
                     }
                 }
             }
@@ -967,7 +943,7 @@ const Nav = {}; ($ => {
 
 })(Nav);
 // Source: src/scripts/proximity.js
-const Proximity = {}; ($ => {
+const Proximity = {}; ($ => {
     $.getCloseNodes = (lat, lng) => {
         const bounds = {lat: [lat - 0.0001, lat + 0.0001], lng: [lng - 0.0001, lng + 0.0001]};
         Geotile.loadBounds(bounds, data => {
@@ -994,7 +970,7 @@ const Proximity = {}; ($ => {
     };
 })(Proximity);
 // Source: src/scripts/search.js
-const Search = {}; ($ => {
+const Search = {}; ($ => {
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
@@ -1048,8 +1024,7 @@ const Search = {}; ($ => {
     };
 })(Search);
 // Source: src/scripts/spot.js
-const Spot = {}; ($ => {
-
+const Spot = {}; ($ => {
     $.spot = {};
 
     ready.push(() => Nav.events.spot_hide = () => _('#map').className = '');
@@ -1130,15 +1105,15 @@ const Spot = {}; ($ => {
                 Maps.panToPosition = false;
                 google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
                     google.maps.event.trigger(Maps.map, 'resize');
-                    Maps.map.setCenter({lat: $.spot.lat, lng: $.spot.lng});
+                    Maps.map.setCenter($.spot);
                     Maps.map.setZoom(15);
                 });
                 console.log($.spot);
                 if (Nav.isLite) {
-                    Maps.newMarker({latLng: {lat: $.spot.lat, lng: $.spot.lng}}, true);
+                    Maps.newMarker($.spot, true);
                 }
                 google.maps.event.trigger(Maps.map, 'resize');
-                Maps.map.setCenter({lat: $.spot.lat, lng: $.spot.lng});
+                Maps.map.setCenter($.spot);
                 Maps.map.setZoom(15);
             } else {
                 _('#spot-geo').style.display = 'none';
@@ -1170,7 +1145,7 @@ const Spot = {}; ($ => {
 
     _('#spot-map').onclick = () => {
         Nav.navigate('');
-        Maps.map.setCenter({lat: $.spot.lat, lng: $.spot.lng});
+        Maps.map.setCenter($.spot);
         Maps.map.setZoom(15);
     };
 

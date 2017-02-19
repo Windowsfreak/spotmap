@@ -1,8 +1,8 @@
 /* globals Geotile, Maps */
 const Proximity = {}; ($ => {
     'use strict';
-    require('./geotile.js');
-    require('./map.js');
+    // require('./geotile.js');
+    // require('./map.js');
     $.getCloseNodes = (lat, lng) => {
         const bounds = {lat: [lat - 0.0001, lat + 0.0001], lng: [lng - 0.0001, lng + 0.0001]};
         Geotile.loadBounds(bounds, data => {

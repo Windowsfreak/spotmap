@@ -2,8 +2,8 @@
 const Http = {}; (function($) {
     'use strict';
 
-    require('./geohash.js');
-    require('./nav.js');
+    // require('./geohash.js');
+    // require('./nav.js');
 
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
@@ -41,10 +41,10 @@ const Http = {}; (function($) {
                     } catch (e) {
                         Nav.error(t('error_server_request'));
                         resolve({
-                            method: method,
-                            url: url,
-                            params: params,
-                            headers: headers,
+                            method,
+                            url,
+                            params,
+                            headers,
                             status: this.status,
                             statusText: xhr.statusText,
                             message: xhr.response
@@ -57,10 +57,10 @@ const Http = {}; (function($) {
             xhr.onerror = () => {
                 Nav.error(t('error_server_request'));
                 const data = {
-                    method: method,
-                    url: url,
-                    params: params,
-                    headers: headers,
+                    method,
+                    url,
+                    params,
+                    headers,
                     status: this.status,
                     statusText: xhr.statusText,
                     message: xhr.response

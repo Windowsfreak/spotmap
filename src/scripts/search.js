@@ -1,10 +1,10 @@
 /* globals _, t, strip, Http, Nav, Spot */
 const Search = {}; ($ => {
     'use strict';
-    require('./base.js');
-    require('./http.js');
-    require('./nav.js');
-    require('./spot.js');
+    // require('./base.js');
+    // require('./http.js');
+    // require('./nav.js');
+    // require('./spot.js');
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;

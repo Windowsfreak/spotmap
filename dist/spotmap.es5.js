@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-02-18
+/*! spotmap - v0.1.0 - 2017-02-19
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
@@ -10,7 +10,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 (function ($) {
-
     $.ready = [];
     $.runLater = function () {
         return ($.ready = $.ready.map(function (item) {
@@ -74,7 +73,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 })(window);
 // Source: src/scripts/form.js
 var Form = {};(function ($) {
-
     ready.push(function () {
         Nav.events.form_show = function () {
             _('#map').style.display = 'block';
@@ -96,7 +94,7 @@ var Form = {};(function ($) {
     });
 
     $.add_here = function (type) {
-        Maps.newMarker({ latLng: { lat: Spot.spot.lat, lng: Spot.spot.lng } }, true);
+        Maps.newMarker(Spot.spot, true);
         $.add(type);
     };
 
@@ -131,8 +129,8 @@ var Form = {};(function ($) {
                 type: localStorage.getItem('form_type')
             };
             window.panToPosition = false;
-            Maps.newMarker({ latLng: { lat: Spot.marker.lat, lng: Spot.marker.lng } }, true);
-            Maps.map.panTo({ lat: Spot.marker.lat, lng: Spot.marker.lng });
+            Maps.newMarker(Spot.marker, true);
+            Maps.map.panTo(Spot.marker);
             $.add(Spot.marker.type);
             google.maps.event.addListenerOnce(Maps.map, 'idle', function () {
                 Maps.map.panTo(Maps.marker.getPosition());
@@ -305,7 +303,6 @@ var Geohash = {};(function ($) {
 })(Geohash);
 // Source: src/scripts/geotile.js
 var Geotile = {};(function ($) {
-
     var cache = {};
     var g_size = [[180, 360], [45, 45], [5.625, 11.25], [1.40625, 1.40625], [0.17578125, 0.3515625], [0.0439453125, 0.0439453125], [0.0054931640625, 0.010986328125], [0.001373291015625, 0.001373291015625], [0.000171661376953125, 0.00034332275390625], [0.00004291534423828125, 0.00004291534423828125], [0.000005364418029785156, 0.000010728836059570312], [0.000001341104507446289, 0.000001341104507446289], [1.6763806343078613e-7, 3.3527612686157227e-7]];
 
@@ -408,7 +405,7 @@ var Geotile = {};(function ($) {
         len++;
         var matrix = void 0;
 
-        while (true) {
+        while (len > 0) {
             len--;
 
             var size = g_size[len];
@@ -498,7 +495,6 @@ var Geotile = {};(function ($) {
 })(Geotile);
 // Source: src/scripts/http.js
 var Http = {};(function ($) {
-
     $.b64a = function (text) {
         return btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, function (match, p1) {
             return String.fromCharCode('0x' + p1);
@@ -612,7 +608,6 @@ var Http = {};(function ($) {
 })(Http);
 // Source: src/scripts/login.js
 var Login = {};(function ($) {
-
     ready.push(function () {
         Nav.events.login_show = function () {
             if (Http.getUser() !== null) {
@@ -648,7 +643,6 @@ var Login = {};(function ($) {
 })(Login);
 // Source: src/scripts/maps.js
 var Maps = {};(function ($) {
-
     ready.push(function () {
         Nav.events.map_show = function () {
             if (window.google) {
@@ -696,17 +690,12 @@ var Maps = {};(function ($) {
     };
 
     $.pan = function (position) {
-        $.map.panTo({ lat: position.coords.latitude, lng: position.coords.longitude });
-        $.map.setZoom(position.coords.accuracy < 200 ? 17 : position.coords.accuracy < 500 ? 16 : position.coords.accuracy < 2000 ? 15 : 13);
-        google.maps.event.addListenerOnce($.map, 'idle', function () {
+        var pan = function pan() {
             $.map.panTo({ lat: position.coords.latitude, lng: position.coords.longitude });
             $.map.setZoom(position.coords.accuracy < 200 ? 17 : position.coords.accuracy < 500 ? 16 : position.coords.accuracy < 2000 ? 15 : 13);
-        });
-    };
-
-    $.afterTrack = function () {
-        //_('button')[3].blur();
-        //goTab('map', 0);
+        };
+        pan();
+        google.maps.event.addListenerOnce($.map, 'idle', pan);
     };
 
     $.track = function (force) {
@@ -714,27 +703,19 @@ var Maps = {};(function ($) {
             window.panToPosition = true;
             Nav.goTab('map', 0);
         }
-        navigator.geolocation.getCurrentPosition(function (position) {
-            //$.marker.setPosition({lat: position.coords.latitude, lng: position.coords.longitude});
+        var checkPan = function checkPan(position) {
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
                 if (force === 'yes' || !location.hash.startsWith('#map') && window.panToPosition) {
                     $.pan(position);
                 }
             }
-        }, function () {
-            // console.log('error1', arguments);
+        };
+        navigator.geolocation.getCurrentPosition(checkPan, function () {
+            return false;
         }, { timeout: 250 });
 
-        navigator.geolocation.getCurrentPosition(function (position) {
-            if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || !location.hash.startsWith('#map') && window.panToPosition) {
-                    $.pan(position);
-                }
-            }
-            $.afterTrack();
-        }, function () {
-            // console.log('error2', arguments);
-            $.afterTrack();
+        navigator.geolocation.getCurrentPosition(checkPan, function () {
+            return false;
         }, { enableHighAccuracy: true });
     };
 
@@ -817,12 +798,12 @@ var Maps = {};(function ($) {
             var coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
             $.map.setCenter({ lat: parseFloat(coords[2]), lng: parseFloat(coords[3]) });
             if (coords[4]) {
-                $.map.setZoom(parseInt(coords[4]));
+                $.map.setZoom(parseInt(coords[4], 10));
             }
         } else if (!window.panToPosition) {
             $.map.setZoom(15);
             if (typeof Spot.spot.lat !== 'undefined') {
-                $.map.setCenter({ lat: Spot.spot.lat, lng: Spot.spot.lng });
+                $.map.setCenter(Spot.spot);
             }
         } else {
             $.map.fitBounds(bounds);
@@ -847,7 +828,7 @@ var Maps = {};(function ($) {
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
         var filterDiv = document.createElement('div');
-        var filter = new $.Filter(filterDiv, $.map);
+        $.filter(filterDiv);
 
         filterDiv.index = 1;
         $.map.controls[google.maps.ControlPosition.LEFT_TOP].push(filterDiv);
@@ -903,6 +884,9 @@ var Maps = {};(function ($) {
     };
 
     $.newMarker = function (event, force) {
+        if (!event.latLng) {
+            event.latLng = { lat: event.lat, lng: event.lng };
+        }
         if (!force && Nav.isLite) {
             return;
         }
@@ -931,7 +915,7 @@ var Maps = {};(function ($) {
     };
 
     $.dragMarker = function (event) {
-        Nav.success(t('position') + ': ' + $.marker.getPosition().lat().toFixed(5) + ' ' + $.marker.getPosition().lng().toFixed(5));
+        return Nav.success(t('position') + ': ' + $.marker.getPosition().lat().toFixed(5) + ' ' + $.marker.getPosition().lng().toFixed(5));
     };
 
     $.endMarker = function (event) {
@@ -940,10 +924,10 @@ var Maps = {};(function ($) {
     };
 
     $.clickMarker = function (event) {
-        $.show($.marker);
+        return $.show($.marker);
     };
 
-    $.Filter = function (filterDiv, map) {
+    $.filter = function (filterDiv) {
         filterDiv.className = 'filterDiv';
         var controlUI = document.createElement('div');
         controlUI.className = 'filterBtn';
@@ -957,13 +941,11 @@ var Maps = {};(function ($) {
         controlUI.addEventListener('click', function () {
             var elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
-            //map.setCenter(chicago);
         });
     };
 })(Maps);
 // Source: src/scripts/nav.js
 var Nav = {};(function ($) {
-
     $.events = {};
     $.isLite = false;
 
@@ -1057,7 +1039,7 @@ var Nav = {};(function ($) {
                 if (Map.map) {
                     Map.map.panTo({ lat: parseFloat(coords[2]), lng: parseFloat(coords[3]) });
                     if (coords[4]) {
-                        Map.map.setZoom(parseInt(coords[4]));
+                        Map.map.setZoom(parseInt(coords[4], 10));
                     }
                 }
             }
@@ -1077,7 +1059,6 @@ var Nav = {};(function ($) {
 })(Nav);
 // Source: src/scripts/proximity.js
 var Proximity = {};(function ($) {
-
     $.getCloseNodes = function (lat, lng) {
         var bounds = { lat: [lat - 0.0001, lat + 0.0001], lng: [lng - 0.0001, lng + 0.0001] };
         Geotile.loadBounds(bounds, function (data) {
@@ -1107,7 +1088,6 @@ var Proximity = {};(function ($) {
 })(Proximity);
 // Source: src/scripts/search.js
 var Search = {};(function ($) {
-
     var search = {};
     _('#search-submit').onclick = function () {
         var text = _('#search-text').value;
@@ -1269,7 +1249,6 @@ var Search = {};(function ($) {
 })(Search);
 // Source: src/scripts/spot.js
 var Spot = {};(function ($) {
-
     $.spot = {};
 
     ready.push(function () {
@@ -1616,15 +1595,15 @@ var Spot = {};(function ($) {
                 Maps.panToPosition = false;
                 google.maps.event.addListenerOnce(Maps.map, 'idle', function () {
                     google.maps.event.trigger(Maps.map, 'resize');
-                    Maps.map.setCenter({ lat: $.spot.lat, lng: $.spot.lng });
+                    Maps.map.setCenter($.spot);
                     Maps.map.setZoom(15);
                 });
                 console.log($.spot);
                 if (Nav.isLite) {
-                    Maps.newMarker({ latLng: { lat: $.spot.lat, lng: $.spot.lng } }, true);
+                    Maps.newMarker($.spot, true);
                 }
                 google.maps.event.trigger(Maps.map, 'resize');
-                Maps.map.setCenter({ lat: $.spot.lat, lng: $.spot.lng });
+                Maps.map.setCenter($.spot);
                 Maps.map.setZoom(15);
             } else {
                 _('#spot-geo').style.display = 'none';
@@ -1705,7 +1684,7 @@ var Spot = {};(function ($) {
 
     _('#spot-map').onclick = function () {
         Nav.navigate('');
-        Maps.map.setCenter({ lat: $.spot.lat, lng: $.spot.lng });
+        Maps.map.setCenter($.spot);
         Maps.map.setZoom(15);
     };
 

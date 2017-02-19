@@ -1,13 +1,13 @@
 /* globals _, t, ready, Form, Geotile, Nav, Proximity, Spot */
-const Maps = {}; (function($) {
+const Maps = {}; ($ => {
     'use strict';
 
-    require('./base.js');
-    require('./form.js');
-    require('./geotile.js');
-    require('./nav.js');
-    require('./proximity.js');
-    require('./spot.js');
+    // require('./base.js');
+    // require('./form.js');
+    // require('./geotile.js');
+    // require('./nav.js');
+    // require('./proximity.js');
+    // require('./spot.js');
 
     ready.push(() => {
         Nav.events.map_show = () => {
@@ -31,7 +31,7 @@ const Maps = {}; (function($) {
     $.icons = {};
     $.shapes = {};
 
-    $.setGpsObj = function(position) {
+    $.setGpsObj = position => {
         if (gpsObj) {
             gpsObj.setMap(null);
         }
@@ -48,7 +48,7 @@ const Maps = {}; (function($) {
         });
     };
 
-    $.updateGpsObj = function(position) {
+    $.updateGpsObj = position => {
         if (!gpsObj || gpsObj.position.coords.accuracy > position.coords.accuracy || gpsObj.position.timestamp < position.timestamp - 3000) {
             $.setGpsObj(position);
             return true;
@@ -56,52 +56,35 @@ const Maps = {}; (function($) {
         return false;
     };
 
-    $.pan = function(position) {
-        $.map.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
-        $.map.setZoom(position.coords.accuracy < 200 ? 17 : position.coords.accuracy < 500 ? 16 : position.coords.accuracy < 2000 ? 15 : 13);
-        google.maps.event.addListenerOnce($.map, 'idle', function () {
+    $.pan = position => {
+        const pan = () => {
             $.map.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
             $.map.setZoom(position.coords.accuracy < 200 ? 17 : position.coords.accuracy < 500 ? 16 : position.coords.accuracy < 2000 ? 15 : 13);
-        });
+        };
+        pan();
+        google.maps.event.addListenerOnce($.map, 'idle', pan);
     };
 
-    $.afterTrack = function() {
-        //_('button')[3].blur();
-        //goTab('map', 0);
-    };
-
-    $.track = function(force) {
+    $.track = force => {
         if (force === 'yes') {
             window.panToPosition = true;
             Nav.goTab('map', 0);
         }
-        navigator.geolocation.getCurrentPosition(function (position) {
-            //$.marker.setPosition({lat: position.coords.latitude, lng: position.coords.longitude});
+        const checkPan = position => {
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
                 if (force === 'yes' || (!location.hash.startsWith('#map') && window.panToPosition)) {
                     $.pan(position);
                 }
             }
-        }, function () {
-            // console.log('error1', arguments);
-        }, {timeout: 250});
+        };
+        navigator.geolocation.getCurrentPosition(checkPan, () => false, {timeout: 250});
 
-        navigator.geolocation.getCurrentPosition(function (position) {
-            if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || (!location.hash.startsWith('#map') && window.panToPosition)) {
-                    $.pan(position);
-                }
-            }
-            $.afterTrack();
-        }, function () {
-            // console.log('error2', arguments);
-            $.afterTrack();
-        }, {enableHighAccuracy: true});
+        navigator.geolocation.getCurrentPosition(checkPan, () => false, {enableHighAccuracy: true});
     };
 
     $.markers = {};
 
-    $.load = function(data, list) {
+    $.load = (data, list) => {
         const marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
@@ -142,7 +125,7 @@ const Maps = {}; (function($) {
         }
     };
 
-    $.loadAll = function(data) {
+    $.loadAll = data => {
         for (const tile in data) {
             if (!$.markers[tile] || (data[tile] && $.markers[tile].length !== data[tile].length)) {
                 const newTile = [];
@@ -167,7 +150,7 @@ const Maps = {}; (function($) {
         }
     };
 
-    $.initMapInternal = function() {
+    $.initMapInternal = () => {
         const h = location.hash;
         const bounds = new google.maps.LatLngBounds({lat: 49, lng: 6}, {lat: 55, lng: 15});
         const mapOptions = {
@@ -181,24 +164,24 @@ const Maps = {}; (function($) {
             const coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
             $.map.setCenter({lat: parseFloat(coords[2]), lng: parseFloat(coords[3])});
             if (coords[4]) {
-                $.map.setZoom(parseInt(coords[4]));
+                $.map.setZoom(parseInt(coords[4], 10));
             }
         } else if (!window.panToPosition) {
             $.map.setZoom(15);
             if (typeof Spot.spot.lat !== 'undefined') {
-                $.map.setCenter({lat: Spot.spot.lat, lng: Spot.spot.lng});
+                $.map.setCenter(Spot.spot);
             }
         } else {
             $.map.fitBounds(bounds);
         }
 
-        google.maps.event.addDomListener(window, 'resize', function () {
+        google.maps.event.addDomListener(window, 'resize', () => {
             const center = $.map.getCenter();
             google.maps.event.trigger($.map, 'resize');
             $.map.setCenter(center);
         });
 
-        google.maps.event.addListener($.map, 'bounds_changed', function () {
+        google.maps.event.addListener($.map, 'bounds_changed', () => {
             const bounds = $.map.getBounds();
             Geotile.loadBounds(bounds, $.loadAll);
             const center = $.map.getCenter();
@@ -211,7 +194,7 @@ const Maps = {}; (function($) {
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
         const filterDiv = document.createElement('div');
-        const filter = new $.Filter(filterDiv, $.map);
+        $.filter(filterDiv);
 
         filterDiv.index = 1;
         $.map.controls[google.maps.ControlPosition.LEFT_TOP].push(filterDiv);
@@ -266,7 +249,10 @@ const Maps = {}; (function($) {
         Form.restore();
     };
 
-    $.newMarker = function(event, force) {
+    $.newMarker = (event, force) => {
+        if (!event.latLng) {
+            event.latLng = {lat: event.lat, lng: event.lng};
+        }
         if (!force && Nav.isLite) {
             return;
         }
@@ -294,20 +280,16 @@ const Maps = {}; (function($) {
         Form.backup();
     };
 
-    $.dragMarker = function(event) {
-        Nav.success(`${t('position')}: ${$.marker.getPosition().lat().toFixed(5)} ${$.marker.getPosition().lng().toFixed(5)}`);
-    };
+    $.dragMarker = event => Nav.success(`${t('position')}: ${$.marker.getPosition().lat().toFixed(5)} ${$.marker.getPosition().lng().toFixed(5)}`);
 
-    $.endMarker = function(event) {
+    $.endMarker = event => {
         $.map.panTo($.marker.getPosition());
         Form.backup();
     };
 
-    $.clickMarker = function(event) {
-        $.show($.marker);
-    };
+    $.clickMarker = event => $.show($.marker);
 
-    $.Filter = function(filterDiv, map) {
+    $.filter = (filterDiv) => {
         filterDiv.className = 'filterDiv';
         const controlUI = document.createElement('div');
         controlUI.className = 'filterBtn';
@@ -318,10 +300,9 @@ const Maps = {}; (function($) {
         filterDiv.appendChild(filterBox);
         filterBox.innerHTML = `Zeige:<br /><span class="yes">${t('spot')}</span><br /><span class="no">${t('event')}</span><br /><span class="yes">${t('group')}</span>`;
 
-        controlUI.addEventListener('click', function () {
+        controlUI.addEventListener('click', () => {
             const elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
-            //map.setCenter(chicago);
         });
     };
 

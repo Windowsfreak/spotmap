@@ -2,10 +2,10 @@
 const Spot = {}; ($ => {
     'use strict';
 
-    require('./base.js');
-    require('./http.js');
-    require('./map.js');
-    require('./nav.js');
+    // require('./base.js');
+    // require('./http.js');
+    // require('./map.js');
+    // require('./nav.js');
 
     $.spot = {};
 
@@ -87,15 +87,15 @@ const Spot = {}; ($ => {
                 Maps.panToPosition = false;
                 google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
                     google.maps.event.trigger(Maps.map, 'resize');
-                    Maps.map.setCenter({lat: $.spot.lat, lng: $.spot.lng});
+                    Maps.map.setCenter($.spot);
                     Maps.map.setZoom(15);
                 });
                 console.log($.spot);
                 if (Nav.isLite) {
-                    Maps.newMarker({latLng: {lat: $.spot.lat, lng: $.spot.lng}}, true);
+                    Maps.newMarker($.spot, true);
                 }
                 google.maps.event.trigger(Maps.map, 'resize');
-                Maps.map.setCenter({lat: $.spot.lat, lng: $.spot.lng});
+                Maps.map.setCenter($.spot);
                 Maps.map.setZoom(15);
             } else {
                 _('#spot-geo').style.display = 'none';
@@ -127,7 +127,7 @@ const Spot = {}; ($ => {
 
     _('#spot-map').onclick = () => {
         Nav.navigate('');
-        Maps.map.setCenter({lat: $.spot.lat, lng: $.spot.lng});
+        Maps.map.setCenter($.spot);
         Maps.map.setZoom(15);
     };
 

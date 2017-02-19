@@ -2,10 +2,10 @@
 const Geotile = {}; ($ => {
     'use strict';
 
-    require('./base.js');
-    require('./geohash.js');
-    require('./http.js');
-    require('./nav.js');
+    // require('./base.js');
+    // require('./geohash.js');
+    // require('./http.js');
+    // require('./nav.js');
 
     const cache = {};
     const g_size = [
@@ -99,7 +99,7 @@ const Geotile = {}; ($ => {
         len++;
         let matrix;
 
-        while (true) {
+        while (len > 0) {
             len--;
 
             const size = g_size[len];

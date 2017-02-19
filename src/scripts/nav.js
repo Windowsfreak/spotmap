@@ -1,9 +1,9 @@
 /* globals _, t, ready, Spot, Search */
 const Nav = {}; ($ => {
     'use strict';
-    require('./base.js');
-    require('./spot.js');
-    require('./search.js');
+    // require('./base.js');
+    // require('./spot.js');
+    // require('./search.js');
     $.events = {};
     $.isLite = false;
 
@@ -87,7 +87,7 @@ const Nav = {}; ($ => {
                 if (Map.map) {
                     Map.map.panTo({lat: parseFloat(coords[2]), lng: parseFloat(coords[3])});
                     if (coords[4]) {
-                        Map.map.setZoom(parseInt(coords[4]));
+                        Map.map.setZoom(parseInt(coords[4], 10));
                     }
                 }
             }
