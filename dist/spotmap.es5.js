@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-02-19
+/*! spotmap - v0.1.0 - 2017-02-20
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
@@ -660,6 +660,7 @@ var Maps = {};(function ($) {
 
     var initial = Date.now;
     $.panToPosition = !location.hash.startsWith('#map/');
+    $.filter = ['spot', 'event', 'group'];
     var gpsObj = void 0;
     $.icons = {};
     $.shapes = {};
@@ -752,7 +753,8 @@ var Maps = {};(function ($) {
             $.map.panTo(marker.getPosition());
             $.map.setZoom($.map.getZoom() + 2);
         } else {
-            $.infoWindow.setContent('<a onclick="Nav.navigate(\'#spot/' + marker.data.id + '\');"><img class="type" src="' + $.icons[marker.data.type].url + '">' + marker.data.title + '</a>');
+            var icon = marker.data.type.startsWith('multi') ? $.icons.zoom : marker.data.type.includes('group') ? $.icons.group : marker.data.type.includes('event') ? $.icons.event : $.icons.spot;
+            $.infoWindow.setContent('<a onclick="Nav.navigate(\'#spot/' + marker.data.id + '\');"><img class="type" src="' + icon.url + '">' + marker.data.title + '</a>');
             $.infoWindow.setPosition(marker.getPosition());
             $.infoWindow.open($.map);
             Proximity.getCloseNodes(marker.data.lat, marker.data.lng);
@@ -764,7 +766,9 @@ var Maps = {};(function ($) {
             if (!$.markers[tile] || data[tile] && $.markers[tile].length !== data[tile].length) {
                 var newTile = [];
                 for (var entry in data[tile]) {
-                    $.load(data[tile][entry], newTile);
+                    if ($.matchesFilter(data[tile][entry])) {
+                        $.load(data[tile][entry], newTile);
+                    }
                 }
                 if ($.markers[tile]) {
                     for (var marker in $.markers[tile]) {
@@ -781,6 +785,16 @@ var Maps = {};(function ($) {
                 }
                 delete $.markers[_tile];
             }
+        }
+    };
+
+    $.handleBoundsChanged = function () {
+        var bounds = $.map.getBounds();
+        Geotile.loadBounds(bounds, $.loadAll);
+        var center = $.map.getCenter();
+        var coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
+        if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
+            history.replaceState({}, '', '#map/' + center.lat().toFixed(5) + '/' + center.lng().toFixed(5) + '/' + $.map.getZoom());
         }
     };
 
@@ -815,20 +829,12 @@ var Maps = {};(function ($) {
             $.map.setCenter(center);
         });
 
-        google.maps.event.addListener($.map, 'bounds_changed', function () {
-            var bounds = $.map.getBounds();
-            Geotile.loadBounds(bounds, $.loadAll);
-            var center = $.map.getCenter();
-            var coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
-            if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
-                history.replaceState({}, '', '#map/' + center.lat().toFixed(5) + '/' + center.lng().toFixed(5) + '/' + $.map.getZoom());
-            }
-        });
+        google.maps.event.addListener($.map, 'bounds_changed', $.handleBoundsChanged);
 
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
         var filterDiv = document.createElement('div');
-        $.filter(filterDiv);
+        $.createFilter(filterDiv);
 
         filterDiv.index = 1;
         $.map.controls[google.maps.ControlPosition.LEFT_TOP].push(filterDiv);
@@ -927,7 +933,7 @@ var Maps = {};(function ($) {
         return $.show($.marker);
     };
 
-    $.filter = function (filterDiv) {
+    $.createFilter = function (filterDiv) {
         filterDiv.className = 'filterDiv';
         var controlUI = document.createElement('div');
         controlUI.className = 'filterBtn';
@@ -936,12 +942,59 @@ var Maps = {};(function ($) {
         var filterBox = document.createElement('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
-        filterBox.innerHTML = 'Zeige:<br /><span class="yes">' + t('spot') + '</span><br /><span class="no">' + t('event') + '</span><br /><span class="yes">' + t('group') + '</span>';
-
+        filterBox.innerHTML = 'Zeige:<br />\n            <span class="yes" id="filter-spot" onclick="Maps.toggleFilter(\'spot\')">' + t('spot') + '</span><br />\n            <span class="yes" id="filter-event" onclick="Maps.toggleFilter(\'event\')">' + t('event') + '</span><br />\n            <span class="yes" id="filter-group" onclick="Maps.toggleFilter(\'group\')">' + t('group') + '</span>';
         controlUI.addEventListener('click', function () {
             var elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
         });
+    };
+
+    $.toggleFilter = function (filterType) {
+        var elem = _('#filter-' + filterType);
+        elem.className = elem.className === 'yes' ? 'no' : 'yes';
+        if (elem.className === 'yes') {
+            if (!$.filter.includes(filterType)) {
+                $.filter.push(filterType);
+            }
+        } else {
+            var i = $.filter.indexOf(filterType);
+            if (i !== -1) {
+                $.filter.splice(i, 1);
+            }
+        }
+        $.loadAll([]);
+        $.handleBoundsChanged();
+    };
+
+    $.matchesFilter = function (entry) {
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+            for (var _iterator4 = $.filter[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                var f = _step4.value;
+
+                if (entry.type.indexOf(f) !== -1) {
+                    return true;
+                }
+            }
+        } catch (err) {
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                    _iterator4.return();
+                }
+            } finally {
+                if (_didIteratorError4) {
+                    throw _iteratorError4;
+                }
+            }
+        }
+
+        return false;
     };
 })(Maps);
 // Source: src/scripts/nav.js
@@ -1109,54 +1162,24 @@ var Search = {};(function ($) {
         if (result.length === 0) {
             text += t('no_results_found');
         }
-        var _iteratorNormalCompletion4 = true;
-        var _didIteratorError4 = false;
-        var _iteratorError4 = undefined;
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
 
         try {
-            for (var _iterator4 = result[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                var spot = _step4.value;
+            for (var _iterator5 = result[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                var spot = _step5.value;
 
                 var nid = void 0;
-                var _iteratorNormalCompletion5 = true;
-                var _didIteratorError5 = false;
-                var _iteratorError5 = undefined;
-
-                try {
-                    for (var _iterator5 = Spot.find('nid|\\d+|value', spot)[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-                        var s = _step5.value;
-
-                        nid = s;
-                    }
-                } catch (err) {
-                    _didIteratorError5 = true;
-                    _iteratorError5 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                            _iterator5.return();
-                        }
-                    } finally {
-                        if (_didIteratorError5) {
-                            throw _iteratorError5;
-                        }
-                    }
-                }
-
-                text += '<article onclick="Nav.navigate(\'#spot/' + nid + '\');">';
-
                 var _iteratorNormalCompletion6 = true;
                 var _didIteratorError6 = false;
                 var _iteratorError6 = undefined;
 
                 try {
-                    for (var _iterator6 = Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                        var _s = _step6.value;
+                    for (var _iterator6 = Spot.find('nid|\\d+|value', spot)[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+                        var s = _step6.value;
 
-                        text += '<div class="in-place cover" style="background-image: url(' + _s + ');"></div>';
-                        if (_s) {
-                            break;
-                        }
+                        nid = s;
                     }
                 } catch (err) {
                     _didIteratorError6 = true;
@@ -1173,17 +1196,20 @@ var Search = {};(function ($) {
                     }
                 }
 
-                text += '<div class="in-place title">';
-                _('#spot-title').innerText = t('no_title');
+                text += '<article onclick="Nav.navigate(\'#spot/' + nid + '\');">';
+
                 var _iteratorNormalCompletion7 = true;
                 var _didIteratorError7 = false;
                 var _iteratorError7 = undefined;
 
                 try {
-                    for (var _iterator7 = Spot.find('title|\\d+|value', spot)[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-                        var _s2 = _step7.value;
+                    for (var _iterator7 = Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+                        var _s = _step7.value;
 
-                        text += '<h1><span>' + strip(_s2) + '</span></h1>';
+                        text += '<div class="in-place cover" style="background-image: url(' + Spot.getUrl(_s) + ');"></div>';
+                        if (_s) {
+                            break;
+                        }
                     }
                 } catch (err) {
                     _didIteratorError7 = true;
@@ -1200,15 +1226,17 @@ var Search = {};(function ($) {
                     }
                 }
 
+                text += '<div class="in-place title">';
+                _('#spot-title').innerText = t('no_title');
                 var _iteratorNormalCompletion8 = true;
                 var _didIteratorError8 = false;
                 var _iteratorError8 = undefined;
 
                 try {
-                    for (var _iterator8 = Spot.find('body|\\d+|value', spot)[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-                        var _s3 = _step8.value;
+                    for (var _iterator8 = Spot.find('title|\\d+|value', spot)[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                        var _s2 = _step8.value;
 
-                        text += '<p><span>' + strip(_s3).substring(0, 100) + '</span></p>';
+                        text += '<h1><span>' + strip(_s2) + '</span></h1>';
                     }
                 } catch (err) {
                     _didIteratorError8 = true;
@@ -1225,20 +1253,45 @@ var Search = {};(function ($) {
                     }
                 }
 
+                var _iteratorNormalCompletion9 = true;
+                var _didIteratorError9 = false;
+                var _iteratorError9 = undefined;
+
+                try {
+                    for (var _iterator9 = Spot.find('body|\\d+|value', spot)[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+                        var _s3 = _step9.value;
+
+                        text += '<p><span>' + strip(_s3).substring(0, 100) + '</span></p>';
+                    }
+                } catch (err) {
+                    _didIteratorError9 = true;
+                    _iteratorError9 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion9 && _iterator9.return) {
+                            _iterator9.return();
+                        }
+                    } finally {
+                        if (_didIteratorError9) {
+                            throw _iteratorError9;
+                        }
+                    }
+                }
+
                 text += '</div>';
                 text += '</article>';
             }
         } catch (err) {
-            _didIteratorError4 = true;
-            _iteratorError4 = err;
+            _didIteratorError5 = true;
+            _iteratorError5 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                    _iterator4.return();
+                if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                    _iterator5.return();
                 }
             } finally {
-                if (_didIteratorError4) {
-                    throw _iteratorError4;
+                if (_didIteratorError5) {
+                    throw _iteratorError5;
                 }
             }
         }
@@ -1262,44 +1315,18 @@ var Spot = {};(function ($) {
             $.spot = { id: id };
 
             _('#spot-type').innerText = '';
-            var _iteratorNormalCompletion9 = true;
-            var _didIteratorError9 = false;
-            var _iteratorError9 = undefined;
-
-            try {
-                for (var _iterator9 = $.find('\\d+|type|\\d+|target_id', data)[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-                    var s = _step9.value;
-
-                    _('#spot').className = 'spot-type-' + s;
-                    _('#spot-type').innerText = t('type_' + s);
-                }
-                /* spot */
-            } catch (err) {
-                _didIteratorError9 = true;
-                _iteratorError9 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion9 && _iterator9.return) {
-                        _iterator9.return();
-                    }
-                } finally {
-                    if (_didIteratorError9) {
-                        throw _iteratorError9;
-                    }
-                }
-            }
-
             var _iteratorNormalCompletion10 = true;
             var _didIteratorError10 = false;
             var _iteratorError10 = undefined;
 
             try {
-                for (var _iterator10 = $.find('\\d+|field_spot_type|\\d+|value', data)[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-                    var _s4 = _step10.value;
+                for (var _iterator10 = $.find('\\d+|type|\\d+|target_id', data)[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+                    var s = _step10.value;
 
-                    _('#spot-type').innerText = t('spot_type_' + _s4);
+                    _('#spot').className = 'spot-type-' + s;
+                    _('#spot-type').innerText = t('type_' + s);
                 }
-                /* move */
+                /* spot */
             } catch (err) {
                 _didIteratorError10 = true;
                 _iteratorError10 = err;
@@ -1320,10 +1347,10 @@ var Spot = {};(function ($) {
             var _iteratorError11 = undefined;
 
             try {
-                for (var _iterator11 = $.find('\\d+|field_category|\\d+|value', data)[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-                    var _s5 = _step11.value;
+                for (var _iterator11 = $.find('\\d+|field_spot_type|\\d+|value', data)[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
+                    var _s4 = _step11.value;
 
-                    _('#spot-type').innerText = t('move_type_' + _s5);
+                    _('#spot-type').innerText = t('spot_type_' + _s4);
                 }
                 /* move */
             } catch (err) {
@@ -1346,10 +1373,10 @@ var Spot = {};(function ($) {
             var _iteratorError12 = undefined;
 
             try {
-                for (var _iterator12 = $.find('\\d+|field_move_category|\\d+|value', data)[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-                    var _s6 = _step12.value;
+                for (var _iterator12 = $.find('\\d+|field_category|\\d+|value', data)[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
+                    var _s5 = _step12.value;
 
-                    _('#spot-type').innerText = t('move_type_' + _s6);
+                    _('#spot-type').innerText = t('move_type_' + _s5);
                 }
                 /* move */
             } catch (err) {
@@ -1372,12 +1399,12 @@ var Spot = {};(function ($) {
             var _iteratorError13 = undefined;
 
             try {
-                for (var _iterator13 = $.find('\\d+|field_level|\\d+|value', data)[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
-                    var _s7 = _step13.value;
+                for (var _iterator13 = $.find('\\d+|field_move_category|\\d+|value', data)[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
+                    var _s6 = _step13.value;
 
-                    _('#spot-type').innerText += ' (' + t('move_type_' + _s7) + ')';
+                    _('#spot-type').innerText = t('move_type_' + _s6);
                 }
-                /* group */
+                /* move */
             } catch (err) {
                 _didIteratorError13 = true;
                 _iteratorError13 = err;
@@ -1398,12 +1425,12 @@ var Spot = {};(function ($) {
             var _iteratorError14 = undefined;
 
             try {
-                for (var _iterator14 = $.find('\\d+|field_group_type|\\d+|value', data)[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
-                    var _s8 = _step14.value;
+                for (var _iterator14 = $.find('\\d+|field_level|\\d+|value', data)[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
+                    var _s7 = _step14.value;
 
-                    _('#spot-type').innerText = t('group_type_' + _s8);
+                    _('#spot-type').innerText += ' (' + t('move_type_' + _s7) + ')';
                 }
-                /* event */
+                /* group */
             } catch (err) {
                 _didIteratorError14 = true;
                 _iteratorError14 = err;
@@ -1424,11 +1451,12 @@ var Spot = {};(function ($) {
             var _iteratorError15 = undefined;
 
             try {
-                for (var _iterator15 = $.find('\\d+|field_event_type|\\d+|value', data)[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
-                    var _s9 = _step15.value;
+                for (var _iterator15 = $.find('\\d+|field_group_type|\\d+|value', data)[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
+                    var _s8 = _step15.value;
 
-                    _('#spot-type').innerText = t('event_type_' + _s9);
+                    _('#spot-type').innerText = t('group_type_' + _s8);
                 }
+                /* event */
             } catch (err) {
                 _didIteratorError15 = true;
                 _iteratorError15 = err;
@@ -1444,16 +1472,15 @@ var Spot = {};(function ($) {
                 }
             }
 
-            _('#spot-title').innerText = t('no_title');
             var _iteratorNormalCompletion16 = true;
             var _didIteratorError16 = false;
             var _iteratorError16 = undefined;
 
             try {
-                for (var _iterator16 = $.find('\\d+|title|\\d+|value', data)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-                    var _s10 = _step16.value;
+                for (var _iterator16 = $.find('\\d+|field_event_type|\\d+|value', data)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
+                    var _s9 = _step16.value;
 
-                    _('#spot-title').innerText = _s10;
+                    _('#spot-type').innerText = t('event_type_' + _s9);
                 }
             } catch (err) {
                 _didIteratorError16 = true;
@@ -1470,16 +1497,16 @@ var Spot = {};(function ($) {
                 }
             }
 
-            _('#spot-body').innerText = t('no_body');
+            _('#spot-title').innerText = t('no_title');
             var _iteratorNormalCompletion17 = true;
             var _didIteratorError17 = false;
             var _iteratorError17 = undefined;
 
             try {
-                for (var _iterator17 = $.find('\\d+|body|\\d+|value', data)[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
-                    var _s11 = _step17.value;
+                for (var _iterator17 = $.find('\\d+|title|\\d+|value', data)[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
+                    var _s10 = _step17.value;
 
-                    _('#spot-body').innerHTML = _s11;
+                    _('#spot-title').innerText = _s10;
                 }
             } catch (err) {
                 _didIteratorError17 = true;
@@ -1496,16 +1523,16 @@ var Spot = {};(function ($) {
                 }
             }
 
-            var text = '';
+            _('#spot-body').innerText = t('no_body');
             var _iteratorNormalCompletion18 = true;
             var _didIteratorError18 = false;
             var _iteratorError18 = undefined;
 
             try {
-                for (var _iterator18 = $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
-                    var _s12 = _step18.value;
+                for (var _iterator18 = $.find('\\d+|body|\\d+|value', data)[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
+                    var _s11 = _step18.value;
 
-                    text += '<img src="' + _s12 + '" />';
+                    _('#spot-body').innerHTML = _s11;
                 }
             } catch (err) {
                 _didIteratorError18 = true;
@@ -1522,22 +1549,17 @@ var Spot = {};(function ($) {
                 }
             }
 
-            _('#spot-images').innerHTML = text || t('no_images');
-
-            //_('#spot-lat').innerText = 'Keine Standortangabe vorhanden.';
+            var text = '';
             var _iteratorNormalCompletion19 = true;
             var _didIteratorError19 = false;
             var _iteratorError19 = undefined;
 
             try {
-                for (var _iterator19 = $.find('\\d+|field_location|\\d+|lat', data)[Symbol.iterator](), _step19; !(_iteratorNormalCompletion19 = (_step19 = _iterator19.next()).done); _iteratorNormalCompletion19 = true) {
-                    var _s13 = _step19.value;
+                for (var _iterator19 = $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)[Symbol.iterator](), _step19; !(_iteratorNormalCompletion19 = (_step19 = _iterator19.next()).done); _iteratorNormalCompletion19 = true) {
+                    var _s12 = _step19.value;
 
-                    $.spot.lat = _s13;
-                    _('#spot-lat').innerHTML = _s13;
+                    text += '<img src="' + $.getUrl(_s12) + '" />';
                 }
-
-                //_('#spot-lng').innerText = 'Keine Standortangabe vorhanden.';
             } catch (err) {
                 _didIteratorError19 = true;
                 _iteratorError19 = err;
@@ -1553,17 +1575,22 @@ var Spot = {};(function ($) {
                 }
             }
 
+            _('#spot-images').innerHTML = text || t('no_images');
+
+            //_('#spot-lat').innerText = 'Keine Standortangabe vorhanden.';
             var _iteratorNormalCompletion20 = true;
             var _didIteratorError20 = false;
             var _iteratorError20 = undefined;
 
             try {
-                for (var _iterator20 = $.find('\\d+|field_location|\\d+|lon', data)[Symbol.iterator](), _step20; !(_iteratorNormalCompletion20 = (_step20 = _iterator20.next()).done); _iteratorNormalCompletion20 = true) {
-                    var _s14 = _step20.value;
+                for (var _iterator20 = $.find('\\d+|field_location|\\d+|lat', data)[Symbol.iterator](), _step20; !(_iteratorNormalCompletion20 = (_step20 = _iterator20.next()).done); _iteratorNormalCompletion20 = true) {
+                    var _s13 = _step20.value;
 
-                    $.spot.lng = _s14;
-                    _('#spot-lng').innerHTML = _s14;
+                    $.spot.lat = _s13;
+                    _('#spot-lat').innerHTML = _s13;
                 }
+
+                //_('#spot-lng').innerText = 'Keine Standortangabe vorhanden.';
             } catch (err) {
                 _didIteratorError20 = true;
                 _iteratorError20 = err;
@@ -1579,13 +1606,39 @@ var Spot = {};(function ($) {
                 }
             }
 
+            var _iteratorNormalCompletion21 = true;
+            var _didIteratorError21 = false;
+            var _iteratorError21 = undefined;
+
+            try {
+                for (var _iterator21 = $.find('\\d+|field_location|\\d+|lon', data)[Symbol.iterator](), _step21; !(_iteratorNormalCompletion21 = (_step21 = _iterator21.next()).done); _iteratorNormalCompletion21 = true) {
+                    var _s14 = _step21.value;
+
+                    $.spot.lng = _s14;
+                    _('#spot-lng').innerHTML = _s14;
+                }
+            } catch (err) {
+                _didIteratorError21 = true;
+                _iteratorError21 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion21 && _iterator21.return) {
+                        _iterator21.return();
+                    }
+                } finally {
+                    if (_didIteratorError21) {
+                        throw _iteratorError21;
+                    }
+                }
+            }
+
             Nav.goTab('spot');
 
             if ($.spot.lat && $.spot.lng) {
                 _('#spot-geo').style.display = 'block';
                 _('#spot-map').style.display = 'inline';
                 _('#spot-maps-form').style.display = 'inline';
-                _('.addHere').forEach(function (item) {
+                _('.add-here').forEach(function (item) {
                     return item.style.display = 'inline-block';
                 });
                 _('#spot-maps-formdata').value = $.spot.lat + ',' + $.spot.lng;
@@ -1609,7 +1662,7 @@ var Spot = {};(function ($) {
                 _('#spot-geo').style.display = 'none';
                 _('#spot-map').style.display = 'none';
                 _('#spot-maps-form').style.display = 'none';
-                _('.addHere').forEach(function (item) {
+                _('.add-here').forEach(function (item) {
                     return item.style.display = 'none';
                 });
             }
@@ -1618,26 +1671,30 @@ var Spot = {};(function ($) {
         });
     };
 
+    $.getUrl = function (imageUrl) {
+        return imageUrl.replace('/sites/default/files/20', '/sites/default/files/styles/grid/public/20');
+    };
+
     $.find = function (path, json) {
         var jsons = [json];
         path = path.split('|');
-        var _iteratorNormalCompletion21 = true;
-        var _didIteratorError21 = false;
-        var _iteratorError21 = undefined;
+        var _iteratorNormalCompletion22 = true;
+        var _didIteratorError22 = false;
+        var _iteratorError22 = undefined;
 
         try {
-            for (var _iterator21 = path[Symbol.iterator](), _step21; !(_iteratorNormalCompletion21 = (_step21 = _iterator21.next()).done); _iteratorNormalCompletion21 = true) {
-                var p = _step21.value;
+            for (var _iterator22 = path[Symbol.iterator](), _step22; !(_iteratorNormalCompletion22 = (_step22 = _iterator22.next()).done); _iteratorNormalCompletion22 = true) {
+                var p = _step22.value;
 
                 var pr = new RegExp('^' + p + '$'),
                     list = [];
-                var _iteratorNormalCompletion22 = true;
-                var _didIteratorError22 = false;
-                var _iteratorError22 = undefined;
+                var _iteratorNormalCompletion23 = true;
+                var _didIteratorError23 = false;
+                var _iteratorError23 = undefined;
 
                 try {
-                    for (var _iterator22 = jsons[Symbol.iterator](), _step22; !(_iteratorNormalCompletion22 = (_step22 = _iterator22.next()).done); _iteratorNormalCompletion22 = true) {
-                        var j = _step22.value;
+                    for (var _iterator23 = jsons[Symbol.iterator](), _step23; !(_iteratorNormalCompletion23 = (_step23 = _iterator23.next()).done); _iteratorNormalCompletion23 = true) {
+                        var j = _step23.value;
 
                         for (var n in j) {
                             if (j.hasOwnProperty(n)) {
@@ -1648,16 +1705,16 @@ var Spot = {};(function ($) {
                         }
                     }
                 } catch (err) {
-                    _didIteratorError22 = true;
-                    _iteratorError22 = err;
+                    _didIteratorError23 = true;
+                    _iteratorError23 = err;
                 } finally {
                     try {
-                        if (!_iteratorNormalCompletion22 && _iterator22.return) {
-                            _iterator22.return();
+                        if (!_iteratorNormalCompletion23 && _iterator23.return) {
+                            _iterator23.return();
                         }
                     } finally {
-                        if (_didIteratorError22) {
-                            throw _iteratorError22;
+                        if (_didIteratorError23) {
+                            throw _iteratorError23;
                         }
                     }
                 }
@@ -1665,16 +1722,16 @@ var Spot = {};(function ($) {
                 jsons = list;
             }
         } catch (err) {
-            _didIteratorError21 = true;
-            _iteratorError21 = err;
+            _didIteratorError22 = true;
+            _iteratorError22 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion21 && _iterator21.return) {
-                    _iterator21.return();
+                if (!_iteratorNormalCompletion22 && _iterator22.return) {
+                    _iterator22.return();
                 }
             } finally {
-                if (_didIteratorError21) {
-                    throw _iteratorError21;
+                if (_didIteratorError22) {
+                    throw _iteratorError22;
                 }
             }
         }

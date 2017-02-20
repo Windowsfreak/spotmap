@@ -92,6 +92,9 @@ const lang = {
     move_type_bar: 'Stangenmove',
     move_type_flips: 'Salto & Schraube',
     move_type_combinations: 'Kombination',
-    move_type_freezes: 'Freeze'
+    move_type_freezes: 'Freeze',
+    move_type_beginner: 'Anfänger',
+    move_type_intermediate: 'Mittelschwer',
+    move_type_advanced: 'Fortgeschritten'
 };
 

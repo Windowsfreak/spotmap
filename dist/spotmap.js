@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-02-19
+/*! spotmap - v0.1.0 - 2017-02-20
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
@@ -562,6 +562,7 @@ const Maps = {}; ($ => {
 
     const initial = Date.now;
     $.panToPosition = !location.hash.startsWith('#map/');
+    $.filter = ['spot', 'event', 'group'];
     let gpsObj;
     $.icons = {};
     $.shapes = {};
@@ -653,7 +654,8 @@ const Maps = {}; ($ => {
             $.map.panTo(marker.getPosition());
             $.map.setZoom($.map.getZoom() + 2);
         } else {
-            $.infoWindow.setContent(`<a onclick="Nav.navigate('#spot/${marker.data.id}');"><img class="type" src="${$.icons[marker.data.type].url}">${marker.data.title}</a>`);
+            const icon = marker.data.type.startsWith('multi') ? $.icons.zoom : (marker.data.type.includes('group') ? $.icons.group : (marker.data.type.includes('event') ? $.icons.event : $.icons.spot));
+            $.infoWindow.setContent(`<a onclick="Nav.navigate('#spot/${marker.data.id}');"><img class="type" src="${icon.url}">${marker.data.title}</a>`);
             $.infoWindow.setPosition(marker.getPosition());
             $.infoWindow.open($.map);
             Proximity.getCloseNodes(marker.data.lat, marker.data.lng);
@@ -665,7 +667,9 @@ const Maps = {}; ($ => {
             if (!$.markers[tile] || (data[tile] && $.markers[tile].length !== data[tile].length)) {
                 const newTile = [];
                 for (const entry in data[tile]) {
-                    $.load(data[tile][entry], newTile);
+                    if ($.matchesFilter(data[tile][entry])) {
+                        $.load(data[tile][entry], newTile);
+                    }
                 }
                 if ($.markers[tile]) {
                     for (const marker in $.markers[tile]) {
@@ -682,6 +686,16 @@ const Maps = {}; ($ => {
                 }
                 delete $.markers[tile];
             }
+        }
+    };
+
+    $.handleBoundsChanged = () => {
+        const bounds = $.map.getBounds();
+        Geotile.loadBounds(bounds, $.loadAll);
+        const center = $.map.getCenter();
+        const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
+        if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
+            history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
         }
     };
 
@@ -716,20 +730,12 @@ const Maps = {}; ($ => {
             $.map.setCenter(center);
         });
 
-        google.maps.event.addListener($.map, 'bounds_changed', () => {
-            const bounds = $.map.getBounds();
-            Geotile.loadBounds(bounds, $.loadAll);
-            const center = $.map.getCenter();
-            const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
-            if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
-                history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
-            }
-        });
+        google.maps.event.addListener($.map, 'bounds_changed', $.handleBoundsChanged);
 
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
         const filterDiv = document.createElement('div');
-        $.filter(filterDiv);
+        $.createFilter(filterDiv);
 
         filterDiv.index = 1;
         $.map.controls[google.maps.ControlPosition.LEFT_TOP].push(filterDiv);
@@ -824,7 +830,7 @@ const Maps = {}; ($ => {
 
     $.clickMarker = event => $.show($.marker);
 
-    $.filter = (filterDiv) => {
+    $.createFilter = filterDiv => {
         filterDiv.className = 'filterDiv';
         const controlUI = document.createElement('div');
         controlUI.className = 'filterBtn';
@@ -833,12 +839,40 @@ const Maps = {}; ($ => {
         const filterBox = document.createElement('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
-        filterBox.innerHTML = `Zeige:<br /><span class="yes">${t('spot')}</span><br /><span class="no">${t('event')}</span><br /><span class="yes">${t('group')}</span>`;
-
+        filterBox.innerHTML = `Zeige:<br />
+            <span class="yes" id="filter-spot" onclick="Maps.toggleFilter('spot')">${t('spot')}</span><br />
+            <span class="yes" id="filter-event" onclick="Maps.toggleFilter('event')">${t('event')}</span><br />
+            <span class="yes" id="filter-group" onclick="Maps.toggleFilter('group')">${t('group')}</span>`;
         controlUI.addEventListener('click', () => {
             const elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
         });
+    };
+
+    $.toggleFilter = filterType => {
+        const elem = _(`#filter-${filterType}`);
+        elem.className = (elem.className === 'yes') ? 'no' : 'yes';
+        if (elem.className === 'yes') {
+            if (!$.filter.includes(filterType)) {
+                $.filter.push(filterType);
+            }
+        } else {
+            const i = $.filter.indexOf(filterType);
+            if(i !== -1) {
+                $.filter.splice(i, 1);
+            }
+        }
+        $.loadAll([]);
+        $.handleBoundsChanged();
+    };
+
+    $.matchesFilter = entry => {
+        for (const f of $.filter) {
+            if (entry.type.indexOf(f) !== -1) {
+                return true;
+            }
+        }
+        return false;
     };
 
 })(Maps);
@@ -1000,7 +1034,7 @@ const Search = {}; ($ => {
             text += `<article onclick="Nav.navigate('#spot/${nid}');">`;
 
             for (const s of Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)) {
-                text += `<div class="in-place cover" style="background-image: url(${s});"></div>`;
+                text += `<div class="in-place cover" style="background-image: url(${Spot.getUrl(s)});"></div>`;
                 if (s) {
                     break;
                 }
@@ -1075,7 +1109,7 @@ const Spot = {}; ($ => {
 
             let text = '';
             for (const s of $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)) {
-                text += `<img src="${s}" />`;
+                text += `<img src="${$.getUrl(s)}" />`;
             }
             _('#spot-images').innerHTML = text || t('no_images');
 
@@ -1097,7 +1131,7 @@ const Spot = {}; ($ => {
                 _('#spot-geo').style.display = 'block';
                 _('#spot-map').style.display = 'inline';
                 _('#spot-maps-form').style.display = 'inline';
-                _('.addHere').forEach((item) => item.style.display = 'inline-block');
+                _('.add-here').forEach(item => item.style.display = 'inline-block');
                 _('#spot-maps-formdata').value = `${$.spot.lat},${$.spot.lng}`;
                 //_('#spot-maps-form').action = `//maps.google.de/maps?q=${$.spot.lat},${$.spot.lng}`;
                 _('#map').style.display = 'block';
@@ -1119,10 +1153,12 @@ const Spot = {}; ($ => {
                 _('#spot-geo').style.display = 'none';
                 _('#spot-map').style.display = 'none';
                 _('#spot-maps-form').style.display = 'none';
-                _('.addHere').forEach((item) => item.style.display = 'none');
+                _('.add-here').forEach(item => item.style.display = 'none');
             }
         }, data => Nav.error(t('error_load_spot')));
     };
+
+    $.getUrl = imageUrl => imageUrl.replace('/sites/default/files/20', '/sites/default/files/styles/grid/public/20');
 
     $.find = (path, json) => {
         let jsons = [json];

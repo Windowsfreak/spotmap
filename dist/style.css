@@ -344,7 +344,7 @@ button, a[onclick], .clickable, .filterBtn, article
     cursor: pointer;
 }
 .spot-type-spot #spot-add-spot {
-    display: none;
+    display: none !important;
 }
 .grid .half {
     flex-basis: 50%;

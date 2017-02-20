@@ -323,7 +323,7 @@ const Maps = {}; ($ => {
             }
         } else {
             const i = $.filter.indexOf(filterType);
-            if(i != -1) {
+            if(i !== -1) {
                 $.filter.splice(i, 1);
             }
         }

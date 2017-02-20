@@ -79,7 +79,7 @@ const Spot = {}; ($ => {
                 _('#spot-geo').style.display = 'block';
                 _('#spot-map').style.display = 'inline';
                 _('#spot-maps-form').style.display = 'inline';
-                _('.addHere').forEach((item) => item.style.display = 'inline-block');
+                _('.add-here').forEach(item => item.style.display = 'inline-block');
                 _('#spot-maps-formdata').value = `${$.spot.lat},${$.spot.lng}`;
                 //_('#spot-maps-form').action = `//maps.google.de/maps?q=${$.spot.lat},${$.spot.lng}`;
                 _('#map').style.display = 'block';
@@ -101,7 +101,7 @@ const Spot = {}; ($ => {
                 _('#spot-geo').style.display = 'none';
                 _('#spot-map').style.display = 'none';
                 _('#spot-maps-form').style.display = 'none';
-                _('.addHere').forEach((item) => item.style.display = 'none');
+                _('.add-here').forEach(item => item.style.display = 'none');
             }
         }, data => Nav.error(t('error_load_spot')));
     };
