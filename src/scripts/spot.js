@@ -57,7 +57,7 @@ const Spot = {}; ($ => {
 
             let text = '';
             for (const s of $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)) {
-                text += `<img src="${s}" />`;
+                text += `<img src="${$.getUrl(s)}" />`;
             }
             _('#spot-images').innerHTML = text || t('no_images');
 
@@ -105,6 +105,8 @@ const Spot = {}; ($ => {
             }
         }, data => Nav.error(t('error_load_spot')));
     };
+
+    $.getUrl = imageUrl => imageUrl.replace('/sites/default/files/20', '/sites/default/files/styles/grid/public/20');
 
     $.find = (path, json) => {
         let jsons = [json];

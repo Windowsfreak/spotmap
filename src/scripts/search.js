@@ -34,7 +34,7 @@ const Search = {}; ($ => {
             text += `<article onclick="Nav.navigate('#spot/${nid}');">`;
 
             for (const s of Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)) {
-                text += `<div class="in-place cover" style="background-image: url(${s});"></div>`;
+                text += `<div class="in-place cover" style="background-image: url(${Spot.getUrl(s)});"></div>`;
                 if (s) {
                     break;
                 }

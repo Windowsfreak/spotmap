@@ -92,5 +92,8 @@ const lang = {
     move_type_bar: 'Bar move',
     move_type_flips: 'Flip & Spin',
     move_type_combinations: 'Combination',
-    move_type_freezes: 'Freeze'
+    move_type_freezes: 'Freeze',
+    move_type_beginner: 'beginner',
+    move_type_intermediate: 'moderate',
+    move_type_advanced: 'advanced'
 };
