@@ -159,7 +159,7 @@ var Form = {};(function ($) {
         Http.get('//www.parkour.org/rest/session/token', undefined, { Authorization: false }).then(function (csrf) {
             Nav.success(t('in_progress'));
             Http.post('//www.parkour.org/entity/node?_format=hal_json', JSON.stringify({
-                _links: { type: { href: 'http://www.parkour.org/rest/type/node/' + Spot.marker.type } },
+                _links: { type: { href: 'https://www.parkour.org/rest/type/node/' + Spot.marker.type } },
                 type: [{ target_id: Spot.marker.type }],
                 title: [{ value: _('#form-title').value }],
                 body: [{ value: _('#form-text').value }],
@@ -532,8 +532,6 @@ var Http = {};(function ($) {
             headers.Authorization = $.getCredentials();
         }
         return new Promise(function (resolve, reject) {
-            var _this = this;
-
             var xhr = new XMLHttpRequest();
             xhr.open(method, url);
             xhr.onload = function () {
@@ -563,7 +561,7 @@ var Http = {};(function ($) {
                     url: url,
                     params: params,
                     headers: headers,
-                    status: _this.status,
+                    status: this.status,
                     statusText: xhr.statusText,
                     message: xhr.response
                 };
@@ -1751,5 +1749,10 @@ var Spot = {};(function ($) {
 })(Spot);
 // Source: src/scripts/z.js
 (function () {
-    return window.runLater();
+    window.runLater();
+    window.addEventListener("load", function () {
+        return setTimeout(function () {
+            return window.scrollTo(0, 1);
+        }, 0);
+    });
 })();

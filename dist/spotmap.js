@@ -127,7 +127,7 @@ const Form = {}; ($ => {
         Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
             Nav.success(t('in_progress'));
             Http.post('//www.parkour.org/entity/node?_format=hal_json', JSON.stringify({
-                _links: {type: {href: 'http://www.parkour.org/rest/type/node/' + Spot.marker.type}},
+                _links: {type: {href: 'https://www.parkour.org/rest/type/node/' + Spot.marker.type}},
                 type: [{target_id: Spot.marker.type}],
                 title: [{value: _('#form-title').value}],
                 body: [{value: _('#form-text').value}],
@@ -419,7 +419,7 @@ const Geotile = {}; ($ => {
     };
 })(Geotile);
 // Source: src/scripts/http.js
-const Http = {}; (function($) {
+const Http = {}; ($ => {
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
     $.getUser = () => localStorage.getItem('d8_user');
@@ -469,7 +469,7 @@ const Http = {}; (function($) {
                     xhr.onerror();
                 }
             };
-            xhr.onerror = () => {
+            xhr.onerror = function() {
                 Nav.error(t('error_server_request'));
                 const data = {
                     method,
@@ -1190,4 +1190,7 @@ const Spot = {}; ($ => {
     };
 })(Spot);
 // Source: src/scripts/z.js
-(() => window.runLater())();
+(() => {
+    window.runLater();
+    window.addEventListener("load", () => setTimeout(() => window.scrollTo(0, 1), 0));
+})();

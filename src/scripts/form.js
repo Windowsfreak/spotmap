@@ -94,7 +94,7 @@ const Form = {}; ($ => {
         Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
             Nav.success(t('in_progress'));
             Http.post('//www.parkour.org/entity/node?_format=hal_json', JSON.stringify({
-                _links: {type: {href: 'http://www.parkour.org/rest/type/node/' + Spot.marker.type}},
+                _links: {type: {href: 'https://www.parkour.org/rest/type/node/' + Spot.marker.type}},
                 type: [{target_id: Spot.marker.type}],
                 title: [{value: _('#form-title').value}],
                 body: [{value: _('#form-text').value}],

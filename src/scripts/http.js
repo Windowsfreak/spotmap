@@ -1,5 +1,5 @@
 /* globals t, Nav */
-const Http = {}; (function($) {
+const Http = {}; ($ => {
     'use strict';
 
     // require('./geohash.js');
@@ -54,7 +54,7 @@ const Http = {}; (function($) {
                     xhr.onerror();
                 }
             };
-            xhr.onerror = () => {
+            xhr.onerror = function() {
                 Nav.error(t('error_server_request'));
                 const data = {
                     method,
