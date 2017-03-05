@@ -40,6 +40,7 @@ const lang = {
     error_login: 'Benutzerdaten fehlerhaft',
     error_forbidden: 'Bitte erst einloggen.',
     error_add_node: 'Der neue Inhalt konnte nicht gespeichert werden.',
+    error_geocode: 'Adresssuche:',
     spot: 'Spot',
     event: 'Event',
     group: 'Gruppe',

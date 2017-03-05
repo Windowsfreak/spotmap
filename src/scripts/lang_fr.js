@@ -40,6 +40,7 @@ const lang = {
     error_login: 'Faux données',
     error_forbidden: 'Please login first.',
     error_add_node: 'Ne peux pas enregistrer ce spot.',
+    error_geocode: 'Address search:',
     spot: 'Spot',
     event: 'Event',
     group: 'Groupe',

@@ -40,6 +40,7 @@ const lang = {
     error_login: 'Wrong user credentials',
     error_forbidden: 'Please login first.',
     error_add_node: 'The new content could not be saved.',
+    error_geocode: 'Address search:',
     spot: 'Spot',
     event: 'Event',
     group: 'Group',

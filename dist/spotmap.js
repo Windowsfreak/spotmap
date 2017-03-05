@@ -819,7 +819,7 @@ const Maps = {}; ($ => {
                 $.map.setCenter(results[0].geometry.location);
                 $.map.setZoom(15);
             } else {
-                Nav.error(t('error_geocode') + status);
+                Nav.error(`${t('error_geocode')} ${status}`);
             }
         });
     };
