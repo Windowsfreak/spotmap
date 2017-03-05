@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-02-20
+/*! spotmap - v0.1.0 - 2017-03-05
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
@@ -418,6 +418,26 @@ const Geotile = {}; ($ => {
         return result;
     };
 })(Geotile);
+// Source: src/scripts/help.js
+const Help = {}; ($ => {
+    ready.push(() => Nav.events.help_show = (previous) => $.previous = previous !== 'help' ? previous : $.previous);
+
+    $.show = id => {
+        Http.get(`./static/${id}_${l}.json`, undefined, {Authorization: false}).then(data => {
+            _('#help-title').innerText = t('no_title');
+            for (const s of Spot.find('title', data)) {
+                _('#help-title').innerText = s;
+            }
+
+            _('#help-body').innerText = t('no_body');
+            for (const s of Spot.find('body', data)) {
+                _('#help-body').innerHTML = s;
+            }
+
+            Nav.goTab('help');
+        }, data => Nav.error(t('no_results_found')));
+    };
+})(Help);
 // Source: src/scripts/http.js
 const Http = {}; ($ => {
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
@@ -708,6 +728,8 @@ const Maps = {}; ($ => {
         };
         $.map = new google.maps.Map(_('#map'), mapOptions);
 
+        $.geocoder = new google.maps.Geocoder();
+
         if (h.startsWith('#map/')) {
             // console.log(h);
             const coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
@@ -788,6 +810,18 @@ const Maps = {}; ($ => {
         $.track(true);
         //get('./query3j.php', {latl:48.188063481211415,lath:55.51619215717891,lngl:-0.54931640625,lngh:20.54443359375,zoom:2}).then(loadAll);
         Form.restore();
+    };
+
+    $.geocode = address => {
+        $.geocoder.geocode({'address': address}, function(results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                $.newMarker({latLng: results[0].geometry.location}, true);
+                $.map.setCenter(results[0].geometry.location);
+                $.map.setZoom(15);
+            } else {
+                Nav.error(t('error_geocode') + status);
+            }
+        });
     };
 
     $.newMarker = (event, force) => {
@@ -883,9 +917,11 @@ const Nav = {}; ($ => {
 
     $.openTab = (id, evt, parent = _('#' + id).parentNode) => {
         const sections = _('section');
+        let previous;
         for (let i = 0; i < sections.length; i++) {
             if (sections[i].parentNode === parent) {
                 if (sections[i].style.display === 'block') {
+                    previous = sections[i].id;
                     console.log('Hiding  ' + sections[i].id);
                     if ($.events[sections[i].id + '_hide']) {
                         $.events[sections[i].id + '_hide'](id === sections[i].id);
@@ -906,7 +942,7 @@ const Nav = {}; ($ => {
         _('#' + id).style.display = 'block';
         console.log('Showing ' + id);
         if ($.events[id + '_show']) {
-            $.events[id + '_show']();
+            $.events[id + '_show'](previous);
         }
     };
 
@@ -1009,6 +1045,11 @@ const Search = {}; ($ => {
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
         Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + text);
+    };
+    _('#search-geocode').onclick = () => {
+        const text = _('#search-text').value;
+        Maps.geocode(text);
+        Nav.navigate('');
     };
 
     $.loadSearch = () => {

@@ -1,14 +1,20 @@
-/* globals _, t, strip, Http, Nav, Spot */
+/* globals _, t, strip, Http, Maps, Nav, Spot */
 const Search = {}; ($ => {
     'use strict';
     // require('./base.js');
     // require('./http.js');
+    // require('./maps.js');
     // require('./nav.js');
     // require('./spot.js');
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
         Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + text);
+    };
+    _('#search-geocode').onclick = () => {
+        const text = _('#search-text').value;
+        Maps.geocode(text);
+        Nav.navigate('');
     };
 
     $.loadSearch = () => {

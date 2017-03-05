@@ -173,6 +173,8 @@ const Maps = {}; ($ => {
         };
         $.map = new google.maps.Map(_('#map'), mapOptions);
 
+        $.geocoder = new google.maps.Geocoder();
+
         if (h.startsWith('#map/')) {
             // console.log(h);
             const coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
@@ -253,6 +255,18 @@ const Maps = {}; ($ => {
         $.track(true);
         //get('./query3j.php', {latl:48.188063481211415,lath:55.51619215717891,lngl:-0.54931640625,lngh:20.54443359375,zoom:2}).then(loadAll);
         Form.restore();
+    };
+
+    $.geocode = address => {
+        $.geocoder.geocode({'address': address}, function(results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                $.newMarker({latLng: results[0].geometry.location}, true);
+                $.map.setCenter(results[0].geometry.location);
+                $.map.setZoom(15);
+            } else {
+                Nav.error(t('error_geocode') + status);
+            }
+        });
     };
 
     $.newMarker = (event, force) => {

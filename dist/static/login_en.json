@@ -1,0 +1,4 @@
+{
+  "title": "The Login Menu",
+  "body": "<p>To create new spots it is required to store the username and password here. They won't be verified, but used to save new spots.</p><p>You don't have a user account? Create a new one <button type='button' onclick='location.href=\"https://www.parkour.org/en/user/register\"'>here</button>.</p>"
+}

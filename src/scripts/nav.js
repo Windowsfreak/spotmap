@@ -9,9 +9,11 @@ const Nav = {}; ($ => {
 
     $.openTab = (id, evt, parent = _('#' + id).parentNode) => {
         const sections = _('section');
+        let previous;
         for (let i = 0; i < sections.length; i++) {
             if (sections[i].parentNode === parent) {
                 if (sections[i].style.display === 'block') {
+                    previous = sections[i].id;
                     console.log('Hiding  ' + sections[i].id);
                     if ($.events[sections[i].id + '_hide']) {
                         $.events[sections[i].id + '_hide'](id === sections[i].id);
@@ -32,7 +34,7 @@ const Nav = {}; ($ => {
         _('#' + id).style.display = 'block';
         console.log('Showing ' + id);
         if ($.events[id + '_show']) {
-            $.events[id + '_show']();
+            $.events[id + '_show'](previous);
         }
     };
 

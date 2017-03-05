@@ -29,6 +29,8 @@
         <div class="grid">
             <input id="search-text" type="text" placeholder="Suchbegriff" data-translate="search_keyword" onkeydown="if (event.keyCode == 13) _('#search-submit').click();">
             <button id="search-submit" type="button" class="no-grow">&#x1f50d;</button>
+            <button id="search-geocode" type="button" class="no-grow">&#x1f30d;</button>
+            <button type="button" class="no-grow" onclick="Help.show('search')">&#10067;</button>
         </div>
         <div id="search-page"></div>
     </section>
@@ -46,12 +48,19 @@
                     <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
                 </div>
                 <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_login">login</span></button>
+                <button type="button" class="no-grow" onclick="Help.show('login')">&#10067;</button>
             </div>
         </section>
         <section id="logout-form">
             <p><span data-translate="label_username">Hi</span> <span id="username"></span>.</p>
             <button id="logout-submit" type="button">&#x1f3c3; <span data-translate="btn_logout">logout</span></button>
         </section>
+    </section>
+
+    <section id="help">
+        <button type="button" onclick="Help.previous ? Nav.goTab(Help.previous) : Nav.resetTab()">&#10060;</button>
+        <h1 id="help-title"></h1>
+        <p id="help-body"></p>
     </section>
 
     <section id="spot">
@@ -96,6 +105,7 @@
         <div class="grid menu">
             <button onclick="Nav.navigate('#login')">&#x1f464; <span data-translate="btn_login">Login</span></button>
             <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } Maps.track('yes');">&#9974; <span data-translate="locate"></span></button>
+            <button type="button" onclick="Help.show('help')">&#10067; <span data-translate="btn_help">Show Help</span></button>
         </div>
         <div class="grid menu">
             <div class="half">
@@ -146,6 +156,7 @@
 <script defer src="scripts/form.js"></script>
 <script defer src="scripts/geohash.js"></script>
 <script defer src="scripts/geotile.js"></script>
+<script defer src="scripts/help.js"></script>
 <script defer src="scripts/http.js"></script>
 <script defer src="scripts/login.js"></script>
 <script defer src="scripts/maps.js"></script>

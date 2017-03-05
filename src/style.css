@@ -360,3 +360,6 @@ button, a[onclick], .clickable, .filterBtn, article
     width: 100%;
     text-align: left;
 }
+h2 {
+    font-size: 125%;
+}

@@ -1,0 +1,4 @@
+{
+  "title": "Die Loginfunktion",
+  "body": "<p>Zum Anlegen neuer Spots ist es erforderlich, hier den Namen und das Kennwort des Benutzers zu hinterlegen. Diese Daten werden nicht auf Richtigkeit überprüft, aber beim Speichern neuer Spots verwendet.</p><p>Noch kein Benutzerkonto vorhanden? <button type='button' onclick='location.href=\"https://www.parkour.org/de/user/register\"'>Hier</button> kann ein neues erstellt werden.</p>"
+}

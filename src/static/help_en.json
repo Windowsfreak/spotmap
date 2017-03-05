@@ -1,0 +1,4 @@
+{
+  "title": "Help",
+  "body": "<h2>Help topics</h2><button type='button' onclick='Help.show(\"map\")'>&#x1f30d; Map</button><button type='button' onclick='Help.show(\"search\")'>&#x1f50d; Search</button><button type='button' onclick='Help.show(\"login\")'>&#x1f464; Login</button>"
+}
