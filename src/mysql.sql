@@ -14,7 +14,7 @@ node__field_images.field_images_target_id = 7907 : int(10)>varchar(100)
 node__field_location.entity_id = 3059
 node__field_location.field_location_lat = lat = 48.18 : decimal(18, 12)
 node__field_location.field_location_lon = lng = 11.55 : decimal(18, 12)
-node__field_location.field_location_geohash = geohash = u284ng : varchar(16)
+node__field_location.ST_GeoHash(field_location_lon, field_location_lat, 16) = geohash = u284ng : varchar(16)
 node__field_spot_type.entity_id = 3059
 node__field_spot_type.field_spot_type_value = outdoor : varchar(255>16)
 file_managed.fid = 7000
@@ -96,7 +96,7 @@ INSERT INTO
     (id, `type`, category, title, created, changed, description, lat, lng, geohash, p0, p1, p2, p3, p4)
 SELECT
     node.nid AS id, node.type, COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)) as category, node_field_data.title, node_field_data.created, node_field_data.changed, body_value as description,
-    field_location_lat as lat, field_location_lon as lng, field_location_geohash as geohash,
+    field_location_lat as lat, field_location_lon as lng, ST_GeoHash(field_location_lon, field_location_lat, 16) as geohash,
     '' as p0, '' as p1, '' as p2, '' as p3, '' as p4
 FROM
     (((node
@@ -195,7 +195,7 @@ SET
     spot.category = COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)),
     spot.lat = field_location_lat,
     spot.lng = field_location_lon,
-    spot.geohash = field_location_geohash,
+    spot.geohash = ST_GeoHash(field_location_lon, field_location_lat, 16),
     spot.description = body_value
 WHERE
     field_location_lat IS NOT NULL AND field_location_lon IS NOT NULL AND spot.changed <> node_field_data.changed;
