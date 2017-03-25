@@ -6,7 +6,7 @@ node.title = title : varchar(255)
 node.created = created : int(11)
 node.changed = changed : int(11)
 node__body.entity_id = 3059
-node__body.body_value = description : longtext
+node__body.COALESCE(body_value, "") = description : longtext
 node__body.body_format : varchar(255>16) full_html/filtered_html
 node__field_images.entity_id = 3059
 node__field_images.delta < 5 : int(10)
@@ -23,31 +23,39 @@ file_managed.uri = public://images/spots/cimg2950.jpg > /var/www/vhosts/parkour.
 > http://www.parkour.org/sites/default/files/images/spots/s1260048.jpg
 > http://www.parkour.org/sites/default/files/styles/teaserfoto_150px/public/images/spots/s1260048.jpg*/
 
-/*CREATE TABLE `spot` (
-  `id` int(10) NOT NULL,
-  `category` varchar(16) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `created` int(11) NOT NULL,
-  `changed` int(11) NOT NULL,
-  `lat` decimal(18,12) NOT NULL,
-  `lng` decimal(18,12) NOT NULL,
-  `geohash` varchar(16) NOT NULL,
-  `p0` varchar(100) NOT NULL,
-  `p1` varchar(100) NOT NULL,
-  `p2` varchar(100) NOT NULL,
-  `p3` varchar(100) NOT NULL,
-  `p4` varchar(100) NOT NULL,
-  `description` longtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*
+CREATE TABLE `spot` (
+	`id` INT(10) NOT NULL,
+	`type` VARCHAR(31) NOT NULL DEFAULT '',
+	`category` VARCHAR(255) NOT NULL DEFAULT '',
+	`title` VARCHAR(16383) NOT NULL DEFAULT '',
+	`created` INT(11) NOT NULL DEFAULT '0',
+	`changed` INT(11) NOT NULL DEFAULT '0',
+	`lat` DECIMAL(18,12) NOT NULL,
+	`lng` DECIMAL(18,12) NOT NULL,
+	`geohash` VARCHAR(16) NOT NULL,
+	`zoom` TINYINT(4) NOT NULL DEFAULT '-1',
+	`p0` VARCHAR(100) NOT NULL DEFAULT '',
+	`p1` VARCHAR(100) NOT NULL DEFAULT '',
+	`p2` VARCHAR(100) NOT NULL DEFAULT '',
+	`p3` VARCHAR(100) NOT NULL DEFAULT '',
+	`p4` VARCHAR(100) NOT NULL DEFAULT '',
+	`description` LONGTEXT NOT NULL,
+	PRIMARY KEY (`zoom`, `id`),
+	INDEX `category` (`category`),
+	INDEX `created` (`created`),
+	INDEX `changed` (`changed`),
+	INDEX `lat` (`lat`),
+	INDEX `lng` (`lng`),
+	INDEX `geohash` (`geohash`),
+	INDEX `filter` (`zoom`, `geohash`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
 
-ALTER TABLE `spot`
-ADD PRIMARY KEY (`id`),
-ADD KEY `category` (`category`),
-ADD KEY `created` (`created`),
-ADD KEY `changed` (`changed`),
-ADD KEY `lat` (`lat`),
-ADD KEY `lng` (`lng`),
-ADD KEY `geohash` (`geohash`);*/
+
+*/
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -71,11 +79,6 @@ CREATE TABLE `spot` (
   `description` longtext NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- ALTER TABLE `spot` ADD `type` VARCHAR(31) NOT NULL AFTER `id`;
--- ALTER TABLE `spot`
---  CHANGE COLUMN `category` `category` VARCHAR(255) NOT NULL AFTER `id`;
-
-
 ALTER TABLE `spot`
 ADD PRIMARY KEY(`zoom`,`id`),
 ADD KEY `category` (`category`),
@@ -95,7 +98,7 @@ INSERT INTO
     spot
     (id, `type`, category, title, created, changed, description, lat, lng, geohash, p0, p1, p2, p3, p4)
 SELECT
-    node.nid AS id, node.type, COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)) as category, node_field_data.title, node_field_data.created, node_field_data.changed, body_value as description,
+    node.nid AS id, node.type, COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)) as category, node_field_data.title, node_field_data.created, node_field_data.changed, COALESCE(body_value, "") as description,
     field_location_lat as lat, field_location_lon as lng, ST_GeoHash(field_location_lon, field_location_lat, 16) as geohash,
     '' as p0, '' as p1, '' as p2, '' as p3, '' as p4
 FROM
@@ -144,8 +147,6 @@ WHERE
     node.`type` IN ('spot', 'event', 'group') AND field_location_lat IS NOT NULL AND field_location_lon IS NOT NULL AND spot.id IS NULL
 ORDER BY
     node.nid ASC;
-
--- ALTER TABLE `spot` ADD `zoom` TINYINT NOT NULL DEFAULT '-1' AFTER `geohash`;
 
 UPDATE
     (((spot
@@ -196,7 +197,7 @@ SET
     spot.lat = field_location_lat,
     spot.lng = field_location_lon,
     spot.geohash = ST_GeoHash(field_location_lon, field_location_lat, 16),
-    spot.description = body_value
+    spot.description = COALESCE(body_value, "")
 WHERE
     field_location_lat IS NOT NULL AND field_location_lon IS NOT NULL AND spot.changed <> node_field_data.changed;
 

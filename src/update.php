@@ -23,7 +23,7 @@ INSERT INTO
     spot
     (id, `type`, category, title, created, changed, description, lat, lng, geohash, p0, p1, p2, p3, p4)
 SELECT
-    node.nid AS id, node.type, COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)) as category, node_field_data.title, node_field_data.created, node_field_data.changed, body_value as description,
+    node.nid AS id, node.type, COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)) as category, node_field_data.title, node_field_data.created, node_field_data.changed, COALESCE(body_value, "") as description,
     field_location_lat as lat, field_location_lon as lng, ST_GeoHash(field_location_lon, field_location_lat, 16) as geohash,
     '' as p0, '' as p1, '' as p2, '' as p3, '' as p4
 FROM
@@ -122,7 +122,7 @@ SET
     spot.lat = field_location_lat,
     spot.lng = field_location_lon,
     spot.geohash = ST_GeoHash(field_location_lon, field_location_lat, 16),
-    spot.description = body_value
+    spot.description = COALESCE(body_value, "")
 WHERE
     field_location_lat IS NOT NULL AND field_location_lon IS NOT NULL AND spot.changed <> node_field_data.changed;
 

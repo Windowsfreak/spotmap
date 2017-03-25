@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-03-05
+/*! spotmap - v0.1.0 - 2017-03-25
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
