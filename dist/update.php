@@ -3,7 +3,9 @@ if (!password_verify($_REQUEST['auth'], '$2y$10$8Iudk1gbvqPvKsFL9PUS9O3SjTk/l05a
     die('Permission denied');
 }
 $pdo = new PDO("mysql:host=localhost;dbname=pkorgd8;charset=utf8", 'root');
-$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, 1);
+// $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, 1);
+$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
+$pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
 $stmt = $pdo->prepare('SELECT count(id) AS c1, sum(if(zoom = -1, 1, 0)) AS c2 FROM spot');
 if ($stmt->execute()) {
@@ -23,7 +25,7 @@ INSERT INTO
     spot
     (id, `type`, category, title, created, changed, description, lat, lng, geohash, p0, p1, p2, p3, p4)
 SELECT
-    node.nid AS id, node.type, COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)) as category, node_field_data.title, node_field_data.created, node_field_data.changed, COALESCE(body_value, "") as description,
+    node.nid AS id, node.type, COALESCE(COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)), "") as category, node_field_data.title, COALESCE(node_field_data.created, 0), COALESCE(node_field_data.changed, 0), COALESCE(body_value, "") as description,
     field_location_lat as lat, field_location_lon as lng, ST_GeoHash(field_location_lon, field_location_lat, 16) as geohash,
     '' as p0, '' as p1, '' as p2, '' as p3, '' as p4
 FROM
@@ -116,9 +118,9 @@ node__field_event_type
 SET
     spot.type = node.type,
     spot.title = node_field_data.title,
-    spot.created = node_field_data.created,
-    spot.changed = node_field_data.changed,
-    spot.category = COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)),
+    spot.created = COALESCE(node_field_data.created, 0),
+    spot.changed = COALESCE(node_field_data.changed, 0),
+    spot.category = COALESCE(COALESCE(field_spot_type_value, COALESCE(field_group_type_value, field_event_type_value)), ""),
     spot.lat = field_location_lat,
     spot.lng = field_location_lon,
     spot.geohash = ST_GeoHash(field_location_lon, field_location_lat, 16),
@@ -198,8 +200,8 @@ DELETE FROM `spot` WHERE zoom > -1;
 /*********************************** ZOOM ***********************************/
 
 INSERT INTO spot
-(id, title, type, category, geohash, zoom, lat, lng)
-  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng
+(id, title, type, category, geohash, zoom, lat, lng, created, changed, description)
+  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng, created, changed, description
   FROM (
        SELECT
          Min(spot.id) As id,
@@ -208,8 +210,11 @@ INSERT INTO spot
          CONCAT('multi,', GROUP_CONCAT(DISTINCT spot.category)) As category,
          LEFT(spot.geohash, 3) As ghash,
          0 As zoom,
-         Avg(spot.lat) As lat,
-         Avg(spot.lng) As lng
+         ROUND(Avg(spot.lat), 12) As lat,
+         ROUND(Avg(spot.lng), 12) As lng,
+           0 As created,
+           0 As changed,
+           '' As description
        FROM spot
        WHERE spot.zoom = -1
        GROUP BY ghash
@@ -225,7 +230,7 @@ FROM (
          Min(spot.id) As id,
          GROUP_CONCAT(DISTINCT spot.type) as type,
          GROUP_CONCAT(DISTINCT spot.category) as category,
-         GROUP_CONCAT(DISTINCT spot.title) as title,
+         Min(spot.title) as title,
          Min(spot.created) as created,
          Min(spot.changed) as changed,
          Min(description) as description,
@@ -247,8 +252,8 @@ FROM (
      ) as t1;
 
 INSERT INTO spot
-(id, title, type, category, geohash, zoom, lat, lng)
-  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng
+(id, title, type, category, geohash, zoom, lat, lng, created, changed, description)
+  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng, created, changed, description
   FROM (
          SELECT
            Min(spot.id) As id,
@@ -257,8 +262,11 @@ INSERT INTO spot
            CONCAT('multi,', GROUP_CONCAT(DISTINCT spot.category)) As category,
            LEFT(spot.geohash, 4) As ghash,
            1 As zoom,
-           Avg(spot.lat) As lat,
-           Avg(spot.lng) As lng
+         ROUND(Avg(spot.lat), 12) As lat,
+         ROUND(Avg(spot.lng), 12) As lng,
+           0 As created,
+           0 As changed,
+           '' As description
          FROM spot
          WHERE spot.zoom = -1
          GROUP BY ghash
@@ -274,7 +282,7 @@ INSERT INTO spot
            Min(spot.id) As id,
            GROUP_CONCAT(DISTINCT spot.type) as type,
            GROUP_CONCAT(DISTINCT spot.category) as category,
-           GROUP_CONCAT(DISTINCT spot.title) as title,
+           Min(spot.title) as title,
            Min(spot.created) as created,
            Min(spot.changed) as changed,
            Min(description) as description,
@@ -296,8 +304,8 @@ INSERT INTO spot
        ) as t1;
 
 INSERT INTO spot
-(id, title, type, category, geohash, zoom, lat, lng)
-  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng
+(id, title, type, category, geohash, zoom, lat, lng, created, changed, description)
+  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng, created, changed, description
   FROM (
          SELECT
            Min(spot.id) As id,
@@ -306,8 +314,11 @@ INSERT INTO spot
            CONCAT('multi,', GROUP_CONCAT(DISTINCT spot.category)) As category,
            LEFT(spot.geohash, 5) As ghash,
            2 As zoom,
-           Avg(spot.lat) As lat,
-           Avg(spot.lng) As lng
+         ROUND(Avg(spot.lat), 12) As lat,
+         ROUND(Avg(spot.lng), 12) As lng,
+           0 As created,
+           0 As changed,
+           '' As description
          FROM spot
          WHERE spot.zoom = -1
          GROUP BY ghash
@@ -323,7 +334,7 @@ INSERT INTO spot
            Min(spot.id) As id,
            GROUP_CONCAT(DISTINCT spot.type) as type,
            GROUP_CONCAT(DISTINCT spot.category) as category,
-           GROUP_CONCAT(DISTINCT spot.title) as title,
+           Min(spot.title) as title,
            Min(spot.created) as created,
            Min(spot.changed) as changed,
            Min(description) as description,
@@ -345,8 +356,8 @@ INSERT INTO spot
        ) as t1;
 
 INSERT INTO spot
-(id, title, type, category, geohash, zoom, lat, lng)
-  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng
+(id, title, type, category, geohash, zoom, lat, lng, created, changed, description)
+  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng, created, changed, description
   FROM (
          SELECT
            Min(spot.id) As id,
@@ -355,8 +366,11 @@ INSERT INTO spot
            CONCAT('multi,', GROUP_CONCAT(DISTINCT spot.category)) As category,
            LEFT(spot.geohash, 6) As ghash,
            3 As zoom,
-           Avg(spot.lat) As lat,
-           Avg(spot.lng) As lng
+         ROUND(Avg(spot.lat), 12) As lat,
+         ROUND(Avg(spot.lng), 12) As lng,
+           0 As created,
+           0 As changed,
+           '' As description
          FROM spot
          WHERE spot.zoom = -1
          GROUP BY ghash
@@ -372,7 +386,7 @@ INSERT INTO spot
            Min(spot.id) As id,
            GROUP_CONCAT(DISTINCT spot.type) as type,
            GROUP_CONCAT(DISTINCT spot.category) as category,
-           GROUP_CONCAT(DISTINCT spot.title) as title,
+           Min(spot.title) as title,
            Min(spot.created) as created,
            Min(spot.changed) as changed,
            Min(description) as description,
@@ -394,8 +408,8 @@ INSERT INTO spot
        ) as t1;
 
 INSERT INTO spot
-(id, title, type, category, geohash, zoom, lat, lng)
-  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng
+(id, title, type, category, geohash, zoom, lat, lng, created, changed, description)
+  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng, created, changed, description
   FROM (
          SELECT
            Min(spot.id) As id,
@@ -404,8 +418,11 @@ INSERT INTO spot
            CONCAT('multi,', GROUP_CONCAT(DISTINCT spot.category)) As category,
            LEFT(spot.geohash, 7) As ghash,
            4 As zoom,
-           Avg(spot.lat) As lat,
-           Avg(spot.lng) As lng
+         ROUND(Avg(spot.lat), 12) As lat,
+         ROUND(Avg(spot.lng), 12) As lng,
+           0 As created,
+           0 As changed,
+           '' As description
          FROM spot
          WHERE spot.zoom = -1
          GROUP BY ghash
@@ -421,7 +438,7 @@ INSERT INTO spot
            Min(spot.id) As id,
            GROUP_CONCAT(DISTINCT spot.type) as type,
            GROUP_CONCAT(DISTINCT spot.category) as category,
-           GROUP_CONCAT(DISTINCT spot.title) as title,
+           Min(spot.title) as title,
            Min(spot.created) as created,
            Min(spot.changed) as changed,
            Min(description) as description,
@@ -443,8 +460,8 @@ INSERT INTO spot
        ) as t1;
 
 INSERT INTO spot
-(id, title, type, category, geohash, zoom, lat, lng)
-  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng
+(id, title, type, category, geohash, zoom, lat, lng, created, changed, description)
+  SELECT t1.id, t1.title, t1.type, t1.category, t1.ghash as geohash, zoom, lat, lng, created, changed, description
   FROM (
          SELECT
            Min(spot.id) As id,
@@ -453,8 +470,11 @@ INSERT INTO spot
            CONCAT('multi,', GROUP_CONCAT(DISTINCT spot.category)) As category,
            LEFT(spot.geohash, 8) As ghash,
            5 As zoom,
-           Avg(spot.lat) As lat,
-           Avg(spot.lng) As lng
+         ROUND(Avg(spot.lat), 12) As lat,
+         ROUND(Avg(spot.lng), 12) As lng,
+           0 As created,
+           0 As changed,
+           '' As description
          FROM spot
          WHERE spot.zoom = -1
          GROUP BY ghash
@@ -470,7 +490,7 @@ INSERT INTO spot
            Min(spot.id) As id,
            GROUP_CONCAT(DISTINCT spot.type) as type,
            GROUP_CONCAT(DISTINCT spot.category) as category,
-           GROUP_CONCAT(DISTINCT spot.title) as title,
+           Min(spot.title) as title,
            Min(spot.created) as created,
            Min(spot.changed) as changed,
            Min(description) as description,
@@ -493,7 +513,7 @@ INSERT INTO spot
 DONE;
 
 try {
-    $pdo->exec($sql);
+    $pdo->exec($sql) or die(print_r($pdo->errorInfo(), true));
 }
 catch (PDOException $e)
 {
