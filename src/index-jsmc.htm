@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parkour.org Spotmap</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="theme-color" content="#acf">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="images/logo64.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./mobile-console.css">
+    <script src="./mobile-console.js"></script>
+    <script>
+        mobileConsole.options({
+            showOnError: true,
+            proxyConsole: true,
+            isCollapsed: true,
+            catchErrors: true
+        });
+        mobileConsole.show();
+    </script>
+</head>
+<body>
+
+<!-- This is the top navigation bar -->
+<nav class="navbar" role="navigation">
+    <button type="button" onclick="Nav.navigate('')">&#x1f30d;</button>
+    <button type="button" onclick="Nav.navigate('#search')">&#x1f50d;</button>
+    <button type="button" onclick="Nav.navigate('#login')">&#x1f464;</button>
+    <button type="button" onclick="Nav.goTab('menu', 3)">&#9776;</button>
+</nav>
+<nav id="notice" onclick="Nav.noticeHide(true)" class="show hide vanish"><span id="notice-text"></span></nav>
+
+<section id="content">
+    <section id="search">
+        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+        <div class="grid">
+            <input id="search-text" type="text" placeholder="Suchbegriff" data-translate="search_keyword" onkeydown="if (event.keyCode == 13) _('#search-submit').click();">
+            <button id="search-submit" type="button" class="no-grow">&#x1f50d;</button>
+            <button id="search-geocode" type="button" class="no-grow">&#x1f30d;</button>
+            <button type="button" class="no-grow" onclick="Help.show('search')">&#10067;</button>
+        </div>
+        <div id="search-page"></div>
+    </section>
+
+    <section id="login">
+        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+        <section id="login-form">
+            <div class="grid">
+                <div class="form">
+                    <label for="login-username" data-translate="username"></label>
+                    <input id="login-username" type="text" placeholder="Benutzername" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-password').focus();">
+                </div>
+                <div class="form">
+                    <label for="login-password" data-translate="password"></label>
+                    <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
+                </div>
+                <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_login">login</span></button>
+                <button type="button" class="no-grow" onclick="Help.show('login')">&#10067;</button>
+            </div>
+        </section>
+        <section id="logout-form">
+            <p><span data-translate="label_username">Hi</span> <span id="username"></span>.</p>
+            <button id="logout-submit" type="button">&#x1f3c3; <span data-translate="btn_logout">logout</span></button>
+        </section>
+    </section>
+
+    <section id="help">
+        <button type="button" onclick="Help.previous ? Nav.goTab(Help.previous) : Nav.resetTab()">&#10060;</button>
+        <h1 id="help-title"></h1>
+        <p id="help-body"></p>
+    </section>
+
+    <section id="spot">
+        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+        <h1 id="spot-title"></h1>
+        <p id="spot-type"></p>
+        <p id="spot-body"></p>
+        <p id="spot-images"></p>
+
+        <div id="spot-geo">
+            <p data-translate="label_location">Standort:</p>
+            <p><span data-translate="label_lat">lat:</span> <span id="spot-lat">LAT</span></p>
+            <p><span data-translate="label_lng">lng:</span> <span id="spot-lng">LNG</span></p>
+        </div>
+        <div class="grid">
+            <button id="spot-map" type="button">&#x1f30d; <span data-translate="btn_show_on_map">auf Karte zeigen</span></button>
+            <form id="spot-maps-form" action="//maps.google.com/maps" target="_blank" method="get">
+                <input type="hidden" name="q" id="spot-maps-formdata">
+                <button id="spot-maps" type="submit">&#x1f30d; <span data-translate="btn_show_on_maps"></span></button>
+            </form>
+            <button id="spot-web" type="button">&#x261e; <span data-translate="btn_show_on_web">zur Webseite</span></button>
+            <button id="spot-add-event" class="add-here" onclick="Form.add_here('event')">&#x2795; <span data-translate="add_event_here"></span></button>
+            <button id="spot-add-group" class="add-here" onclick="Form.add_here('group')">&#x2795; <span data-translate="add_group_here"></span></button>
+            <button id="spot-add-spot" class="add-here" onclick="Form.add_here('spot')">&#x2795; <span data-translate="add_spot_here"></span></button>
+        </div>
+    </section>
+
+    <section id="form">
+        <button type="button" onclick="Nav.goTab('map', 0)">&#10060;</button>
+        <h1><span id="form-type"></span> <input id="form-title" oninput="Form.backup()" type="text" placeholder="Name" data-translate="form_name"></h1>
+        <textarea id="form-text" oninput="Form.backup()" placeholder="Beschreibung" data-translate="form_description"></textarea>
+        <p data-translate="label_complete_later">Weitere Details können nach dem Speichern ergänzt werden.</p>
+        <button id="form-save" type="button" onclick="Form.save()">&#9997; <span data-translate="btn_save">Speichern</span></button>
+        <button id="form-delete" type="button" onclick="Form.remove()">&#10060; <span data-translate="btn_delete">Entwurf l&ouml;schen</span></button>
+    </section>
+
+    <section id="menu">
+        <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } else { Nav.goTab('map', 0) }">&#10060;</button>
+        <div class="grid">
+            <button type="button" style="font-size: 24px; padding: 0" onclick="location.href='//www.parkour.org/';"><img src="images/logo32.png" style="vertical-align: text-bottom;"> www.parkour.org</button>
+        </div>
+        <div class="grid menu">
+            <button onclick="Nav.navigate('#login')">&#x1f464; <span data-translate="btn_login">Login</span></button>
+            <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } Maps.track('yes');">&#9974; <span data-translate="locate"></span></button>
+            <button type="button" onclick="Help.show('help')">&#10067; <span data-translate="btn_help">Show Help</span></button>
+        </div>
+        <div class="grid menu">
+            <div class="half">
+                <h1>Discover</h1>
+                <button onclick="location.href='//www.parkour.org/events';">&#x1f30d; <span data-translate="btn_events">Events</span></button>
+                <button onclick="location.href='//www.parkour.org/spots';">&#x1f30d; <span data-translate="btn_spots">Spots</span></button>
+                <button onclick="location.href='//www.parkour.org/groups';">&#x1f30d; <span data-translate="btn_groups">Groups</span></button>
+                <button onclick="location.href='//www.parkour.org/members';">&#x1f30d; <span data-translate="btn_members">Members</span></button>
+            </div>
+            <div class="half">
+                <h1>Inspire</h1>
+                <button onclick="location.href='//www.parkour.org/articles';">&#x1f30d; <span data-translate="btn_articles">Articles</span></button>
+                <button onclick="location.href='//www.parkour.org/moves';">&#x1f30d; <span data-translate="btn_moves">Moves</span></button>
+                <button onclick="location.href='//www.parkour.org/videos';">&#x1f30d; <span data-translate="btn_videos">Videos</span></button>
+            </div>
+        </div>
+        <div class="grid language">
+            <h1>Language</h1>
+            <button type="button" class="no-grow" onclick="setLang('de')"><img src="flags/de.png"></button>
+            <button type="button" class="no-grow" onclick="setLang('en')"><img src="flags/en.png"></button>
+            <button type="button" class="no-grow" onclick="setLang('fr')"><img src="flags/fr.png"></button>
+        </div>
+        <p>
+        </p>
+    </section>
+
+    <section id="map">
+    </section>
+</section>
+
+<!-- Always put your scripts at the bottom of the page -->
+<script>
+    function initMap() {
+        window.mapLoaded = true;
+        if (window.mapScripts) Maps.initMapInternal();
+    }
+    let l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
+    l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
+    document.write('<sc' + `ript defer src="scripts/lang_${l}.js"><\/script>`);
+</script>
+<!-- development -->
+<script>
+    function require() {
+        return window;
+    }
+</script>
+<script defer src="scripts/base.js"></script>
+<script defer src="scripts/form.js"></script>
+<script defer src="scripts/geohash.js"></script>
+<script defer src="scripts/geotile.js"></script>
+<script defer src="scripts/help.js"></script>
+<script defer src="scripts/http.js"></script>
+<script defer src="scripts/login.js"></script>
+<script defer src="scripts/maps.js"></script>
+<script defer src="scripts/nav.js"></script>
+<script defer src="scripts/proximity.js"></script>
+<script defer src="scripts/search.js"></script>
+<script defer src="scripts/spot.js"></script>
+<script defer src="scripts/z.js"></script>
+<script async defer src="//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap"></script>
+<!-- /development -->
+<!-- production
+<script defer src="spotmap.es5.js"></script>
+<script async defer src="//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap"></script>
+/production -->
+</body>
+</html>

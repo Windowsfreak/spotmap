@@ -39,14 +39,14 @@ module.exports = function(grunt) {
       main: {
         files: [
           // includes files within path
-          {expand: true, cwd: 'src/', src: ['*.php', 'manifest.json', '.htaccess', '*.css'], dest: 'dist/', filter: 'isFile'},
+          {expand: true, cwd: 'src/', src: ['*.php', 'manifest.json', '.htaccess', '*.css', '*.js'], dest: 'dist/', filter: 'isFile'},
           // includes files within path and its sub-directories
           {expand: true, cwd: 'src/', src: ['flags/*', 'static/*', 'images/*', 'scripts/lang*.js'], dest: 'dist/'}
         ]
       },
       html: {
         files: [
-          {expand: true, cwd: 'src/', src: ['index.htm'], dest: 'dist/', filter: 'isFile'}
+          {expand: true, cwd: 'src/', src: ['index*.htm'], dest: 'dist/', filter: 'isFile'}
         ],
         options: {
           process: function(src) {
