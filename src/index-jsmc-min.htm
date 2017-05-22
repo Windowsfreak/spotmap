@@ -12,16 +12,6 @@
     <link rel="icon" href="images/logo64.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="./mobile-console.min.css">
-    <script src="./mobile-console.min.js"></script>
-    <script>
-        mobileConsole.options({
-            showOnError: true,
-            proxyConsole: true,
-            isCollapsed: true,
-            catchErrors: true
-        });
-        mobileConsole.show();
-    </script>
 </head>
 <body>
 
@@ -148,6 +138,16 @@
 </section>
 
 <!-- Always put your scripts at the bottom of the page -->
+<script src="./mobile-console.min.js"></script>
+<script>
+    mobileConsole.options({
+        showOnError: true,
+        proxyConsole: true,
+        isCollapsed: true,
+        catchErrors: true
+    });
+    mobileConsole.show();
+</script>
 <script>
     function initMap() {
         window.mapLoaded = true;
