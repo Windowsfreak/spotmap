@@ -144,7 +144,7 @@
     }
     let l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
     l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
-    document.write('<sc' + `ript defer src="scripts/lang_${l}.js"><\/script>`);
+    document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
 </script>
 <script defer src="spotmap.es5.js"></script>
 <script async defer src="//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap"></script>

@@ -144,7 +144,7 @@
     }
     let l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
     l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
-    document.write('<sc' + `ript defer src="scripts/lang_${l}.js"><\/script>`);
+    document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
 </script>
 <!-- development -->
 <script>
