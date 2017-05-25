@@ -27,8 +27,8 @@
 
     $.t_html = () => {
         for (const item of $._('*')) {
-            if (item.dataset.translate) {
-                item[['input', 'textarea'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.dataset.translate);
+            if (item.getAttribute('data-translate')) {
+                item[['input', 'textarea'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.getAttribute('data-translate'));
             }
         }
     };

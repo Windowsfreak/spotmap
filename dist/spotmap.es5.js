@@ -49,8 +49,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             for (var _iterator = $._('*')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 var item = _step.value;
 
-                if (item.dataset.translate) {
-                    item[['input', 'textarea'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.dataset.translate);
+                if (item.getAttribute('data-translate')) {
+                    item[['input', 'textarea'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.getAttribute('data-translate'));
                 }
             }
         } catch (err) {
