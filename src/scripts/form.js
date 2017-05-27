@@ -47,8 +47,10 @@ const Form = {}; ($ => {
     $.backup = () => {
         localStorage.setItem('form_title', _('#form-title').value);
         localStorage.setItem('form_text', _('#form-text').value);
-        localStorage.setItem('form_lat', Maps.marker.getPosition().lat());
-        localStorage.setItem('form_lng', Maps.marker.getPosition().lng());
+        if (Maps.marker) {
+            localStorage.setItem('form_lat', Maps.marker.getPosition().lat());
+            localStorage.setItem('form_lng', Maps.marker.getPosition().lng());
+        }
         if (Spot.marker) {
             localStorage.setItem('form_type', Spot.marker.type);
         }

@@ -78,9 +78,13 @@ const Maps = {}; ($ => {
                 }
             }
         };
-        navigator.geolocation.getCurrentPosition(checkPan, () => false, {timeout: 250});
+        try {
+            navigator.geolocation.getCurrentPosition(checkPan, () => false, {timeout: 250});
 
-        navigator.geolocation.getCurrentPosition(checkPan, () => false, {enableHighAccuracy: true});
+            navigator.geolocation.getCurrentPosition(checkPan, () => false, {enableHighAccuracy: true});
+        } catch (ignored) {
+            Nav.error('The browser is too old, Geolocation is not supported.'); // TODO translate
+        }
     };
 
     $.markers = {};

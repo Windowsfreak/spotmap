@@ -138,6 +138,7 @@
 </section>
 
 <!-- Always put your scripts at the bottom of the page -->
+<script src="scripts/polyfill.min.js"></script>
 <script src="./mobile-console.js"></script>
 <script>
     mobileConsole.options({
@@ -153,7 +154,8 @@
         window.mapLoaded = true;
         if (window.mapScripts) Maps.initMapInternal();
     }
-    let l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
+    if (!localStorage || !localStorage.getItem) { localStorage = {getItem: function() {}, setItem: function() {}}; }
+    var l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
     l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
     document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
 </script>

@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-05-25
+/*! spotmap - v0.1.0 - 2017-05-27
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
 
@@ -80,8 +80,10 @@ const Form = {}; ($ => {
     $.backup = () => {
         localStorage.setItem('form_title', _('#form-title').value);
         localStorage.setItem('form_text', _('#form-text').value);
-        localStorage.setItem('form_lat', Maps.marker.getPosition().lat());
-        localStorage.setItem('form_lng', Maps.marker.getPosition().lng());
+        if (Maps.marker) {
+            localStorage.setItem('form_lat', Maps.marker.getPosition().lat());
+            localStorage.setItem('form_lng', Maps.marker.getPosition().lng());
+        }
         if (Spot.marker) {
             localStorage.setItem('form_type', Spot.marker.type);
         }
@@ -633,9 +635,13 @@ const Maps = {}; ($ => {
                 }
             }
         };
-        navigator.geolocation.getCurrentPosition(checkPan, () => false, {timeout: 250});
+        try {
+            navigator.geolocation.getCurrentPosition(checkPan, () => false, {timeout: 250});
 
-        navigator.geolocation.getCurrentPosition(checkPan, () => false, {enableHighAccuracy: true});
+            navigator.geolocation.getCurrentPosition(checkPan, () => false, {enableHighAccuracy: true});
+        } catch (ignored) {
+            Nav.error('The browser is too old, Geolocation is not supported.'); // TODO translate
+        }
     };
 
     $.markers = {};

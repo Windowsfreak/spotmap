@@ -139,15 +139,9 @@
 
 <!-- Always put your scripts at the bottom of the page -->
 <script src="scripts/polyfill.min.js"></script>
-<script src="./mobile-console.js"></script>
+<script src="https://cdn.ravenjs.com/3.15.0/raven.min.js"></script>
 <script>
-    mobileConsole.options({
-        showOnError: true,
-        proxyConsole: true,
-        isCollapsed: true,
-        catchErrors: true
-    });
-    mobileConsole.show();
+    Raven.config('https://77dac36a659b4a418b5bd02ef6438b7d@sentry.io/172882').install();
 </script>
 <script>
     function initMap() {

@@ -142,7 +142,17 @@
         window.mapLoaded = true;
         if (window.mapScripts) Maps.initMapInternal();
     }
-    let l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
+    function issues(reason) {
+        document.getElementById('help').style.display = 'block';
+        document.getElementById('help-title').innerHTML = (reason == 'browser') ? 'Old browser detected' : 'Errors detected';
+        document.getElementById('help-body').innerHTML = 'You are using an old browser. <a href="./index-sentry.htm">Do you want to load a compatibility version?</a>';
+    }
+    if (typeof(Symbol) == "undefined") {
+        issues('browser');
+    }
+    window.onerror = issues;
+    if (!localStorage || !localStorage.getItem) { localStorage = {getItem: function() {}, setItem: function() {}}; }
+    var l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
     l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
     document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
 </script>

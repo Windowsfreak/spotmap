@@ -56,6 +56,11 @@ module.exports = function(grunt) {
                 .replace(/\/production -->\s+/g, '');
           }
         }
+      },
+      babel: {
+        files: [
+            {expand: true, cwd: 'node_modules/babel-polyfill/dist/', src: ['polyfill.min.js'], dest: 'dist/scripts/', filter: 'isFile'}
+        ]
       }
     },
     babel: {
