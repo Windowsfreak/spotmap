@@ -483,7 +483,7 @@ var Geotile = {};(function ($) {
             return key;
         });
         if (tmp.length) {
-            Http.get('//www.parkour.org/map/query5j.php', { tiles: tmp.join(','), zoom: zoom }, { Authorization: false }).then(function (data) {
+            Http.get('//map.parkour.org/query5j.php', { tiles: tmp.join(','), zoom: zoom }, { Authorization: false }).then(function (data) {
                 Object.assign(cache[zoom], data);
                 Object.assign(result, data);
                 callback(result);
@@ -598,7 +598,7 @@ var Http = {};(function ($) {
             headers.Authorization = 'Basic ' + $.b64a(headers.user + ':' + headers.pass);
             delete headers.user;
             delete headers.pass;
-        } else if (url.match(/^(https?:)?\/\/(www\.)parkour\.org\/?/)) {
+        } else if (url.match(/^(https?:)?\/\/(www\.)?map\.parkour\.org\/?/)) {
             headers.Authorization = $.getCredentials();
         }
         return new Promise(function (resolve, reject) {
@@ -610,6 +610,7 @@ var Http = {};(function ($) {
                         resolve(JSON.parse(xhr.response));
                     } catch (e) {
                         Nav.error(t('error_server_request'));
+						//alert(JSON.stringify(e));
                         resolve({
                             method: method,
                             url: url,
@@ -691,11 +692,19 @@ var Login = {};(function ($) {
         var user = _('#login-username');
         var pass = _('#login-password');
         Http.setCredentials(user.value, pass.value);
+		Http.get('//map.parkour.org/api/v1/auth', null , { Authorization: true }).then(function (data) {
+		  //alert("Data: " + JSON.stringify(data));
+			Nav.success(t('logged_in_as', user.value));
+			user.value = '';
+			pass.value = '';
+			Nav.events.login_show();
+		}, function (data) {
+            return Nav.error(t('error_login'));
+        });
         //get('//www.parkour.org/user/1',{_format: 'hal_json'}).then(function() {
-        Nav.success(t('logged_in_as', user.value));
-        user.value = '';
-        pass.value = '';
-        Nav.events.login_show();
+			
+		
+		
         /*}, function() {
          error(t('error_login'));
          deleteCredentials();
@@ -1245,8 +1254,8 @@ var Search = {};(function ($) {
         if (/^(0|[1-9]\d*)$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = { _format: 'hal_json', status: 'All', type: 'All', title: text, langcode: 'All', page: 0 };
-            Http.get('//www.parkour.org/rest/content/node?status=All&type=All&title=&langcode=All&page=0', search.data, { Authorization: false }).then($.showPage);
+            search.data = { search: text, limit: 25};
+            Http.get('//map.parkour.org/api/v1/spots/search', search.data, { Authorization: false }).then($.showPage);
         }
     };
 
@@ -1261,8 +1270,10 @@ var Search = {};(function ($) {
 
         try {
             for (var _iterator7 = result[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-                var spot = _step7.value;
-
+                
+				
+				var spot = _step7.value;
+				/*
                 var nid = void 0;
                 var _iteratorNormalCompletion8 = true;
                 var _didIteratorError8 = false;
@@ -1287,10 +1298,11 @@ var Search = {};(function ($) {
                             throw _iteratorError8;
                         }
                     }
-                }
+                }*/
 
-                text += '<article onclick="Nav.navigate(\'#spot/' + nid + '\');">';
+                text += '<article onclick="Nav.navigate(\'#spot/' + spot.id + '\');">';
 
+				/*
                 var _iteratorNormalCompletion9 = true;
                 var _didIteratorError9 = false;
                 var _iteratorError9 = undefined;
@@ -1317,10 +1329,14 @@ var Search = {};(function ($) {
                             throw _iteratorError9;
                         }
                     }
-                }
-
+                }*/
+				if(spot.p0)
+					text += '<div class="in-place cover" style="background-image: url(/images/spots/thumbnails/320px/' + spot.p0 + ');"></div>';
                 text += '<div class="in-place title">';
+				
                 _('#spot-title').innerText = t('no_title');
+				
+				/*
                 var _iteratorNormalCompletion10 = true;
                 var _didIteratorError10 = false;
                 var _iteratorError10 = undefined;
@@ -1344,8 +1360,10 @@ var Search = {};(function ($) {
                             throw _iteratorError10;
                         }
                     }
-                }
-
+                }*/
+				text += '<h1><span>' + strip(spot.title) + '</span></h1>';
+				
+				/*
                 var _iteratorNormalCompletion11 = true;
                 var _didIteratorError11 = false;
                 var _iteratorError11 = undefined;
@@ -1369,8 +1387,10 @@ var Search = {};(function ($) {
                             throw _iteratorError11;
                         }
                     }
-                }
+                }*/
 
+				text += '<p><span>' + strip(spot.description).substring(0, 100) + '</span></p>';
+				
                 text += '</div>';
                 text += '</article>';
             }
@@ -1404,9 +1424,39 @@ var Spot = {};(function ($) {
     });
 
     $.loadSpot = function (id) {
-        Http.get('//www.parkour.org/' + l + '/rest/node/' + id, { _format: 'hal_json' }, { Authorization: false }).then(function (data) {
-            $.spot = { id: id };
-
+        Http.get('//map.parkour.org/api/v1/spot/' + id, {}, { Authorization: false }).then(function (data) {
+            $.spot = { id: id , type: data.spot.type, url_alias: data.spot.url_alias};
+					
+			_('#spot-title').innerText = data.spot.title || t('no_title');
+			_('#spot').className = 'spot-type-'+data.spot.type;
+			_('#spot-type').innerText  = t(data.spot_type_detailed);
+			_('#spot-body').innerHTML = data.spot.description || t('no_body');
+			_('#spot-lat').innerHTML = data.spot.lat;
+			_('#spot-lng').innerHTML = data.spot.lng;
+			$.spot.lat = parseFloat(data.spot.lat);
+			$.spot.lng = parseFloat(data.spot.lng);
+			if(data.spot.p0)
+				_('#spot-images').innerHTML = '<img src="/images/spots/thumbnails/320px/'+data.spot.p0+'">';
+			else
+				_('#spot-images').innerHTML = t('no_images');
+			
+			/*
+			if(data.spot.type == "spot")
+				_('#spot-type').innerText = t('type_spot');
+			else if(data.spot.type == "group")
+				_('#spot-type').innerText = t('group_type_'+data.spot.type);
+			else if(data.spot.type == "event")
+				_('#spot-type').innerText = t('event_type_'+data.spot.type);
+			_('#spot-title').innerText = data.spot.title;
+			_('#spot-body').innerHTML = data.spot.description;
+			_('#spot-lat').innerHTML = data.spot.lat;
+			_('#spot-lng').innerHTML = data.spot.lng;
+			if(data.spot.p0)
+				_('#spot-images').innerHTML = '<img src="/images/spots/'+data.spot.p0+'">';
+			else
+				_('#spot-images').innerHTML = t('no_images');
+			*/
+			/*
             _('#spot-type').innerText = '';
             var _iteratorNormalCompletion12 = true;
             var _didIteratorError12 = false;
@@ -1419,7 +1469,7 @@ var Spot = {};(function ($) {
                     _('#spot').className = 'spot-type-' + s;
                     _('#spot-type').innerText = t('type_' + s);
                 }
-                /* spot */
+                // spot
             } catch (err) {
                 _didIteratorError12 = true;
                 _iteratorError12 = err;
@@ -1445,7 +1495,7 @@ var Spot = {};(function ($) {
 
                     _('#spot-type').innerText = t('spot_type_' + _s5);
                 }
-                /* move */
+                //move 
             } catch (err) {
                 _didIteratorError13 = true;
                 _iteratorError13 = err;
@@ -1471,7 +1521,7 @@ var Spot = {};(function ($) {
 
                     _('#spot-type').innerText = t('move_type_' + _s6);
                 }
-                /* move */
+                // move
             } catch (err) {
                 _didIteratorError14 = true;
                 _iteratorError14 = err;
@@ -1497,7 +1547,7 @@ var Spot = {};(function ($) {
 
                     _('#spot-type').innerText = t('move_type_' + _s7);
                 }
-                /* move */
+                // move
             } catch (err) {
                 _didIteratorError15 = true;
                 _iteratorError15 = err;
@@ -1523,7 +1573,7 @@ var Spot = {};(function ($) {
 
                     _('#spot-type').innerText += ' (' + t('move_type_' + _s8) + ')';
                 }
-                /* group */
+                // group
             } catch (err) {
                 _didIteratorError16 = true;
                 _iteratorError16 = err;
@@ -1549,7 +1599,7 @@ var Spot = {};(function ($) {
 
                     _('#spot-type').innerText = t('group_type_' + _s9);
                 }
-                /* event */
+                // event
             } catch (err) {
                 _didIteratorError17 = true;
                 _iteratorError17 = err;
@@ -1724,7 +1774,7 @@ var Spot = {};(function ($) {
                     }
                 }
             }
-
+				*/
             Nav.goTab('spot');
 
             if ($.spot.lat && $.spot.lng) {
@@ -1839,7 +1889,7 @@ var Spot = {};(function ($) {
     };
 
     _('#spot-web').onclick = function () {
-        location.href = '//www.parkour.org/' + l + '/node/' + $.spot.id;
+        location.href = '//map.parkour.org/'+ $.spot.type + '/' + $.spot.url_alias;
     };
 })(Spot);
 // Source: src/scripts/z.js

@@ -50,7 +50,7 @@ body, button {
     font-family: "Trebuchet MS", Helvetica, sans-serif;
     font-size: 16px;
 }
-nav {
+nav.navbar {
     background-color: #f8f8f8;
     border-bottom: 1px solid #e7e7e7;
     position: fixed;
@@ -60,6 +60,7 @@ nav {
     z-index: 1030;
     height: 50px;
     display: flex;
+	padding: 0;
 }
 #notice {
     justify-content: center;
@@ -105,6 +106,11 @@ button {
     border-radius: 4px;
     min-height: 43px;
 }
+
+#content.visible > section button{
+    max-height: 50px;
+}
+
 textarea {
     text-align: left;
     min-width: 100%;
@@ -137,6 +143,9 @@ button.active, button:focus {
 }
 #content > section {
     display: none;
+}
+#content.visible > section {
+    display: block;
 }
 #map {
     background: url(images/loading.png) no-repeat center;
@@ -195,6 +204,7 @@ h1 {
 }
 .grid > *:not(.no-grow) {
     min-width: 200px;
+	max-width: 380px;
 }
 .grid > form > button {
     width: 100%;
@@ -362,4 +372,117 @@ button, a[onclick], .clickable, .filterBtn, article
 }
 h2 {
     font-size: 125%;
+}
+
+
+nav div.button{
+	font-size: 180%;
+    line-height: 1;
+    border-width: 0 1px;
+    width: 25%;
+	font-weight: normal;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    min-width: 43px;
+    height: 100%;
+    padding: 11px 10px;
+	border-right-style: solid;
+	border-right-color: #ddd;
+}
+nav div.button a{
+	text-decoration: none;
+}
+/*
+Spotlist
+*/
+.category_button .category_button_link{
+	color: #fff !important;
+    padding: 9px 12px;
+    background-color: #337ab7;
+    text-decoration: none !important;
+	cursor: pointer;
+}
+
+.category_button .category_button_link.active{
+    background-color: #286090;
+}
+
+.category_button {
+    float: left;
+    padding-right: 10px;
+	margin-bottom: 24px;
+}
+
+.category_button_container {
+    display: inline-block;
+}
+
+.pagination {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    padding-left: 0;
+    list-style: none;
+    border-radius: .25rem;
+}
+
+
+
+
+.pagination-container{
+	margin-top: 20px;
+}
+
+.page-item:first-child .page-link {
+    margin-left: 0;
+    border-top-left-radius: .25rem;
+    border-bottom-left-radius: .25rem;
+}
+
+.page-link:not(:disabled):not(.disabled) {
+    cursor: pointer;
+}
+
+.page-link {
+    position: relative;
+    display: block;
+    padding: .5rem .75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: #007bff;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}
+
+
+.pagination-container .pagination{
+		display: none;
+}
+
+.pagination-container .pagination-mobile{
+	display: flex;
+}
+
+.pagination-container .pagination-mobile  li{
+	width: 50%;
+}
+	
+.container #search-form input{
+	height:auto;
+}
+
+.container{
+    padding: 20px;
+}
+
+@media (min-width: 768px) { 
+	.pagination-container .pagination{
+		display: flex;
+	}
+	
+	.pagination-container .pagination-mobile{
+		display: none;
+	}
 }
