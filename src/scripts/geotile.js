@@ -150,7 +150,7 @@ const Geotile = {}; ($ => {
 
         let tmp = Object.keys($.filter(result, (key, val) => (val === undefined) ? key : undefined)).map(key => key);
         if (tmp.length) {
-            Http.get('//www.parkour.org/map/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
+            Http.get('//map.parkour.org/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
                 Object.assign(cache[zoom], data);
                 Object.assign(result, data);
                 callback(result);

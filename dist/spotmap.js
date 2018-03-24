@@ -1,7 +1,7 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-05-27
+/*! spotmap - v0.2.0 - 2018-03-24
 * https://github.com/windowsfreak/spotmap
-* Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
+* Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
 // Source: src/scripts/base.js
 // global
@@ -410,7 +410,7 @@ const Geotile = {}; ($ => {
 
         let tmp = Object.keys($.filter(result, (key, val) => (val === undefined) ? key : undefined)).map(key => key);
         if (tmp.length) {
-            Http.get('//www.parkour.org/map/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
+            Http.get('//map.parkour.org/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
                 Object.assign(cache[zoom], data);
                 Object.assign(result, data);
                 callback(result);
@@ -465,7 +465,7 @@ const Http = {}; ($ => {
             headers.Authorization = 'Basic ' + $.b64a(headers.user + ':' + headers.pass);
             delete headers.user;
             delete headers.pass;
-        } else if (url.match(/^(https?:)?\/\/(www\.)parkour\.org\/?/)) {
+        } else if (url.match(/^(https?:)?\/\/(www\.)?map\.parkour\.org\/?/)) {
             headers.Authorization = $.getCredentials();
         }
         return new Promise(function (resolve, reject) {
@@ -546,17 +546,17 @@ const Login = {}; ($ => {
         let user = _('#login-username');
         let pass = _('#login-password');
         Http.setCredentials(user.value, pass.value);
-        //get('//www.parkour.org/user/1',{_format: 'hal_json'}).then(function() {
-        Nav.success(t('logged_in_as', user.value));
-        user.value = '';
-        pass.value = '';
-        Nav.events.login_show();
-        /*}, function() {
-         error(t('error_login'));
-         deleteCredentials();
-         pass.value = '';
-         pass.focus();
-         });*/
+        Http.get('//map.parkour.org/api/v1/auth', null, {Authorization: true}).then(function(data) {
+            Nav.success(t('logged_in_as', user.value));
+            user.value = '';
+            pass.value = '';
+            Nav.events.login_show();
+        }, function() {
+            Nav.error(t('error_login'));
+            Http.deleteCredentials();
+            pass.value = '';
+            pass.focus();
+        });
     };
 
     _('#logout-submit').onclick = () => {
@@ -1063,8 +1063,8 @@ const Search = {}; ($ => {
         if (/^(0|[1-9]\d*)$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = {_format: 'hal_json', status: 'All', type: 'All', title: text, langcode: 'All', page: 0};
-            Http.get('//www.parkour.org/rest/content/node?status=All&type=All&title=&langcode=All&page=0', search.data, {Authorization: false}).then($.showPage);
+            search.data = {search: text, limit: 25};
+            Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
         }
     };
 
@@ -1074,28 +1074,14 @@ const Search = {}; ($ => {
             text += t('no_results_found');
         }
         for (const spot of result) {
-            let nid;
-            for (const s of Spot.find('nid|\\d+|value', spot)) {
-                nid = s;
-            }
-            text += `<article onclick="Nav.navigate('#spot/${nid}');">`;
-
-            for (const s of Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)) {
-                text += `<div class="in-place cover" style="background-image: url(${Spot.getUrl(s)});"></div>`;
-                if (s) {
-                    break;
-                }
+            text += `<article onclick="Nav.navigate('#spot/${spot.id}');">`;
+            if (spot.p0) {
+              text += `<div class="in-place cover" style="background-image: url(//map.parkour.org/images/spots/thumbnails/320px/${spot.p0});"></div>`;
             }
 
             text += '<div class="in-place title">';
-            _('#spot-title').innerText = t('no_title');
-            for (const s of Spot.find('title|\\d+|value', spot)) {
-                text += `<h1><span>${strip(s)}</span></h1>`;
-            }
-
-            for (const s of Spot.find('body|\\d+|value', spot)) {
-                text += `<p><span>${strip(s).substring(0, 100)}</span></p>`;
-            }
+            text += `<h1><span>${strip(spot.title)}</span></h1>`;
+            text += `<p><span>${strip(spot.description).substring(0, 100)}</span></p>`;
 
             text += '</div>';
             text += '</article>';
@@ -1111,65 +1097,21 @@ const Spot = {}; ($ => {
     ready.push(() => Nav.events.spot_hide = () => _('#map').className = '');
 
     $.loadSpot = id => {
-        Http.get(`//www.parkour.org/${l}/rest/node/${id}`, {_format: 'hal_json'}, {Authorization: false}).then(data => {
-            $.spot = {id: id};
+        Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
+            $.spot = {id: id, type: data.spot.type, url_alias: data.spot.url_alias};
 
-            _('#spot-type').innerText = '';
-            for (const s of $.find('\\d+|type|\\d+|target_id', data)) {
-                _('#spot').className = `spot-type-${s}`;
-                _('#spot-type').innerText = t(`type_${s}`);
-            }
-            /* spot */
-            for (const s of $.find('\\d+|field_spot_type|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`spot_type_${s}`);
-            }
-            /* move */
-            for (const s of $.find('\\d+|field_category|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`move_type_${s}`);
-            }
-            /* move */
-            for (const s of $.find('\\d+|field_move_category|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`move_type_${s}`);
-            }
-            /* move */
-            for (const s of $.find('\\d+|field_level|\\d+|value', data)) {
-                _('#spot-type').innerText += ` (${t('move_type_' + s)})`;
-            }
-            /* group */
-            for (const s of $.find('\\d+|field_group_type|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`group_type_${s}`);
-            }
-            /* event */
-            for (const s of $.find('\\d+|field_event_type|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`event_type_${s}`);
-            }
-
-            _('#spot-title').innerText = t('no_title');
-            for (const s of $.find('\\d+|title|\\d+|value', data)) {
-                _('#spot-title').innerText = s;
-            }
-
-            _('#spot-body').innerText = t('no_body');
-            for (const s of $.find('\\d+|body|\\d+|value', data)) {
-                _('#spot-body').innerHTML = s;
-            }
-
-            let text = '';
-            for (const s of $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)) {
-                text += `<img src="${$.getUrl(s)}" />`;
-            }
-            _('#spot-images').innerHTML = text || t('no_images');
-
-            //_('#spot-lat').innerText = 'Keine Standortangabe vorhanden.';
-            for (const s of $.find('\\d+|field_location|\\d+|lat', data)) {
-                $.spot.lat = s;
-                _('#spot-lat').innerHTML = s;
-            }
-
-            //_('#spot-lng').innerText = 'Keine Standortangabe vorhanden.';
-            for (const s of $.find('\\d+|field_location|\\d+|lon', data)) {
-                $.spot.lng = s;
-                _('#spot-lng').innerHTML = s;
+            _('#spot-title').innerText = data.spot.title || t('no_title');
+            _('#spot').className = `spot-type-${data.spot.type}`;
+            _('#spot-type').innerText = t(data.spot_type_detailed);
+            _('#spot-body').innerHTML = data.spot.description || t('no_body');
+            _('#spot-lat').innerHTML = data.spot.lat;
+            _('#spot-lng').innerHTML = data.spot.lng;
+            $.spot.lat = parseFloat(data.spot.lat);
+            $.spot.lng = parseFloat(data.spot.lng);
+            if(data.spot.p0) {
+                _('#spot-images').innerHTML = `<img src="//map.parkour.org/images/spots/thumbnails/320px/${data.spot.p0}" />`;
+            } else {
+                _('#spot-images').innerHTML = t('no_images');
             }
 
             Nav.goTab('spot');
@@ -1205,8 +1147,6 @@ const Spot = {}; ($ => {
         }, data => Nav.error(t('error_load_spot')));
     };
 
-    $.getUrl = imageUrl => imageUrl.replace('/sites/default/files/20', '/sites/default/files/styles/grid/public/20');
-
     $.find = (path, json) => {
         let jsons = [json];
         path = path.split('|');
@@ -1233,7 +1173,7 @@ const Spot = {}; ($ => {
     };
 
     _('#spot-web').onclick = () => {
-        location.href = `//www.parkour.org/${l}/node/${$.spot.id}`;
+        location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
     };
 })(Spot);
 // Source: src/scripts/z.js

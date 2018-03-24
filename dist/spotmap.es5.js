@@ -1,7 +1,7 @@
 'use strict';
-/*! spotmap - v0.1.0 - 2017-05-27
+/*! spotmap - v0.2.0 - 2018-03-24
 * https://github.com/windowsfreak/spotmap
-* Copyright (c) 2017 Björn Eberhardt; Licensed MIT */
+* Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
 // Source: src/scripts/base.js
 // global
@@ -610,7 +610,6 @@ var Http = {};(function ($) {
                         resolve(JSON.parse(xhr.response));
                     } catch (e) {
                         Nav.error(t('error_server_request'));
-						//alert(JSON.stringify(e));
                         resolve({
                             method: method,
                             url: url,
@@ -692,25 +691,17 @@ var Login = {};(function ($) {
         var user = _('#login-username');
         var pass = _('#login-password');
         Http.setCredentials(user.value, pass.value);
-		Http.get('//map.parkour.org/api/v1/auth', null , { Authorization: true }).then(function (data) {
-		  //alert("Data: " + JSON.stringify(data));
-			Nav.success(t('logged_in_as', user.value));
-			user.value = '';
-			pass.value = '';
-			Nav.events.login_show();
-		}, function (data) {
-            return Nav.error(t('error_login'));
+        Http.get('//map.parkour.org/api/v1/auth', null, { Authorization: true }).then(function (data) {
+            Nav.success(t('logged_in_as', user.value));
+            user.value = '';
+            pass.value = '';
+            Nav.events.login_show();
+        }, function () {
+            Nav.error(t('error_login'));
+            Http.deleteCredentials();
+            pass.value = '';
+            pass.focus();
         });
-        //get('//www.parkour.org/user/1',{_format: 'hal_json'}).then(function() {
-			
-		
-		
-        /*}, function() {
-         error(t('error_login'));
-         deleteCredentials();
-         pass.value = '';
-         pass.focus();
-         });*/
     };
 
     _('#logout-submit').onclick = function () {
@@ -1254,7 +1245,7 @@ var Search = {};(function ($) {
         if (/^(0|[1-9]\d*)$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = { search: text, limit: 25};
+            search.data = { search: text, limit: 25 };
             Http.get('//map.parkour.org/api/v1/spots/search', search.data, { Authorization: false }).then($.showPage);
         }
     };
@@ -1270,127 +1261,17 @@ var Search = {};(function ($) {
 
         try {
             for (var _iterator7 = result[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-                
-				
-				var spot = _step7.value;
-				/*
-                var nid = void 0;
-                var _iteratorNormalCompletion8 = true;
-                var _didIteratorError8 = false;
-                var _iteratorError8 = undefined;
-
-                try {
-                    for (var _iterator8 = Spot.find('nid|\\d+|value', spot)[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-                        var s = _step8.value;
-
-                        nid = s;
-                    }
-                } catch (err) {
-                    _didIteratorError8 = true;
-                    _iteratorError8 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion8 && _iterator8.return) {
-                            _iterator8.return();
-                        }
-                    } finally {
-                        if (_didIteratorError8) {
-                            throw _iteratorError8;
-                        }
-                    }
-                }*/
+                var spot = _step7.value;
 
                 text += '<article onclick="Nav.navigate(\'#spot/' + spot.id + '\');">';
+                if (spot.p0) {
+                    text += '<div class="in-place cover" style="background-image: url(//map.parkour.org/images/spots/thumbnails/320px/' + spot.p0 + ');"></div>';
+                }
 
-				/*
-                var _iteratorNormalCompletion9 = true;
-                var _didIteratorError9 = false;
-                var _iteratorError9 = undefined;
-
-                try {
-                    for (var _iterator9 = Spot.find('_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', spot)[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-                        var _s2 = _step9.value;
-
-                        text += '<div class="in-place cover" style="background-image: url(' + Spot.getUrl(_s2) + ');"></div>';
-                        if (_s2) {
-                            break;
-                        }
-                    }
-                } catch (err) {
-                    _didIteratorError9 = true;
-                    _iteratorError9 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion9 && _iterator9.return) {
-                            _iterator9.return();
-                        }
-                    } finally {
-                        if (_didIteratorError9) {
-                            throw _iteratorError9;
-                        }
-                    }
-                }*/
-				if(spot.p0)
-					text += '<div class="in-place cover" style="background-image: url(/images/spots/thumbnails/320px/' + spot.p0 + ');"></div>';
                 text += '<div class="in-place title">';
-				
-                _('#spot-title').innerText = t('no_title');
-				
-				/*
-                var _iteratorNormalCompletion10 = true;
-                var _didIteratorError10 = false;
-                var _iteratorError10 = undefined;
+                text += '<h1><span>' + strip(spot.title) + '</span></h1>';
+                text += '<p><span>' + strip(spot.description).substring(0, 100) + '</span></p>';
 
-                try {
-                    for (var _iterator10 = Spot.find('title|\\d+|value', spot)[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-                        var _s3 = _step10.value;
-
-                        text += '<h1><span>' + strip(_s3) + '</span></h1>';
-                    }
-                } catch (err) {
-                    _didIteratorError10 = true;
-                    _iteratorError10 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion10 && _iterator10.return) {
-                            _iterator10.return();
-                        }
-                    } finally {
-                        if (_didIteratorError10) {
-                            throw _iteratorError10;
-                        }
-                    }
-                }*/
-				text += '<h1><span>' + strip(spot.title) + '</span></h1>';
-				
-				/*
-                var _iteratorNormalCompletion11 = true;
-                var _didIteratorError11 = false;
-                var _iteratorError11 = undefined;
-
-                try {
-                    for (var _iterator11 = Spot.find('body|\\d+|value', spot)[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-                        var _s4 = _step11.value;
-
-                        text += '<p><span>' + strip(_s4).substring(0, 100) + '</span></p>';
-                    }
-                } catch (err) {
-                    _didIteratorError11 = true;
-                    _iteratorError11 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion11 && _iterator11.return) {
-                            _iterator11.return();
-                        }
-                    } finally {
-                        if (_didIteratorError11) {
-                            throw _iteratorError11;
-                        }
-                    }
-                }*/
-
-				text += '<p><span>' + strip(spot.description).substring(0, 100) + '</span></p>';
-				
                 text += '</div>';
                 text += '</article>';
             }
@@ -1424,357 +1305,23 @@ var Spot = {};(function ($) {
     });
 
     $.loadSpot = function (id) {
-        Http.get('//map.parkour.org/api/v1/spot/' + id, {}, { Authorization: false }).then(function (data) {
-            $.spot = { id: id , type: data.spot.type, url_alias: data.spot.url_alias};
-					
-			_('#spot-title').innerText = data.spot.title || t('no_title');
-			_('#spot').className = 'spot-type-'+data.spot.type;
-			_('#spot-type').innerText  = t(data.spot_type_detailed);
-			_('#spot-body').innerHTML = data.spot.description || t('no_body');
-			_('#spot-lat').innerHTML = data.spot.lat;
-			_('#spot-lng').innerHTML = data.spot.lng;
-			$.spot.lat = parseFloat(data.spot.lat);
-			$.spot.lng = parseFloat(data.spot.lng);
-			if(data.spot.p0)
-				_('#spot-images').innerHTML = '<img src="/images/spots/thumbnails/320px/'+data.spot.p0+'">';
-			else
-				_('#spot-images').innerHTML = t('no_images');
-			
-			/*
-			if(data.spot.type == "spot")
-				_('#spot-type').innerText = t('type_spot');
-			else if(data.spot.type == "group")
-				_('#spot-type').innerText = t('group_type_'+data.spot.type);
-			else if(data.spot.type == "event")
-				_('#spot-type').innerText = t('event_type_'+data.spot.type);
-			_('#spot-title').innerText = data.spot.title;
-			_('#spot-body').innerHTML = data.spot.description;
-			_('#spot-lat').innerHTML = data.spot.lat;
-			_('#spot-lng').innerHTML = data.spot.lng;
-			if(data.spot.p0)
-				_('#spot-images').innerHTML = '<img src="/images/spots/'+data.spot.p0+'">';
-			else
-				_('#spot-images').innerHTML = t('no_images');
-			*/
-			/*
-            _('#spot-type').innerText = '';
-            var _iteratorNormalCompletion12 = true;
-            var _didIteratorError12 = false;
-            var _iteratorError12 = undefined;
+        Http.get('//map.parkour.org/api/v1/spot/' + id, null, { Authorization: false }).then(function (data) {
+            $.spot = { id: id, type: data.spot.type, url_alias: data.spot.url_alias };
 
-            try {
-                for (var _iterator12 = $.find('\\d+|type|\\d+|target_id', data)[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-                    var s = _step12.value;
-
-                    _('#spot').className = 'spot-type-' + s;
-                    _('#spot-type').innerText = t('type_' + s);
-                }
-                // spot
-            } catch (err) {
-                _didIteratorError12 = true;
-                _iteratorError12 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion12 && _iterator12.return) {
-                        _iterator12.return();
-                    }
-                } finally {
-                    if (_didIteratorError12) {
-                        throw _iteratorError12;
-                    }
-                }
+            _('#spot-title').innerText = data.spot.title || t('no_title');
+            _('#spot').className = 'spot-type-' + data.spot.type;
+            _('#spot-type').innerText = t(data.spot_type_detailed);
+            _('#spot-body').innerHTML = data.spot.description || t('no_body');
+            _('#spot-lat').innerHTML = data.spot.lat;
+            _('#spot-lng').innerHTML = data.spot.lng;
+            $.spot.lat = parseFloat(data.spot.lat);
+            $.spot.lng = parseFloat(data.spot.lng);
+            if (data.spot.p0) {
+                _('#spot-images').innerHTML = '<img src="//map.parkour.org/images/spots/thumbnails/320px/' + data.spot.p0 + '" />';
+            } else {
+                _('#spot-images').innerHTML = t('no_images');
             }
 
-            var _iteratorNormalCompletion13 = true;
-            var _didIteratorError13 = false;
-            var _iteratorError13 = undefined;
-
-            try {
-                for (var _iterator13 = $.find('\\d+|field_spot_type|\\d+|value', data)[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
-                    var _s5 = _step13.value;
-
-                    _('#spot-type').innerText = t('spot_type_' + _s5);
-                }
-                //move 
-            } catch (err) {
-                _didIteratorError13 = true;
-                _iteratorError13 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion13 && _iterator13.return) {
-                        _iterator13.return();
-                    }
-                } finally {
-                    if (_didIteratorError13) {
-                        throw _iteratorError13;
-                    }
-                }
-            }
-
-            var _iteratorNormalCompletion14 = true;
-            var _didIteratorError14 = false;
-            var _iteratorError14 = undefined;
-
-            try {
-                for (var _iterator14 = $.find('\\d+|field_category|\\d+|value', data)[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
-                    var _s6 = _step14.value;
-
-                    _('#spot-type').innerText = t('move_type_' + _s6);
-                }
-                // move
-            } catch (err) {
-                _didIteratorError14 = true;
-                _iteratorError14 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion14 && _iterator14.return) {
-                        _iterator14.return();
-                    }
-                } finally {
-                    if (_didIteratorError14) {
-                        throw _iteratorError14;
-                    }
-                }
-            }
-
-            var _iteratorNormalCompletion15 = true;
-            var _didIteratorError15 = false;
-            var _iteratorError15 = undefined;
-
-            try {
-                for (var _iterator15 = $.find('\\d+|field_move_category|\\d+|value', data)[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
-                    var _s7 = _step15.value;
-
-                    _('#spot-type').innerText = t('move_type_' + _s7);
-                }
-                // move
-            } catch (err) {
-                _didIteratorError15 = true;
-                _iteratorError15 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion15 && _iterator15.return) {
-                        _iterator15.return();
-                    }
-                } finally {
-                    if (_didIteratorError15) {
-                        throw _iteratorError15;
-                    }
-                }
-            }
-
-            var _iteratorNormalCompletion16 = true;
-            var _didIteratorError16 = false;
-            var _iteratorError16 = undefined;
-
-            try {
-                for (var _iterator16 = $.find('\\d+|field_level|\\d+|value', data)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-                    var _s8 = _step16.value;
-
-                    _('#spot-type').innerText += ' (' + t('move_type_' + _s8) + ')';
-                }
-                // group
-            } catch (err) {
-                _didIteratorError16 = true;
-                _iteratorError16 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion16 && _iterator16.return) {
-                        _iterator16.return();
-                    }
-                } finally {
-                    if (_didIteratorError16) {
-                        throw _iteratorError16;
-                    }
-                }
-            }
-
-            var _iteratorNormalCompletion17 = true;
-            var _didIteratorError17 = false;
-            var _iteratorError17 = undefined;
-
-            try {
-                for (var _iterator17 = $.find('\\d+|field_group_type|\\d+|value', data)[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
-                    var _s9 = _step17.value;
-
-                    _('#spot-type').innerText = t('group_type_' + _s9);
-                }
-                // event
-            } catch (err) {
-                _didIteratorError17 = true;
-                _iteratorError17 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion17 && _iterator17.return) {
-                        _iterator17.return();
-                    }
-                } finally {
-                    if (_didIteratorError17) {
-                        throw _iteratorError17;
-                    }
-                }
-            }
-
-            var _iteratorNormalCompletion18 = true;
-            var _didIteratorError18 = false;
-            var _iteratorError18 = undefined;
-
-            try {
-                for (var _iterator18 = $.find('\\d+|field_event_type|\\d+|value', data)[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
-                    var _s10 = _step18.value;
-
-                    _('#spot-type').innerText = t('event_type_' + _s10);
-                }
-            } catch (err) {
-                _didIteratorError18 = true;
-                _iteratorError18 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion18 && _iterator18.return) {
-                        _iterator18.return();
-                    }
-                } finally {
-                    if (_didIteratorError18) {
-                        throw _iteratorError18;
-                    }
-                }
-            }
-
-            _('#spot-title').innerText = t('no_title');
-            var _iteratorNormalCompletion19 = true;
-            var _didIteratorError19 = false;
-            var _iteratorError19 = undefined;
-
-            try {
-                for (var _iterator19 = $.find('\\d+|title|\\d+|value', data)[Symbol.iterator](), _step19; !(_iteratorNormalCompletion19 = (_step19 = _iterator19.next()).done); _iteratorNormalCompletion19 = true) {
-                    var _s11 = _step19.value;
-
-                    _('#spot-title').innerText = _s11;
-                }
-            } catch (err) {
-                _didIteratorError19 = true;
-                _iteratorError19 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion19 && _iterator19.return) {
-                        _iterator19.return();
-                    }
-                } finally {
-                    if (_didIteratorError19) {
-                        throw _iteratorError19;
-                    }
-                }
-            }
-
-            _('#spot-body').innerText = t('no_body');
-            var _iteratorNormalCompletion20 = true;
-            var _didIteratorError20 = false;
-            var _iteratorError20 = undefined;
-
-            try {
-                for (var _iterator20 = $.find('\\d+|body|\\d+|value', data)[Symbol.iterator](), _step20; !(_iteratorNormalCompletion20 = (_step20 = _iterator20.next()).done); _iteratorNormalCompletion20 = true) {
-                    var _s12 = _step20.value;
-
-                    _('#spot-body').innerHTML = _s12;
-                }
-            } catch (err) {
-                _didIteratorError20 = true;
-                _iteratorError20 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion20 && _iterator20.return) {
-                        _iterator20.return();
-                    }
-                } finally {
-                    if (_didIteratorError20) {
-                        throw _iteratorError20;
-                    }
-                }
-            }
-
-            var text = '';
-            var _iteratorNormalCompletion21 = true;
-            var _didIteratorError21 = false;
-            var _iteratorError21 = undefined;
-
-            try {
-                for (var _iterator21 = $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)[Symbol.iterator](), _step21; !(_iteratorNormalCompletion21 = (_step21 = _iterator21.next()).done); _iteratorNormalCompletion21 = true) {
-                    var _s13 = _step21.value;
-
-                    text += '<img src="' + $.getUrl(_s13) + '" />';
-                }
-            } catch (err) {
-                _didIteratorError21 = true;
-                _iteratorError21 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion21 && _iterator21.return) {
-                        _iterator21.return();
-                    }
-                } finally {
-                    if (_didIteratorError21) {
-                        throw _iteratorError21;
-                    }
-                }
-            }
-
-            _('#spot-images').innerHTML = text || t('no_images');
-
-            //_('#spot-lat').innerText = 'Keine Standortangabe vorhanden.';
-            var _iteratorNormalCompletion22 = true;
-            var _didIteratorError22 = false;
-            var _iteratorError22 = undefined;
-
-            try {
-                for (var _iterator22 = $.find('\\d+|field_location|\\d+|lat', data)[Symbol.iterator](), _step22; !(_iteratorNormalCompletion22 = (_step22 = _iterator22.next()).done); _iteratorNormalCompletion22 = true) {
-                    var _s14 = _step22.value;
-
-                    $.spot.lat = _s14;
-                    _('#spot-lat').innerHTML = _s14;
-                }
-
-                //_('#spot-lng').innerText = 'Keine Standortangabe vorhanden.';
-            } catch (err) {
-                _didIteratorError22 = true;
-                _iteratorError22 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion22 && _iterator22.return) {
-                        _iterator22.return();
-                    }
-                } finally {
-                    if (_didIteratorError22) {
-                        throw _iteratorError22;
-                    }
-                }
-            }
-
-            var _iteratorNormalCompletion23 = true;
-            var _didIteratorError23 = false;
-            var _iteratorError23 = undefined;
-
-            try {
-                for (var _iterator23 = $.find('\\d+|field_location|\\d+|lon', data)[Symbol.iterator](), _step23; !(_iteratorNormalCompletion23 = (_step23 = _iterator23.next()).done); _iteratorNormalCompletion23 = true) {
-                    var _s15 = _step23.value;
-
-                    $.spot.lng = _s15;
-                    _('#spot-lng').innerHTML = _s15;
-                }
-            } catch (err) {
-                _didIteratorError23 = true;
-                _iteratorError23 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion23 && _iterator23.return) {
-                        _iterator23.return();
-                    }
-                } finally {
-                    if (_didIteratorError23) {
-                        throw _iteratorError23;
-                    }
-                }
-            }
-				*/
             Nav.goTab('spot');
 
             if ($.spot.lat && $.spot.lng) {
@@ -1814,30 +1361,26 @@ var Spot = {};(function ($) {
         });
     };
 
-    $.getUrl = function (imageUrl) {
-        return imageUrl.replace('/sites/default/files/20', '/sites/default/files/styles/grid/public/20');
-    };
-
     $.find = function (path, json) {
         var jsons = [json];
         path = path.split('|');
-        var _iteratorNormalCompletion24 = true;
-        var _didIteratorError24 = false;
-        var _iteratorError24 = undefined;
+        var _iteratorNormalCompletion8 = true;
+        var _didIteratorError8 = false;
+        var _iteratorError8 = undefined;
 
         try {
-            for (var _iterator24 = path[Symbol.iterator](), _step24; !(_iteratorNormalCompletion24 = (_step24 = _iterator24.next()).done); _iteratorNormalCompletion24 = true) {
-                var p = _step24.value;
+            for (var _iterator8 = path[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                var p = _step8.value;
 
                 var pr = new RegExp('^' + p + '$'),
                     list = [];
-                var _iteratorNormalCompletion25 = true;
-                var _didIteratorError25 = false;
-                var _iteratorError25 = undefined;
+                var _iteratorNormalCompletion9 = true;
+                var _didIteratorError9 = false;
+                var _iteratorError9 = undefined;
 
                 try {
-                    for (var _iterator25 = jsons[Symbol.iterator](), _step25; !(_iteratorNormalCompletion25 = (_step25 = _iterator25.next()).done); _iteratorNormalCompletion25 = true) {
-                        var j = _step25.value;
+                    for (var _iterator9 = jsons[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+                        var j = _step9.value;
 
                         for (var n in j) {
                             if (j.hasOwnProperty(n)) {
@@ -1848,16 +1391,16 @@ var Spot = {};(function ($) {
                         }
                     }
                 } catch (err) {
-                    _didIteratorError25 = true;
-                    _iteratorError25 = err;
+                    _didIteratorError9 = true;
+                    _iteratorError9 = err;
                 } finally {
                     try {
-                        if (!_iteratorNormalCompletion25 && _iterator25.return) {
-                            _iterator25.return();
+                        if (!_iteratorNormalCompletion9 && _iterator9.return) {
+                            _iterator9.return();
                         }
                     } finally {
-                        if (_didIteratorError25) {
-                            throw _iteratorError25;
+                        if (_didIteratorError9) {
+                            throw _iteratorError9;
                         }
                     }
                 }
@@ -1865,16 +1408,16 @@ var Spot = {};(function ($) {
                 jsons = list;
             }
         } catch (err) {
-            _didIteratorError24 = true;
-            _iteratorError24 = err;
+            _didIteratorError8 = true;
+            _iteratorError8 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion24 && _iterator24.return) {
-                    _iterator24.return();
+                if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                    _iterator8.return();
                 }
             } finally {
-                if (_didIteratorError24) {
-                    throw _iteratorError24;
+                if (_didIteratorError8) {
+                    throw _iteratorError8;
                 }
             }
         }
@@ -1889,7 +1432,7 @@ var Spot = {};(function ($) {
     };
 
     _('#spot-web').onclick = function () {
-        location.href = '//map.parkour.org/'+ $.spot.type + '/' + $.spot.url_alias;
+        location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias;
     };
 })(Spot);
 // Source: src/scripts/z.js

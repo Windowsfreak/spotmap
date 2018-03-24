@@ -20,17 +20,17 @@ const Login = {}; ($ => {
         let user = _('#login-username');
         let pass = _('#login-password');
         Http.setCredentials(user.value, pass.value);
-        //get('//www.parkour.org/user/1',{_format: 'hal_json'}).then(function() {
-        Nav.success(t('logged_in_as', user.value));
-        user.value = '';
-        pass.value = '';
-        Nav.events.login_show();
-        /*}, function() {
-         error(t('error_login'));
-         deleteCredentials();
-         pass.value = '';
-         pass.focus();
-         });*/
+        Http.get('//map.parkour.org/api/v1/auth', null, {Authorization: true}).then(function(data) {
+            Nav.success(t('logged_in_as', user.value));
+            user.value = '';
+            pass.value = '';
+            Nav.events.login_show();
+        }, function() {
+            Nav.error(t('error_login'));
+            Http.deleteCredentials();
+            pass.value = '';
+            pass.focus();
+        });
     };
 
     _('#logout-submit').onclick = () => {

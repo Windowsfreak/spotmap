@@ -96,6 +96,9 @@ button, input, textarea {
     background-color: transparent;
     border: solid transparent;
 }
+#content section#map button {
+    min-width: inherit;
+}
 button {
     -webkit-appearance: button;
     user-select: none;
@@ -104,6 +107,9 @@ button {
     border: 1px solid #ddd;
     border-radius: 4px;
     min-height: 43px;
+}
+#content section#map button {
+    min-height: inherit;
 }
 textarea {
     text-align: left;

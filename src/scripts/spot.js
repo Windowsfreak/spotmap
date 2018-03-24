@@ -12,65 +12,21 @@ const Spot = {}; ($ => {
     ready.push(() => Nav.events.spot_hide = () => _('#map').className = '');
 
     $.loadSpot = id => {
-        Http.get(`//www.parkour.org/${l}/rest/node/${id}`, {_format: 'hal_json'}, {Authorization: false}).then(data => {
-            $.spot = {id: id};
+        Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
+            $.spot = {id: id, type: data.spot.type, url_alias: data.spot.url_alias};
 
-            _('#spot-type').innerText = '';
-            for (const s of $.find('\\d+|type|\\d+|target_id', data)) {
-                _('#spot').className = `spot-type-${s}`;
-                _('#spot-type').innerText = t(`type_${s}`);
-            }
-            /* spot */
-            for (const s of $.find('\\d+|field_spot_type|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`spot_type_${s}`);
-            }
-            /* move */
-            for (const s of $.find('\\d+|field_category|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`move_type_${s}`);
-            }
-            /* move */
-            for (const s of $.find('\\d+|field_move_category|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`move_type_${s}`);
-            }
-            /* move */
-            for (const s of $.find('\\d+|field_level|\\d+|value', data)) {
-                _('#spot-type').innerText += ` (${t('move_type_' + s)})`;
-            }
-            /* group */
-            for (const s of $.find('\\d+|field_group_type|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`group_type_${s}`);
-            }
-            /* event */
-            for (const s of $.find('\\d+|field_event_type|\\d+|value', data)) {
-                _('#spot-type').innerText = t(`event_type_${s}`);
-            }
-
-            _('#spot-title').innerText = t('no_title');
-            for (const s of $.find('\\d+|title|\\d+|value', data)) {
-                _('#spot-title').innerText = s;
-            }
-
-            _('#spot-body').innerText = t('no_body');
-            for (const s of $.find('\\d+|body|\\d+|value', data)) {
-                _('#spot-body').innerHTML = s;
-            }
-
-            let text = '';
-            for (const s of $.find('\\d+|_links|.+parkour\.org\/rest\/relation\/node\/.+\/field_images|\\d+|href', data)) {
-                text += `<img src="${$.getUrl(s)}" />`;
-            }
-            _('#spot-images').innerHTML = text || t('no_images');
-
-            //_('#spot-lat').innerText = 'Keine Standortangabe vorhanden.';
-            for (const s of $.find('\\d+|field_location|\\d+|lat', data)) {
-                $.spot.lat = s;
-                _('#spot-lat').innerHTML = s;
-            }
-
-            //_('#spot-lng').innerText = 'Keine Standortangabe vorhanden.';
-            for (const s of $.find('\\d+|field_location|\\d+|lon', data)) {
-                $.spot.lng = s;
-                _('#spot-lng').innerHTML = s;
+            _('#spot-title').innerText = data.spot.title || t('no_title');
+            _('#spot').className = `spot-type-${data.spot.type}`;
+            _('#spot-type').innerText = t(data.spot_type_detailed);
+            _('#spot-body').innerHTML = data.spot.description || t('no_body');
+            _('#spot-lat').innerHTML = data.spot.lat;
+            _('#spot-lng').innerHTML = data.spot.lng;
+            $.spot.lat = parseFloat(data.spot.lat);
+            $.spot.lng = parseFloat(data.spot.lng);
+            if(data.spot.p0) {
+                _('#spot-images').innerHTML = `<img src="//map.parkour.org/images/spots/thumbnails/320px/${data.spot.p0}" />`;
+            } else {
+                _('#spot-images').innerHTML = t('no_images');
             }
 
             Nav.goTab('spot');
@@ -106,8 +62,6 @@ const Spot = {}; ($ => {
         }, data => Nav.error(t('error_load_spot')));
     };
 
-    $.getUrl = imageUrl => imageUrl.replace('/sites/default/files/20', '/sites/default/files/styles/grid/public/20');
-
     $.find = (path, json) => {
         let jsons = [json];
         path = path.split('|');
@@ -134,6 +88,6 @@ const Spot = {}; ($ => {
     };
 
     _('#spot-web').onclick = () => {
-        location.href = `//www.parkour.org/${l}/node/${$.spot.id}`;
+        location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
     };
 })(Spot);

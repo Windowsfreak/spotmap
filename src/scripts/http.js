@@ -28,7 +28,7 @@ const Http = {}; ($ => {
             headers.Authorization = 'Basic ' + $.b64a(headers.user + ':' + headers.pass);
             delete headers.user;
             delete headers.pass;
-        } else if (url.match(/^(https?:)?\/\/(www\.)parkour\.org\/?/)) {
+        } else if (url.match(/^(https?:)?\/\/(www\.)?map\.parkour\.org\/?/)) {
             headers.Authorization = $.getCredentials();
         }
         return new Promise(function (resolve, reject) {
