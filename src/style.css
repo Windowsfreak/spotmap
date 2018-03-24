@@ -174,6 +174,9 @@ article *, #spot * {
 #spot-type {
     font-weight: bold;
 }
+#spot-meta {
+    font-size: 80%;
+}
 #spot img {
     width: 320px;
     max-width: 100%;

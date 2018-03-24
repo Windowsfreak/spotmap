@@ -18,16 +18,28 @@ const Spot = {}; ($ => {
             _('#spot-title').innerText = data.spot.title || t('no_title');
             _('#spot').className = `spot-type-${data.spot.type}`;
             _('#spot-type').innerText = t(data.spot_type_detailed);
+            let text = '';
+            let date = new Date(data.spot.created * 1000).toLocaleString();
+            if (data.spot.user_id) {
+                text = `${t('node_created_by', data.spot.user_id)} ${t('node_created_by_at', date)}`;
+            } else {
+                text = `${t('node_created_at', date)}`;
+            }
+            if (data.spot.changed > data.spot.created) {
+                text += `${t('node_changed_at', new Date(data.spot.changed * 1000).toLocaleString())}`;
+            }
+            _('#spot-meta').innerText = text;
+            //data.spot_type_detailed);
             _('#spot-body').innerHTML = data.spot.description || t('no_body');
             _('#spot-lat').innerHTML = data.spot.lat;
             _('#spot-lng').innerHTML = data.spot.lng;
             $.spot.lat = parseFloat(data.spot.lat);
             $.spot.lng = parseFloat(data.spot.lng);
-            if(data.spot.p0) {
-                _('#spot-images').innerHTML = `<img src="//map.parkour.org/images/spots/thumbnails/320px/${data.spot.p0}" />`;
-            } else {
-                _('#spot-images').innerHTML = t('no_images');
+            text = '';
+            for (const image of data.images) {
+                text += `<img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" />`;
             }
+            _('#spot-images').innerHTML = text || t('no_images');
 
             Nav.goTab('spot');
 

@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.0 - 2018-03-24
+/*! spotmap - v0.2.1 - 2018-03-24
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -1311,16 +1311,50 @@ var Spot = {};(function ($) {
             _('#spot-title').innerText = data.spot.title || t('no_title');
             _('#spot').className = 'spot-type-' + data.spot.type;
             _('#spot-type').innerText = t(data.spot_type_detailed);
+            var text = '';
+            var date = new Date(data.spot.created * 1000).toLocaleString();
+            if (data.spot.user_id) {
+                text = t('node_created_by', data.spot.user_id) + ' ' + t('node_created_by_at', date);
+            } else {
+                text = '' + t('node_created_at', date);
+            }
+            if (data.spot.changed > data.spot.created) {
+                text += '' + t('node_changed_at', new Date(data.spot.changed * 1000).toLocaleString());
+            }
+            _('#spot-meta').innerText = text;
+            //data.spot_type_detailed);
             _('#spot-body').innerHTML = data.spot.description || t('no_body');
             _('#spot-lat').innerHTML = data.spot.lat;
             _('#spot-lng').innerHTML = data.spot.lng;
             $.spot.lat = parseFloat(data.spot.lat);
             $.spot.lng = parseFloat(data.spot.lng);
-            if (data.spot.p0) {
-                _('#spot-images').innerHTML = '<img src="//map.parkour.org/images/spots/thumbnails/320px/' + data.spot.p0 + '" />';
-            } else {
-                _('#spot-images').innerHTML = t('no_images');
+            text = '';
+            var _iteratorNormalCompletion8 = true;
+            var _didIteratorError8 = false;
+            var _iteratorError8 = undefined;
+
+            try {
+                for (var _iterator8 = data.images[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                    var image = _step8.value;
+
+                    text += '<img src="//map.parkour.org/images/spots/thumbnails/320px/' + image.filename + '" />';
+                }
+            } catch (err) {
+                _didIteratorError8 = true;
+                _iteratorError8 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                        _iterator8.return();
+                    }
+                } finally {
+                    if (_didIteratorError8) {
+                        throw _iteratorError8;
+                    }
+                }
             }
+
+            _('#spot-images').innerHTML = text || t('no_images');
 
             Nav.goTab('spot');
 
@@ -1364,23 +1398,23 @@ var Spot = {};(function ($) {
     $.find = function (path, json) {
         var jsons = [json];
         path = path.split('|');
-        var _iteratorNormalCompletion8 = true;
-        var _didIteratorError8 = false;
-        var _iteratorError8 = undefined;
+        var _iteratorNormalCompletion9 = true;
+        var _didIteratorError9 = false;
+        var _iteratorError9 = undefined;
 
         try {
-            for (var _iterator8 = path[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-                var p = _step8.value;
+            for (var _iterator9 = path[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+                var p = _step9.value;
 
                 var pr = new RegExp('^' + p + '$'),
                     list = [];
-                var _iteratorNormalCompletion9 = true;
-                var _didIteratorError9 = false;
-                var _iteratorError9 = undefined;
+                var _iteratorNormalCompletion10 = true;
+                var _didIteratorError10 = false;
+                var _iteratorError10 = undefined;
 
                 try {
-                    for (var _iterator9 = jsons[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-                        var j = _step9.value;
+                    for (var _iterator10 = jsons[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+                        var j = _step10.value;
 
                         for (var n in j) {
                             if (j.hasOwnProperty(n)) {
@@ -1391,16 +1425,16 @@ var Spot = {};(function ($) {
                         }
                     }
                 } catch (err) {
-                    _didIteratorError9 = true;
-                    _iteratorError9 = err;
+                    _didIteratorError10 = true;
+                    _iteratorError10 = err;
                 } finally {
                     try {
-                        if (!_iteratorNormalCompletion9 && _iterator9.return) {
-                            _iterator9.return();
+                        if (!_iteratorNormalCompletion10 && _iterator10.return) {
+                            _iterator10.return();
                         }
                     } finally {
-                        if (_didIteratorError9) {
-                            throw _iteratorError9;
+                        if (_didIteratorError10) {
+                            throw _iteratorError10;
                         }
                     }
                 }
@@ -1408,16 +1442,16 @@ var Spot = {};(function ($) {
                 jsons = list;
             }
         } catch (err) {
-            _didIteratorError8 = true;
-            _iteratorError8 = err;
+            _didIteratorError9 = true;
+            _iteratorError9 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion8 && _iterator8.return) {
-                    _iterator8.return();
+                if (!_iteratorNormalCompletion9 && _iterator9.return) {
+                    _iterator9.return();
                 }
             } finally {
-                if (_didIteratorError8) {
-                    throw _iteratorError8;
+                if (_didIteratorError9) {
+                    throw _iteratorError9;
                 }
             }
         }
