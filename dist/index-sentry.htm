@@ -39,15 +39,16 @@
     <section id="login">
         <button type="button" onclick="Nav.resetTab()">&#10060;</button>
         <section id="login-form">
+            <p><span data-translate="login_text"></span></p>
             <div class="grid">
                 <div class="form">
                     <label for="login-username" data-translate="username"></label>
-                    <input id="login-username" type="text" placeholder="Benutzername" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-password').focus();">
+                    <input id="login-username" type="text" placeholder="Benutzername" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
                 </div>
-                <div class="form">
+                <!--<div class="form">
                     <label for="login-password" data-translate="password"></label>
-                    <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
-                </div>
+                    <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-password').focus();">
+                </div>-->
                 <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_login">login</span></button>
                 <button type="button" class="no-grow" onclick="Help.show('login')">&#10067;</button>
             </div>
@@ -68,6 +69,7 @@
         <button type="button" onclick="Nav.resetTab()">&#10060;</button>
         <h1 id="spot-title"></h1>
         <p id="spot-type"></p>
+        <p id="spot-meta"></p>
         <p id="spot-body"></p>
         <p id="spot-images"></p>
 
@@ -92,6 +94,8 @@
     <section id="form">
         <button type="button" onclick="Nav.goTab('map', 0)">&#10060;</button>
         <h1><span id="form-type"></span> <input id="form-title" oninput="Form.backup()" type="text" placeholder="Name" data-translate="form_name"></h1>
+        <h1><span data-translate="form_category"></span> <select required id="form-category" placeholder="Category" data-translate="form_category">
+        </select></h1>
         <textarea id="form-text" oninput="Form.backup()" placeholder="Beschreibung" data-translate="form_description"></textarea>
         <p data-translate="label_complete_later">Weitere Details können nach dem Speichern ergänzt werden.</p>
         <button id="form-save" type="button" onclick="Form.save()">&#9997; <span data-translate="btn_save">Speichern</span></button>

@@ -84,7 +84,7 @@ nav.success {
     visibility: hidden;
     opacity: 0;
 }
-button, input, textarea {
+button, input, select, textarea {
     font-weight: normal;
     text-align: center;
     white-space: nowrap;
@@ -103,7 +103,7 @@ button {
     -webkit-appearance: button;
     user-select: none;
 }
-#content > section button, #content > section input, textarea {
+#content > section button, #content > section input, select, textarea {
     border: 1px solid #ddd;
     border-radius: 4px;
     min-height: 43px;
@@ -371,4 +371,7 @@ button, a[onclick], .clickable, .filterBtn, article
 }
 h2 {
     font-size: 125%;
+}
+select {
+    height: 43px;
 }

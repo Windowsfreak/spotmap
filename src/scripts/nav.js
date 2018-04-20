@@ -78,7 +78,7 @@ const Nav = {}; ($ => {
         } else if (h.startsWith('#search')) {
             $.goTab('search', 1);
             if (h.startsWith('#search/')) {
-                _('#search-text').value = /#(\w+)\/(.*)/g.exec(h)[2];
+                _('#search-text').value = decodeURIComponent(/#(\w+)\/(.*)/g.exec(h)[2]);
                 Search.loadSearch();
             }
         } else if (h === '' || h.startsWith('#map/')) {

@@ -9,7 +9,7 @@ const Search = {}; ($ => {
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
-        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + text);
+        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
     };
     _('#search-geocode').onclick = () => {
         const text = _('#search-text').value;
@@ -17,12 +17,13 @@ const Search = {}; ($ => {
         Nav.navigate('');
     };
 
-    $.loadSearch = () => {
+    $.loadSearch = more => {
         const text = _('#search-text').value;
         if (/^(0|[1-9]\d*)$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = {search: text, limit: 25};
+            search.data = {search: text, limit: more ? search.data.limit + 25 : 25};
+            console.log(search);
             Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
         }
     };
@@ -45,7 +46,10 @@ const Search = {}; ($ => {
             text += '</div>';
             text += '</article>';
         }
-        text += '</div>';
+        if (result.length >= search.data.limit) {
+            text += `<article onclick="Search.loadSearch(true);"><div class="in-place title"><h1>${t('search_show_more')}</h1></div></article>`;
+            text += '</div>';
+        }
         _('#search-page').innerHTML = text;
     };
 })(Search);

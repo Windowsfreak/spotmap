@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.1 - 2018-03-24
+/*! spotmap - v0.2.2 - 2018-04-21
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -32,7 +32,7 @@
     $.t_html = () => {
         for (const item of $._('*')) {
             if (item.getAttribute('data-translate')) {
-                item[['input', 'textarea'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.getAttribute('data-translate'));
+                item[['input', 'textarea', 'select'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.getAttribute('data-translate'));
             }
         }
     };
@@ -41,6 +41,44 @@
 })(window);
 // Source: src/scripts/form.js
 const Form = {}; ($ => {
+    const categories = {
+        spot: [
+            'gym',
+            'parkourpark',
+            'parkourgym',
+            'climbinggym',
+            'pool',
+            'cliff'
+        ],
+        event: [
+            'training',
+            'workshop',
+            'jam',
+            'trip',
+            'competition'
+        ],
+        group: [
+            'private',
+            'community',
+            'club',
+            'company'
+        ],
+        move: [
+            'moves',
+            'conditioning',
+            'games',
+            'jumps',
+            'vaults',
+            'bar',
+            'flips',
+            'combinations',
+            'freezes',
+            'beginner',
+            'intermediate',
+            'advanced'
+        ]
+    };
+
     ready.push(() => {
         Nav.events.form_show = () => {
             _('#map').style.display = 'block';
@@ -73,6 +111,9 @@ const Form = {}; ($ => {
             event: t('new_event')
         };
         _('#form-type').innerText = formTypes[type];
+        _('#form-category').innerHTML = `<option value='' disabled selected hidden>${t('form_category')}</option>` +
+            categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
+        _('#form-category').value = '';
         Spot.marker = {lat: Maps.marker.getPosition().lat(), lng: Maps.marker.getPosition().lng(), type: type};
         Nav.goTab('form');
     };
@@ -126,24 +167,29 @@ const Form = {}; ($ => {
     };
 
     $.save = () => {
-        Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
+        const category = _('#form-category').value;
+        if (!category) {
+            Nav.error(t('form_category'));
+            return;
+        }
+//        Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
             Nav.success(t('in_progress'));
-            Http.post('//www.parkour.org/entity/node?_format=hal_json', JSON.stringify({
-                _links: {type: {href: 'https://www.parkour.org/rest/type/node/' + Spot.marker.type}},
-                type: [{target_id: Spot.marker.type}],
-                title: [{value: _('#form-title').value}],
-                body: [{value: _('#form-text').value}],
-                field_location: [{
-                    lat: Spot.marker.lat,
-                    lon: Spot.marker.lng,
-                    value: 'POINT (' + Spot.marker.lng + ' ' + Spot.marker.lat + ')'
-                }]
-            }), {'Content-Type': 'application/hal+json', 'X-CSRF-Token': csrf.message}).then(data => {
+            Http.post('//map.parkour.org/api/v1/spot', JSON.stringify({
+                type: Spot.marker.type,
+                category: _('#form-category').value,
+                title: _('#form-title').value,
+                description: _('#form-text').value,
+                lat: Spot.marker.lat.toString(),
+                lng: Spot.marker.lng.toString(),
+                user_created: Http.getUser(),
+            }), {'Content-Type': 'application/json'/*, 'X-CSRF-Token': csrf.message*/}).then(data => {
                 Nav.success(t('node_added'));
-                location.href = '//www.parkour.org/de/node/' + Spot.find('nid|\\d+|value', data)[0] + '/edit';
+                //location.href = '//map.parkour.org/de/node/' + data.id + '/edit';
+                //location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
+                Nav.navigate('#spot/' + data.id);
                 $.remove(true);
-            }, data => Nav.error(t((data.status === 403 || data.status === 401) ? 'error_forbidden' : 'error_add_node')));
-        }, () => Nav.error(t('error_add_node')));
+            }, data => Nav.error(t((data.status === 403 || data.status === 401) ? 'error_forbidden' : 'error_add_node') + ' ' + data.message));
+        //}, () => Nav.error(t('error_add_node')));
     };
 })(Form);
 // Source: src/scripts/geohash.js
@@ -450,12 +496,12 @@ const Http = {}; ($ => {
 
     $.setCredentials = (user, pass) => {
         localStorage.setItem('d8_user', user);
-        localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
+        //localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
     };
 
     $.deleteCredentials = () => {
         localStorage.removeItem('d8_user');
-        localStorage.removeItem('d8_auth');
+        //localStorage.removeItem('d8_auth');
     };
 
     $.http = function(method, url, params, headers = {}) {
@@ -544,19 +590,19 @@ const Login = {}; ($ => {
 
     _('#login-submit').onclick = () => {
         let user = _('#login-username');
-        let pass = _('#login-password');
-        Http.setCredentials(user.value, pass.value);
-        Http.get('//map.parkour.org/api/v1/auth', null, {Authorization: true}).then(function(data) {
+        /*let pass = _('#login-password');*/
+        Http.setCredentials(user.value, ''/*pass.value*/);
+        //Http.get('//map.parkour.org/api/v1/auth', null, {Authorization: true}).then(function(data) {
             Nav.success(t('logged_in_as', user.value));
             user.value = '';
-            pass.value = '';
+            //pass.value = '';
             Nav.events.login_show();
-        }, function() {
+        /*}, function() {
             Nav.error(t('error_login'));
             Http.deleteCredentials();
             pass.value = '';
             pass.focus();
-        });
+        });*/
     };
 
     _('#logout-submit').onclick = () => {
@@ -834,6 +880,10 @@ const Maps = {}; ($ => {
         if (!event.latLng) {
             event.latLng = {lat: event.lat, lng: event.lng};
         }
+        if (!Http.getUser()) {
+            Nav.success(t('error_login_required'));
+            return;
+        }
         if (!force && Nav.isLite) {
             return;
         }
@@ -992,7 +1042,7 @@ const Nav = {}; ($ => {
         } else if (h.startsWith('#search')) {
             $.goTab('search', 1);
             if (h.startsWith('#search/')) {
-                _('#search-text').value = /#(\w+)\/(.*)/g.exec(h)[2];
+                _('#search-text').value = decodeURIComponent(/#(\w+)\/(.*)/g.exec(h)[2]);
                 Search.loadSearch();
             }
         } else if (h === '' || h.startsWith('#map/')) {
@@ -1050,7 +1100,7 @@ const Search = {}; ($ => {
     const search = {};
     _('#search-submit').onclick = () => {
         const text = _('#search-text').value;
-        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + text);
+        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
     };
     _('#search-geocode').onclick = () => {
         const text = _('#search-text').value;
@@ -1058,12 +1108,13 @@ const Search = {}; ($ => {
         Nav.navigate('');
     };
 
-    $.loadSearch = () => {
+    $.loadSearch = more => {
         const text = _('#search-text').value;
         if (/^(0|[1-9]\d*)$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = {search: text, limit: 25};
+            search.data = {search: text, limit: more ? search.data.limit + 25 : 25};
+            console.log(search);
             Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
         }
     };
@@ -1086,7 +1137,10 @@ const Search = {}; ($ => {
             text += '</div>';
             text += '</article>';
         }
-        text += '</div>';
+        if (result.length >= search.data.limit) {
+            text += `<article onclick="Search.loadSearch(true);"><div class="in-place title"><h1>${t('search_show_more')}</h1></div></article>`;
+            text += '</div>';
+        }
         _('#search-page').innerHTML = text;
     };
 })(Search);
@@ -1098,31 +1152,40 @@ const Spot = {}; ($ => {
 
     $.loadSpot = id => {
         Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
-            $.spot = {id: id, type: data.spot.type, url_alias: data.spot.url_alias};
+            const spot = data.spot;
+            $.spot = {id: id, type: spot.type, url_alias: spot.url_alias};
 
-            _('#spot-title').innerText = data.spot.title || t('no_title');
-            _('#spot').className = `spot-type-${data.spot.type}`;
-            _('#spot-type').innerText = t(data.spot_type_detailed);
+            _('#spot-title').innerText = spot.title || t('no_title');
+            _('#spot').className = `spot-type-${spot.type}`;
+            let type = t(`${spot.type}_type_${spot.category}`);
+            if (data.spot_category_details && data.spot_category_details.length) {
+                type += ` - ${data.spot_category_details.map(item => t(`spot_feature_${item}`)).join(', ')}`;
+            }
+            _('#spot-type').innerText = type;
             let text = '';
-            let date = new Date(data.spot.created * 1000).toLocaleString();
-            if (data.spot.user_id) {
-                text = `${t('node_created_by', data.spot.user_id)} ${t('node_created_by_at', date)}`;
+            const date = new Date(spot.created * 1000).toLocaleString();
+            if (spot.user_created) {
+                text = `${t('node_created_by', spot.user_created)} ${t('node_created_by_at', date)}`;
             } else {
                 text = `${t('node_created_at', date)}`;
             }
-            if (data.spot.changed > data.spot.created) {
-                text += `${t('node_changed_at', new Date(data.spot.changed * 1000).toLocaleString())}`;
+            if (spot.changed > spot.created) {
+                const date = new Date(spot.changed * 1000).toLocaleString();
+                if (spot.user_changed) {
+                    text += `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}`;
+                } else {
+                  text += `${t('node_changed_at', date)}`;
+                }
             }
             _('#spot-meta').innerText = text;
-            //data.spot_type_detailed);
-            _('#spot-body').innerHTML = data.spot.description || t('no_body');
-            _('#spot-lat').innerHTML = data.spot.lat;
-            _('#spot-lng').innerHTML = data.spot.lng;
-            $.spot.lat = parseFloat(data.spot.lat);
-            $.spot.lng = parseFloat(data.spot.lng);
+            _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-lat').innerHTML = spot.lat;
+            _('#spot-lng').innerHTML = spot.lng;
+            $.spot.lat = parseFloat(spot.lat);
+            $.spot.lng = parseFloat(spot.lng);
             text = '';
             for (const image of data.images) {
-                text += `<img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" />`;
+                text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
             }
             _('#spot-images').innerHTML = text || t('no_images');
 

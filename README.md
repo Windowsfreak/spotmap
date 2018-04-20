@@ -96,7 +96,8 @@ Filter - can show / hide spots of certain categories
 on the map. Filters could become more sophisticated
 in future.
 ## Getting Started
-TL;DR: Install nodeJS, Grunt, run `npm install` and type `grunt default`.
+TL;DR: Install nodeJS, Grunt, run `npm install` and
+type `grunt default`.
 ### Using Node.js
 Install this module by typing `npm install` in this
 root directory. If you don't have npm installed,
@@ -139,6 +140,21 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.2] - 2018-04-19
+Added:
+- Clickable images in spot description
+- Category choice in editor
+- Show more search results
+Changed:
+- Display spot category and feature
+- Submit editor values, now includes username
+- Login form text changed, password field removed
+Fixed:
+- Character encoding in search
+### [0.2.1] - 2018-03-24
+Added:
+- Show more pictures per spot
+- Create/modify date and author
 ### [0.2.0] - 2018-03-10
 Changed:
 - Changed from Drupal 8 to our own REST backend

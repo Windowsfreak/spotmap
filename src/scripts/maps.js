@@ -1,10 +1,11 @@
-/* globals _, t, ready, Form, Geotile, Nav, Proximity, Spot */
+/* globals _, t, ready, Form, Geotile, Http, Nav, Proximity, Spot */
 const Maps = {}; ($ => {
     'use strict';
 
     // require('./base.js');
     // require('./form.js');
     // require('./geotile.js');
+    // require('./http.js');
     // require('./nav.js');
     // require('./proximity.js');
     // require('./spot.js');
@@ -276,6 +277,10 @@ const Maps = {}; ($ => {
     $.newMarker = (event, force) => {
         if (!event.latLng) {
             event.latLng = {lat: event.lat, lng: event.lng};
+        }
+        if (!Http.getUser()) {
+            Nav.success(t('error_login_required'));
+            return;
         }
         if (!force && Nav.isLite) {
             return;

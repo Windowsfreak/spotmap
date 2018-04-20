@@ -13,12 +13,12 @@ const Http = {}; ($ => {
 
     $.setCredentials = (user, pass) => {
         localStorage.setItem('d8_user', user);
-        localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
+        //localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
     };
 
     $.deleteCredentials = () => {
         localStorage.removeItem('d8_user');
-        localStorage.removeItem('d8_auth');
+        //localStorage.removeItem('d8_auth');
     };
 
     $.http = function(method, url, params, headers = {}) {

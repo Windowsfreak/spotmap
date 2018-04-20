@@ -8,6 +8,44 @@ const Form = {}; ($ => {
     // require('./nav.js');
     // require('./spot.js');
 
+    const categories = {
+        spot: [
+            'gym',
+            'parkourpark',
+            'parkourgym',
+            'climbinggym',
+            'pool',
+            'cliff'
+        ],
+        event: [
+            'training',
+            'workshop',
+            'jam',
+            'trip',
+            'competition'
+        ],
+        group: [
+            'private',
+            'community',
+            'club',
+            'company'
+        ],
+        move: [
+            'moves',
+            'conditioning',
+            'games',
+            'jumps',
+            'vaults',
+            'bar',
+            'flips',
+            'combinations',
+            'freezes',
+            'beginner',
+            'intermediate',
+            'advanced'
+        ]
+    };
+
     ready.push(() => {
         Nav.events.form_show = () => {
             _('#map').style.display = 'block';
@@ -40,6 +78,9 @@ const Form = {}; ($ => {
             event: t('new_event')
         };
         _('#form-type').innerText = formTypes[type];
+        _('#form-category').innerHTML = `<option value='' disabled selected hidden>${t('form_category')}</option>` +
+            categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
+        _('#form-category').value = '';
         Spot.marker = {lat: Maps.marker.getPosition().lat(), lng: Maps.marker.getPosition().lng(), type: type};
         Nav.goTab('form');
     };
@@ -93,23 +134,28 @@ const Form = {}; ($ => {
     };
 
     $.save = () => {
-        Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
+        const category = _('#form-category').value;
+        if (!category) {
+            Nav.error(t('form_category'));
+            return;
+        }
+//        Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
             Nav.success(t('in_progress'));
-            Http.post('//www.parkour.org/entity/node?_format=hal_json', JSON.stringify({
-                _links: {type: {href: 'https://www.parkour.org/rest/type/node/' + Spot.marker.type}},
-                type: [{target_id: Spot.marker.type}],
-                title: [{value: _('#form-title').value}],
-                body: [{value: _('#form-text').value}],
-                field_location: [{
-                    lat: Spot.marker.lat,
-                    lon: Spot.marker.lng,
-                    value: 'POINT (' + Spot.marker.lng + ' ' + Spot.marker.lat + ')'
-                }]
-            }), {'Content-Type': 'application/hal+json', 'X-CSRF-Token': csrf.message}).then(data => {
+            Http.post('//map.parkour.org/api/v1/spot', JSON.stringify({
+                type: Spot.marker.type,
+                category: _('#form-category').value,
+                title: _('#form-title').value,
+                description: _('#form-text').value,
+                lat: Spot.marker.lat.toString(),
+                lng: Spot.marker.lng.toString(),
+                user_created: Http.getUser(),
+            }), {'Content-Type': 'application/json'/*, 'X-CSRF-Token': csrf.message*/}).then(data => {
                 Nav.success(t('node_added'));
-                location.href = '//www.parkour.org/de/node/' + Spot.find('nid|\\d+|value', data)[0] + '/edit';
+                //location.href = '//map.parkour.org/de/node/' + data.id + '/edit';
+                //location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
+                Nav.navigate('#spot/' + data.id);
                 $.remove(true);
-            }, data => Nav.error(t((data.status === 403 || data.status === 401) ? 'error_forbidden' : 'error_add_node')));
-        }, () => Nav.error(t('error_add_node')));
+            }, data => Nav.error(t((data.status === 403 || data.status === 401) ? 'error_forbidden' : 'error_add_node') + ' ' + data.message));
+        //}, () => Nav.error(t('error_add_node')));
     };
 })(Form);

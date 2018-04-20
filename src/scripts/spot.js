@@ -13,31 +13,40 @@ const Spot = {}; ($ => {
 
     $.loadSpot = id => {
         Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
-            $.spot = {id: id, type: data.spot.type, url_alias: data.spot.url_alias};
+            const spot = data.spot;
+            $.spot = {id: id, type: spot.type, url_alias: spot.url_alias};
 
-            _('#spot-title').innerText = data.spot.title || t('no_title');
-            _('#spot').className = `spot-type-${data.spot.type}`;
-            _('#spot-type').innerText = t(data.spot_type_detailed);
+            _('#spot-title').innerText = spot.title || t('no_title');
+            _('#spot').className = `spot-type-${spot.type}`;
+            let type = t(`${spot.type}_type_${spot.category}`);
+            if (data.spot_category_details && data.spot_category_details.length) {
+                type += ` - ${data.spot_category_details.map(item => t(`spot_feature_${item}`)).join(', ')}`;
+            }
+            _('#spot-type').innerText = type;
             let text = '';
-            let date = new Date(data.spot.created * 1000).toLocaleString();
-            if (data.spot.user_id) {
-                text = `${t('node_created_by', data.spot.user_id)} ${t('node_created_by_at', date)}`;
+            const date = new Date(spot.created * 1000).toLocaleString();
+            if (spot.user_created) {
+                text = `${t('node_created_by', spot.user_created)} ${t('node_created_by_at', date)}`;
             } else {
                 text = `${t('node_created_at', date)}`;
             }
-            if (data.spot.changed > data.spot.created) {
-                text += `${t('node_changed_at', new Date(data.spot.changed * 1000).toLocaleString())}`;
+            if (spot.changed > spot.created) {
+                const date = new Date(spot.changed * 1000).toLocaleString();
+                if (spot.user_changed) {
+                    text += `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}`;
+                } else {
+                  text += `${t('node_changed_at', date)}`;
+                }
             }
             _('#spot-meta').innerText = text;
-            //data.spot_type_detailed);
-            _('#spot-body').innerHTML = data.spot.description || t('no_body');
-            _('#spot-lat').innerHTML = data.spot.lat;
-            _('#spot-lng').innerHTML = data.spot.lng;
-            $.spot.lat = parseFloat(data.spot.lat);
-            $.spot.lng = parseFloat(data.spot.lng);
+            _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-lat').innerHTML = spot.lat;
+            _('#spot-lng').innerHTML = spot.lng;
+            $.spot.lat = parseFloat(spot.lat);
+            $.spot.lng = parseFloat(spot.lng);
             text = '';
             for (const image of data.images) {
-                text += `<img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" />`;
+                text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
             }
             _('#spot-images').innerHTML = text || t('no_images');
 
