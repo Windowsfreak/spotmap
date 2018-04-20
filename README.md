@@ -145,10 +145,12 @@ Added:
 - Clickable images in spot description
 - Category choice in editor
 - Show more search results
+
 Changed:
 - Display spot category and feature
 - Submit editor values, now includes username
 - Login form text changed, password field removed
+
 Fixed:
 - Character encoding in search
 ### [0.2.1] - 2018-03-24

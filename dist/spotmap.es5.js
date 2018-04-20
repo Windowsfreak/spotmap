@@ -181,8 +181,8 @@ var Form = {};(function ($) {
             category: _('#form-category').value,
             title: _('#form-title').value,
             description: _('#form-text').value,
-            lat: Spot.marker.lat.toString(),
-            lng: Spot.marker.lng.toString(),
+            lat: Spot.marker.lat,
+            lng: Spot.marker.lng,
             user_created: Http.getUser()
         }), { 'Content-Type': 'application/json' /*, 'X-CSRF-Token': csrf.message*/ }).then(function (data) {
             Nav.success(t('node_added'));
