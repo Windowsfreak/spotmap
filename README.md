@@ -140,6 +140,22 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.3] - 2018-05-06
+Added:
+- Invisible Captchas for new spot creation
+- Lazy load scripts (e.g. reCAPTCHA) on form load
+- Translations for new form fields
+
+Changed:
+- Navigates to login on form load when username missing
+- Headers sent for new spot creation
+
+Fixed:
+- GPS pans map on page load
+- Users can now click through GPS circle
+- Restore saved spots when username missing
+- Translations for spot features
+
 ### [0.2.2] - 2018-04-19
 Added:
 - Clickable images in spot description

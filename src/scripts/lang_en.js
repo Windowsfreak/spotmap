@@ -19,6 +19,8 @@ const lang = {
     form_name: 'Name',
     form_description: 'Description',
     form_category: 'Category',
+    form_features: 'Features',
+    form_images: 'Images',
     label_complete_later: 'More details can be added after saving.',
     btn_save: 'Save',
     btn_delete: 'Delete draft',

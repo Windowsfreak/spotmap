@@ -19,6 +19,8 @@ const lang = {
     form_name: 'Nom',
     form_description: 'Description',
     form_category: 'Category',
+    form_features: 'Features',
+    form_images: 'Images',
     label_complete_later: 'Plus de détails peuvent être ajoutés après l\'enregistrement.',
     btn_save: 'Enregistrer',
     btn_delete: 'Effacer l\'ébauche',

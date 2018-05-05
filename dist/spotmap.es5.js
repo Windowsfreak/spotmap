@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.2 - 2018-04-21
+/*! spotmap - v0.2.3 - 2018-05-06
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -21,9 +21,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     $._ = function (s) {
         return s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
     };
+    $.dom = function (t) {
+        return document.createElement(t);
+    };
 
     $.strip = function (html) {
-        var tmp = document.createElement('DIV');
+        var tmp = $.dom('DIV');
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
     };
@@ -69,10 +72,24 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
     };
 
+    $.script = function (url, callback) {
+        var s = $.dom('script');
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = url;
+        var p = $._('head')[0];
+        if (callback) {
+            s.addEventListener('load', callback, false);
+        }
+        p.appendChild(s);
+    };
+
     $.t_html();
 })(window);
 // Source: src/scripts/form.js
 var Form = {};(function ($) {
+    var captchaCode = false;
+
     var categories = {
         spot: ['gym', 'parkourpark', 'parkourgym', 'climbinggym', 'pool', 'cliff'],
         event: ['training', 'workshop', 'jam', 'trip', 'competition'],
@@ -80,8 +97,19 @@ var Form = {};(function ($) {
         move: ['moves', 'conditioning', 'games', 'jumps', 'vaults', 'bar', 'flips', 'combinations', 'freezes', 'beginner', 'intermediate', 'advanced']
     };
 
+    window.captcha = function () {
+        grecaptcha.render('form-captcha', {
+            'sitekey': '6LdRg1cUAAAAAFjzUokSQB6egcNS_o9EF_KAmW7i',
+            'callback': $.save
+        });
+    };
+
     ready.push(function () {
         Nav.events.form_show = function () {
+            if (!captchaCode) {
+                script('https://www.google.com/recaptcha/api.js?onload=captcha&render=explicit');
+                captchaCode = true;
+            }
             _('#map').style.display = 'block';
             _('#map').className = 'half';
             Maps.map.setCenter(Maps.marker.getPosition());
@@ -90,6 +118,10 @@ var Form = {};(function ($) {
                 google.maps.event.trigger(Maps.map, 'resize');
                 Maps.map.setCenter(Maps.marker.getPosition());
             });
+            if (!Http.getUser()) {
+                Nav.success(t('error_login_required'));
+                Nav.navigate('#login');
+            }
         };
 
         Nav.events.form_hide = function (isSame) {
@@ -112,7 +144,7 @@ var Form = {};(function ($) {
             event: t('new_event')
         };
         _('#form-type').innerText = formTypes[type];
-        _('#form-category').innerHTML = '<option value=\'\' disabled selected hidden>' + t('form_category') + '</option>' + categories[type].map(function (item) {
+        _('#form-category').innerHTML = '<option value="" disabled selected hidden>' + t('form_category') + '</option>' + categories[type].map(function (item) {
             return '<option value="' + item + '">' + t(type + '_type_' + item) + '</option>';
         }).join('');
         _('#form-category').value = '';
@@ -174,26 +206,32 @@ var Form = {};(function ($) {
             Nav.error(t('form_category'));
             return;
         }
-        //        Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
-        Nav.success(t('in_progress'));
-        Http.post('//map.parkour.org/api/v1/spot', JSON.stringify({
-            type: Spot.marker.type,
-            category: _('#form-category').value,
-            title: _('#form-title').value,
-            description: _('#form-text').value,
-            lat: Spot.marker.lat,
-            lng: Spot.marker.lng,
-            user_created: Http.getUser()
-        }), { 'Content-Type': 'application/json' /*, 'X-CSRF-Token': csrf.message*/ }).then(function (data) {
-            Nav.success(t('node_added'));
-            //location.href = '//map.parkour.org/de/node/' + data.id + '/edit';
-            //location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
-            Nav.navigate('#spot/' + data.id);
-            $.remove(true);
-        }, function (data) {
-            return Nav.error(t(data.status === 403 || data.status === 401 ? 'error_forbidden' : 'error_add_node') + ' ' + data.message);
-        });
-        //}, () => Nav.error(t('error_add_node')));
+        var save = function save(token) {
+            Nav.success(t('in_progress'));
+            var user = Http.getUser();
+            Http.post('//map.parkour.org/api/v1/spot', JSON.stringify({
+                type: Spot.marker.type,
+                category: _('#form-category').value,
+                title: _('#form-title').value,
+                description: _('#form-text').value,
+                lat: Spot.marker.lat,
+                lng: Spot.marker.lng,
+                user_created: user
+            }), { 'Content-Type': 'application/json', 'X-CSRF-Token': token, 'X-Username': user }).then(function (data) {
+                Nav.success(t('node_added'));
+                Nav.navigate('#spot/' + data.id);
+                $.remove(true);
+            }, function (data) {
+                return Nav.error(t(data.status === 403 || data.status === 401 ? 'error_forbidden' : 'error_add_node') + ' ' + data.message);
+            });
+        };
+        var token = grecaptcha.getResponse();
+        if (!token) {
+            grecaptcha.execute();
+        } else {
+            save(token);
+            grecaptcha.reset();
+        }
     };
 })(Form);
 // Source: src/scripts/geohash.js
@@ -741,7 +779,7 @@ var Maps = {};(function ($) {
     });
 
     var initial = Date.now;
-    $.panToPosition = !location.hash.startsWith('#map/');
+    window.panToPosition = !location.hash.startsWith('#map/');
     $.filter = ['spot', 'event', 'group'];
     var gpsObj = void 0;
     $.icons = {};
@@ -760,7 +798,8 @@ var Maps = {};(function ($) {
             map: $.map,
             center: { lat: position.coords.latitude, lng: position.coords.longitude },
             radius: position.coords.accuracy,
-            position: position
+            position: position,
+            clickable: false
         });
     };
 
@@ -787,8 +826,9 @@ var Maps = {};(function ($) {
             Nav.goTab('map', 0);
         }
         var checkPan = function checkPan(position) {
+            console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || !location.hash.startsWith('#map') && window.panToPosition) {
+                if (force === 'yes' || !location.hash.startsWith('#map') || window.panToPosition) {
                     $.pan(position);
                 }
             }
@@ -921,7 +961,7 @@ var Maps = {};(function ($) {
 
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
-        var filterDiv = document.createElement('div');
+        var filterDiv = dom('div');
         $.createFilter(filterDiv);
 
         filterDiv.index = 1;
@@ -973,7 +1013,6 @@ var Maps = {};(function ($) {
         });
 
         $.track(true);
-        //get('./query3j.php', {latl:48.188063481211415,lath:55.51619215717891,lngl:-0.54931640625,lngh:20.54443359375,zoom:2}).then(loadAll);
         Form.restore();
     };
 
@@ -992,10 +1031,6 @@ var Maps = {};(function ($) {
     $.newMarker = function (event, force) {
         if (!event.latLng) {
             event.latLng = { lat: event.lat, lng: event.lng };
-        }
-        if (!Http.getUser()) {
-            Nav.success(t('error_login_required'));
-            return;
         }
         if (!force && Nav.isLite) {
             return;
@@ -1039,11 +1074,11 @@ var Maps = {};(function ($) {
 
     $.createFilter = function (filterDiv) {
         filterDiv.className = 'filterDiv';
-        var controlUI = document.createElement('div');
+        var controlUI = dom('div');
         controlUI.className = 'filterBtn';
         controlUI.innerHTML = '&#9881;';
         filterDiv.appendChild(controlUI);
-        var filterBox = document.createElement('div');
+        var filterBox = dom('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
         filterBox.innerHTML = 'Zeige:<br />\n            <span class="yes" id="filter-spot" onclick="Maps.toggleFilter(\'spot\')">' + t('spot') + '</span><br />\n            <span class="yes" id="filter-event" onclick="Maps.toggleFilter(\'event\')">' + t('event') + '</span><br />\n            <span class="yes" id="filter-group" onclick="Maps.toggleFilter(\'group\')">' + t('group') + '</span>';

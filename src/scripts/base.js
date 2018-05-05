@@ -6,9 +6,10 @@
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
+    $.dom = t => document.createElement(t);
 
     $.strip = html => {
-        const tmp = document.createElement('DIV');
+        const tmp = $.dom('DIV');
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
     };
@@ -31,6 +32,16 @@
                 item[['input', 'textarea', 'select'].indexOf(item.tagName.toLowerCase()) >= 0 ? 'placeholder' : 'innerHTML'] = $.t(item.getAttribute('data-translate'));
             }
         }
+    };
+
+    $.script = (url, callback) => {
+        const s = $.dom('script');
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = url;
+        const p = $._('head')[0];
+        if (callback) { s.addEventListener('load', callback, false); }
+        p.appendChild(s);
     };
 
     $.t_html();

@@ -1,6 +1,8 @@
-/* globals _, t, ready, Http, Spot, Maps, Nav */
+/* globals _, t, ready, Http, Spot, Maps, Nav, script, grecaptcha */
 const Form = {}; ($ => {
     'use strict';
+
+    let captchaCode = false;
 
     // require('./base.js');
     // require('./http.js');
@@ -46,8 +48,19 @@ const Form = {}; ($ => {
         ]
     };
 
+    window.captcha = () => {
+        grecaptcha.render('form-captcha', {
+            'sitekey' : '6LdRg1cUAAAAAFjzUokSQB6egcNS_o9EF_KAmW7i',
+            'callback' : $.save
+        });
+    };
+
     ready.push(() => {
         Nav.events.form_show = () => {
+            if (!captchaCode) {
+                script('https://www.google.com/recaptcha/api.js?onload=captcha&render=explicit');
+                captchaCode = true;
+            }
             _('#map').style.display = 'block';
             _('#map').className = 'half';
             Maps.map.setCenter(Maps.marker.getPosition());
@@ -56,6 +69,10 @@ const Form = {}; ($ => {
                 google.maps.event.trigger(Maps.map, 'resize');
                 Maps.map.setCenter(Maps.marker.getPosition());
             });
+            if (!Http.getUser()) {
+                Nav.success(t('error_login_required'));
+                Nav.navigate('#login');
+            }
         };
 
         Nav.events.form_hide = isSame => {
@@ -78,7 +95,7 @@ const Form = {}; ($ => {
             event: t('new_event')
         };
         _('#form-type').innerText = formTypes[type];
-        _('#form-category').innerHTML = `<option value='' disabled selected hidden>${t('form_category')}</option>` +
+        _('#form-category').innerHTML = `<option value="" disabled selected hidden>${t('form_category')}</option>` +
             categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
         _('#form-category').value = '';
         Spot.marker = {lat: Maps.marker.getPosition().lat(), lng: Maps.marker.getPosition().lng(), type: type};
@@ -139,8 +156,9 @@ const Form = {}; ($ => {
             Nav.error(t('form_category'));
             return;
         }
-//        Http.get('//www.parkour.org/rest/session/token', undefined, {Authorization: false}).then(csrf => {
+        const save = token => {
             Nav.success(t('in_progress'));
+            const user = Http.getUser();
             Http.post('//map.parkour.org/api/v1/spot', JSON.stringify({
                 type: Spot.marker.type,
                 category: _('#form-category').value,
@@ -148,14 +166,19 @@ const Form = {}; ($ => {
                 description: _('#form-text').value,
                 lat: Spot.marker.lat,
                 lng: Spot.marker.lng,
-                user_created: Http.getUser(),
-            }), {'Content-Type': 'application/json'/*, 'X-CSRF-Token': csrf.message*/}).then(data => {
+                user_created: user,
+            }), {'Content-Type': 'application/json', 'X-CSRF-Token': token, 'X-Username': user}).then(data => {
                 Nav.success(t('node_added'));
-                //location.href = '//map.parkour.org/de/node/' + data.id + '/edit';
-                //location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
                 Nav.navigate('#spot/' + data.id);
                 $.remove(true);
             }, data => Nav.error(t((data.status === 403 || data.status === 401) ? 'error_forbidden' : 'error_add_node') + ' ' + data.message));
-        //}, () => Nav.error(t('error_add_node')));
+        };
+        const token = grecaptcha.getResponse();
+        if (!token) {
+            grecaptcha.execute();
+        } else {
+            save(token);
+            grecaptcha.reset();
+        }
     };
 })(Form);

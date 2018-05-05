@@ -1,11 +1,10 @@
-/* globals _, t, ready, Form, Geotile, Http, Nav, Proximity, Spot */
+/* globals _, t, dom, ready, Form, Geotile, Nav, Proximity, Spot */
 const Maps = {}; ($ => {
     'use strict';
 
     // require('./base.js');
     // require('./form.js');
     // require('./geotile.js');
-    // require('./http.js');
     // require('./nav.js');
     // require('./proximity.js');
     // require('./spot.js');
@@ -25,9 +24,8 @@ const Maps = {}; ($ => {
         }
     });
 
-
     const initial = Date.now;
-    $.panToPosition = !location.hash.startsWith('#map/');
+    window.panToPosition = !location.hash.startsWith('#map/');
     $.filter = ['spot', 'event', 'group'];
     let gpsObj;
     $.icons = {};
@@ -46,7 +44,8 @@ const Maps = {}; ($ => {
             map: $.map,
             center: {lat: position.coords.latitude, lng: position.coords.longitude},
             radius: position.coords.accuracy,
-            position: position
+            position: position,
+            clickable: false
         });
     };
 
@@ -73,8 +72,9 @@ const Maps = {}; ($ => {
             Nav.goTab('map', 0);
         }
         const checkPan = position => {
+            console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || (!location.hash.startsWith('#map') && window.panToPosition)) {
+                if (force === 'yes' || (!location.hash.startsWith('#map') || window.panToPosition)) {
                     $.pan(position);
                 }
             }
@@ -206,7 +206,7 @@ const Maps = {}; ($ => {
 
         google.maps.event.addListener($.map, 'click', $.newMarker);
 
-        const filterDiv = document.createElement('div');
+        const filterDiv = dom('div');
         $.createFilter(filterDiv);
 
         filterDiv.index = 1;
@@ -258,7 +258,6 @@ const Maps = {}; ($ => {
         });
 
         $.track(true);
-        //get('./query3j.php', {latl:48.188063481211415,lath:55.51619215717891,lngl:-0.54931640625,lngh:20.54443359375,zoom:2}).then(loadAll);
         Form.restore();
     };
 
@@ -277,10 +276,6 @@ const Maps = {}; ($ => {
     $.newMarker = (event, force) => {
         if (!event.latLng) {
             event.latLng = {lat: event.lat, lng: event.lng};
-        }
-        if (!Http.getUser()) {
-            Nav.success(t('error_login_required'));
-            return;
         }
         if (!force && Nav.isLite) {
             return;
@@ -320,11 +315,11 @@ const Maps = {}; ($ => {
 
     $.createFilter = filterDiv => {
         filterDiv.className = 'filterDiv';
-        const controlUI = document.createElement('div');
+        const controlUI = dom('div');
         controlUI.className = 'filterBtn';
         controlUI.innerHTML = '&#9881;';
         filterDiv.appendChild(controlUI);
-        const filterBox = document.createElement('div');
+        const filterBox = dom('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
         filterBox.innerHTML = `Zeige:<br />
