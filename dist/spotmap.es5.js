@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.3 - 2018-05-06
+/*! spotmap - v0.2.4 - 2018-05-06
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -29,6 +29,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         var tmp = $.dom('DIV');
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
+    };
+
+    $.html = function (text) {
+        var tmp = $.dom('DIV');
+        tmp.innerText = text;
+        return tmp.innerHTML || '';
     };
 
     $.t = function (template, field) {
@@ -213,7 +219,7 @@ var Form = {};(function ($) {
                 type: Spot.marker.type,
                 category: _('#form-category').value,
                 title: _('#form-title').value,
-                description: _('#form-text').value,
+                description: html(_('#form-text').value),
                 lat: Spot.marker.lat,
                 lng: Spot.marker.lng,
                 user_created: user

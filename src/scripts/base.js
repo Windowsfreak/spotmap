@@ -14,6 +14,12 @@
         return tmp.textContent || tmp.innerText || '';
     };
 
+    $.html = text => {
+        const tmp = $.dom('DIV');
+        tmp.innerText = text;
+        return tmp.innerHTML || '';
+    };
+
     $.t = (template, field) => {
         if (!lang[template]) {
             console.log(`MISSING: ${template}`);

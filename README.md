@@ -51,13 +51,9 @@ important information about spots. The following
 fields - may they exist - are **not** displayed in the
 current release of the Spotmap:
 
-- Postal Address
-- Author and date of an entry
 - Edit history
-- More than one photo per spot (although clicking
-  the "website" link will reveal the additional ones)
-- Name and logo of associations
-- Telephone
+- Postal Address
+- Telephone numbers
 - Workshops that take place on that spot (including
   age, price, time span, recurrence, buying tickets)
 ### Interactions
@@ -140,6 +136,9 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.4] - 2018-05-06
+Added:
+- Filter HTML and add Newline in Spot creation
 ### [0.2.3] - 2018-05-06
 Added:
 - Invisible Captchas for new spot creation

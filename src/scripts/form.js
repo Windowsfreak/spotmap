@@ -1,4 +1,4 @@
-/* globals _, t, ready, Http, Spot, Maps, Nav, script, grecaptcha */
+/* globals _, t, html, ready, Http, Spot, Maps, Nav, script, grecaptcha */
 const Form = {}; ($ => {
     'use strict';
 
@@ -163,7 +163,7 @@ const Form = {}; ($ => {
                 type: Spot.marker.type,
                 category: _('#form-category').value,
                 title: _('#form-title').value,
-                description: _('#form-text').value,
+                description: html(_('#form-text').value),
                 lat: Spot.marker.lat,
                 lng: Spot.marker.lng,
                 user_created: user,
