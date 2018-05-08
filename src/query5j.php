@@ -6,7 +6,7 @@ $zoom = (int) $_REQUEST['zoom'];
 
 if (count($tiles) == 0) die('[]');
 
-$pdo = new PDO("mysql:host=localhost;dbname=pkorgd8;charset=utf8", 'root');
+$pdo = new PDO("mysql:host=localhost;dbname=pkorg_map;charset=utf8", 'root');
 $base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
 
 $stmt = $pdo->prepare('

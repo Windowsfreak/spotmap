@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.4 - 2018-05-06
+/*! spotmap - v0.2.5 - 2018-05-08
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -97,7 +97,7 @@ var Form = {};(function ($) {
     var captchaCode = false;
 
     var categories = {
-        spot: ['gym', 'parkourpark', 'parkourgym', 'climbinggym', 'pool', 'cliff'],
+        spot: ['outdoor', 'gym', 'parkourpark', 'parkourgym', 'climbinggym', 'pool', 'cliff'],
         event: ['training', 'workshop', 'jam', 'trip', 'competition'],
         group: ['private', 'community', 'club', 'company'],
         move: ['moves', 'conditioning', 'games', 'jumps', 'vaults', 'bar', 'flips', 'combinations', 'freezes', 'beginner', 'intermediate', 'advanced']
@@ -784,8 +784,12 @@ var Maps = {};(function ($) {
         }
     });
 
+    $.mapped = function (hash) {
+        return hash.startsWith('#map/') || hash.startsWith('#spot/');
+    };
+
     var initial = Date.now;
-    window.panToPosition = !location.hash.startsWith('#map/');
+    window.panToPosition = !$.mapped(location.hash);
     $.filter = ['spot', 'event', 'group'];
     var gpsObj = void 0;
     $.icons = {};
@@ -834,7 +838,7 @@ var Maps = {};(function ($) {
         var checkPan = function checkPan(position) {
             console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || !location.hash.startsWith('#map') || window.panToPosition) {
+                if (force === 'yes' || !$.mapped(location.hash) || window.panToPosition) {
                     $.pan(position);
                 }
             }
@@ -855,14 +859,15 @@ var Maps = {};(function ($) {
     $.markers = {};
 
     $.load = function (data, list) {
+        var multi = data.type.startsWith('multi');
         var marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
-            title: '' + data.title,
+            title: multi ? data.title + ' ' + t('btn_spots') + '\n' + data.category.replace(/^multi,/, '').replace(/,/g, ', ') : data.title,
             position: { lat: data.lat, lng: data.lng },
             data: data,
-            icon: data.type.startsWith('multi') ? $.icons.zoom : data.type.includes('group') ? $.icons.group : data.type.includes('event') ? $.icons.event : $.icons.spot,
-            shape: data.type.startsWith('multi') ? $.shapes.zoom : $.shapes.spot
+            icon: multi ? $.icons.zoom : data.type.includes('group') ? $.icons.group : data.type.includes('event') ? $.icons.event : $.icons.spot,
+            shape: multi ? $.shapes.zoom : $.shapes.spot
         });
         list.push(marker);
 

@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.4 - 2018-05-06
+/*! spotmap - v0.2.5 - 2018-05-08
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -63,6 +63,7 @@ const Form = {}; ($ => {
 
     const categories = {
         spot: [
+            'outdoor',
             'gym',
             'parkourpark',
             'parkourgym',
@@ -668,8 +669,10 @@ const Maps = {}; ($ => {
         }
     });
 
+    $.mapped = hash => hash.startsWith('#map/') || hash.startsWith('#spot/');
+
     const initial = Date.now;
-    window.panToPosition = !location.hash.startsWith('#map/');
+    window.panToPosition = !$.mapped(location.hash);
     $.filter = ['spot', 'event', 'group'];
     let gpsObj;
     $.icons = {};
@@ -718,7 +721,7 @@ const Maps = {}; ($ => {
         const checkPan = position => {
             console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
-                if (force === 'yes' || (!location.hash.startsWith('#map') || window.panToPosition)) {
+                if (force === 'yes' || (!$.mapped(location.hash) || window.panToPosition)) {
                     $.pan(position);
                 }
             }
@@ -735,14 +738,16 @@ const Maps = {}; ($ => {
     $.markers = {};
 
     $.load = (data, list) => {
+        const multi = data.type.startsWith('multi');
         const marker = new google.maps.Marker({
             id: data.id,
             map: $.map,
-            title: '' + data.title,
+            title: multi ? (`${data.title} ${t('btn_spots')}
+${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
             position: {lat: data.lat, lng: data.lng},
             data: data,
-            icon: data.type.startsWith('multi') ? $.icons.zoom : (data.type.includes('group') ? $.icons.group : (data.type.includes('event') ? $.icons.event : $.icons.spot)),
-            shape: data.type.startsWith('multi') ? $.shapes.zoom : $.shapes.spot
+            icon: multi ? $.icons.zoom : (data.type.includes('group') ? $.icons.group : (data.type.includes('event') ? $.icons.event : $.icons.spot)),
+            shape: multi ? $.shapes.zoom : $.shapes.spot
         });
         list.push(marker);
 

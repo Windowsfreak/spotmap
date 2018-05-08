@@ -136,6 +136,16 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.5] - 2018-05-06
+Added:
+- Backend code to perform regional pinpoint updates
+Changed:
+- Better alt text for magnifiers
+Removed:
+- Legacy backend code for geospatial search
+Fixed:
+- Add spot was missing the category 'outdoor'
+- Map no longer pans to GPS on load after showing spot
 ### [0.2.4] - 2018-05-06
 Added:
 - Filter HTML and add Newline in Spot creation

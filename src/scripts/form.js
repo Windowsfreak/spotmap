@@ -12,6 +12,7 @@ const Form = {}; ($ => {
 
     const categories = {
         spot: [
+            'outdoor',
             'gym',
             'parkourpark',
             'parkourgym',
