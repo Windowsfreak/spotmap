@@ -1,14 +1,18 @@
-/* globals ready, Geohash, Geotile, Nav */
+/* globals ready, Geohash, Geotile, Maps, Nav */
 const Tictactoe = {}; ($ => {
     'use strict';
     // require('./base.js');
     // require('./geohash.js');
     // require('./geotile.js');
+    // require('./maps.js');
     // require('./nav.js');
 
     let rects = [];
 
-    ready.push(() => Geotile.loadBounds = (bounds, callback) => Geotile.loadBounds(bounds, $.intercept($.drawRects, callback)));
+    ready.push(() => {
+        const p = Geotile.loadBounds;
+        Geotile.loadBounds = (bounds, callback) => p(bounds, $.intercept($.drawRects, callback));
+    });
 
     $.intercept = (callback1, callback2) => data => {
         callback1(data);
@@ -50,7 +54,7 @@ const Tictactoe = {}; ($ => {
         if (data) {
             google.maps.event.addListener(obj, "click", () => Nav.success(data));
         }
-        obj.setMap(Map.map);
+        obj.setMap(Maps.map);
         rects.push(obj);
         return obj;
     };

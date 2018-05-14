@@ -7,18 +7,20 @@ const Http = {}; ($ => {
 
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
+    $.retr = key => localStorage.getItem(key);
+
+    $.stor = (key, value) => localStorage.setItem(key, value);
+
     $.getUser = () => localStorage.getItem('d8_user');
 
-    $.getCredentials = () => localStorage.getItem('d8_auth') || 'Basic Og==';
+    $.getCredentials = () => 'Basic Og==';
 
-    $.setCredentials = (user, pass) => {
+    $.setCredentials = (user) => {
         localStorage.setItem('d8_user', user);
-        //localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
     };
 
     $.deleteCredentials = () => {
         localStorage.removeItem('d8_user');
-        //localStorage.removeItem('d8_auth');
     };
 
     $.http = function(method, url, params, headers = {}) {

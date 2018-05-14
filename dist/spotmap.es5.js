@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.5 - 2018-05-08
+/*! spotmap - v0.2.6 - 2018-05-14
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -82,11 +82,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         var s = $.dom('script');
         s.type = 'text/javascript';
         s.async = true;
+        s.defer = true;
         s.src = url;
         var p = $._('head')[0];
-        if (callback) {
-            s.addEventListener('load', callback, false);
-        }
+        s.addEventListener('load', function (e) {
+            if (callback) {
+                callback(e);
+            }
+            $.runLater();
+        }, false);
         p.appendChild(s);
     };
 
@@ -562,63 +566,17 @@ var Help = {};(function ($) {
     });
 
     $.show = function (id) {
-        Http.get('./static/' + id + '_' + l + '.json', undefined, { Authorization: false }).then(function (data) {
-            _('#help-title').innerText = t('no_title');
-            var _iteratorNormalCompletion4 = true;
-            var _didIteratorError4 = false;
-            var _iteratorError4 = undefined;
-
-            try {
-                for (var _iterator4 = Spot.find('title', data)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                    var s = _step4.value;
-
-                    _('#help-title').innerText = s;
-                }
-            } catch (err) {
-                _didIteratorError4 = true;
-                _iteratorError4 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                        _iterator4.return();
-                    }
-                } finally {
-                    if (_didIteratorError4) {
-                        throw _iteratorError4;
-                    }
-                }
-            }
-
-            _('#help-body').innerText = t('no_body');
-            var _iteratorNormalCompletion5 = true;
-            var _didIteratorError5 = false;
-            var _iteratorError5 = undefined;
-
-            try {
-                for (var _iterator5 = Spot.find('body', data)[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-                    var _s = _step5.value;
-
-                    _('#help-body').innerHTML = _s;
-                }
-            } catch (err) {
-                _didIteratorError5 = true;
-                _iteratorError5 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                        _iterator5.return();
-                    }
-                } finally {
-                    if (_didIteratorError5) {
-                        throw _iteratorError5;
-                    }
-                }
-            }
-
+        return Http.get('./static/' + id + '_' + l + '.json', undefined, { Authorization: false }).then(function (data) {
+            _('#help-title').innerText = data.title || t('no_title');
+            _('#help-body').innerHTML = data.body || strip(t('no_body'));
             Nav.goTab('help');
-        }, function (data) {
+        }, function (ignored) {
             return Nav.error(t('no_results_found'));
         });
+    };
+
+    $.close = function () {
+        return Help.previous ? Nav.goTab(Help.previous) : Nav.resetTab();
     };
 })(Help);
 // Source: src/scripts/http.js
@@ -629,22 +587,28 @@ var Http = {};(function ($) {
         }));
     };
 
+    $.retr = function (key) {
+        return localStorage.getItem(key);
+    };
+
+    $.stor = function (key, value) {
+        return localStorage.setItem(key, value);
+    };
+
     $.getUser = function () {
         return localStorage.getItem('d8_user');
     };
 
     $.getCredentials = function () {
-        return localStorage.getItem('d8_auth') || 'Basic Og==';
+        return 'Basic Og==';
     };
 
-    $.setCredentials = function (user, pass) {
+    $.setCredentials = function (user) {
         localStorage.setItem('d8_user', user);
-        //localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
     };
 
     $.deleteCredentials = function () {
         localStorage.removeItem('d8_user');
-        //localStorage.removeItem('d8_auth');
     };
 
     $.http = function (method, url, params) {
@@ -747,19 +711,10 @@ var Login = {};(function ($) {
 
     _('#login-submit').onclick = function () {
         var user = _('#login-username');
-        /*let pass = _('#login-password');*/
-        Http.setCredentials(user.value, '' /*pass.value*/);
-        //Http.get('//map.parkour.org/api/v1/auth', null, {Authorization: true}).then(function(data) {
+        Http.setCredentials(user.value);
         Nav.success(t('logged_in_as', user.value));
         user.value = '';
-        //pass.value = '';
         Nav.events.login_show();
-        /*}, function() {
-            Nav.error(t('error_login'));
-            Http.deleteCredentials();
-            pass.value = '';
-            pass.focus();
-        });*/
     };
 
     _('#logout-submit').onclick = function () {
@@ -775,12 +730,16 @@ var Maps = {};(function ($) {
                 var pos = $.map.getCenter();
                 google.maps.event.trigger($.map, 'resize');
                 $.map.setCenter(pos);
+            } else {
+                $.gdpr();
             }
         };
 
         window.mapScripts = true;
         if (window.mapLoaded) {
             $.initMapInternal();
+        } else {
+            $.gdpr();
         }
     });
 
@@ -794,6 +753,22 @@ var Maps = {};(function ($) {
     var gpsObj = void 0;
     $.icons = {};
     $.shapes = {};
+
+    $.gdpr = function () {
+        if (parseInt(Http.retr('gdpr')) !== 1) {
+            Help.show('gdpr');
+        } else {
+            $.accept();
+        }
+    };
+
+    $.accept = function () {
+        if (!window.mapLoaded && !window.mapLoading) {
+            script('//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap');
+            window.mapLoading = true;
+        }
+        Http.stor('gdpr', 1);
+    };
 
     $.setGpsObj = function (position) {
         if (gpsObj) {
@@ -814,6 +789,9 @@ var Maps = {};(function ($) {
     };
 
     $.updateGpsObj = function (position) {
+        if (!window.mapLoaded) {
+            return false;
+        }
         if (!gpsObj || gpsObj.position.coords.accuracy > position.coords.accuracy || gpsObj.position.timestamp < position.timestamp - 3000) {
             $.setGpsObj(position);
             return true;
@@ -836,7 +814,6 @@ var Maps = {};(function ($) {
             Nav.goTab('map', 0);
         }
         var checkPan = function checkPan(position) {
-            console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
                 if (force === 'yes' || !$.mapped(location.hash) || window.panToPosition) {
                     $.pan(position);
@@ -925,14 +902,21 @@ var Maps = {};(function ($) {
         }
     };
 
+    var boundsTimer = null;
+
     $.handleBoundsChanged = function () {
         var bounds = $.map.getBounds();
         Geotile.loadBounds(bounds, $.loadAll);
-        var center = $.map.getCenter();
-        var coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
-        if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
-            history.replaceState({}, '', '#map/' + center.lat().toFixed(5) + '/' + center.lng().toFixed(5) + '/' + $.map.getZoom());
-        }
+        clearTimeout(boundsTimer);
+        boundsTimer = setTimeout(function () {
+            if (location.hash.startsWith('#map/') || location.hash === '') {
+                var center = $.map.getCenter();
+                var coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
+                if (location.hash !== coords) {
+                    history.replaceState({}, '', '#map/' + center.lat().toFixed(5) + '/' + center.lng().toFixed(5) + '/' + $.map.getZoom());
+                }
+            }
+        }, 400);
     };
 
     $.initMapInternal = function () {
@@ -1117,29 +1101,29 @@ var Maps = {};(function ($) {
     };
 
     $.matchesFilter = function (entry) {
-        var _iteratorNormalCompletion6 = true;
-        var _didIteratorError6 = false;
-        var _iteratorError6 = undefined;
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
 
         try {
-            for (var _iterator6 = $.filter[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                var f = _step6.value;
+            for (var _iterator4 = $.filter[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                var f = _step4.value;
 
                 if (entry.type.indexOf(f) !== -1) {
                     return true;
                 }
             }
         } catch (err) {
-            _didIteratorError6 = true;
-            _iteratorError6 = err;
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion6 && _iterator6.return) {
-                    _iterator6.return();
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                    _iterator4.return();
                 }
             } finally {
-                if (_didIteratorError6) {
-                    throw _iteratorError6;
+                if (_didIteratorError4) {
+                    throw _iteratorError4;
                 }
             }
         }
@@ -1162,9 +1146,7 @@ var Nav = {};(function ($) {
                 if (sections[i].style.display === 'block') {
                     previous = sections[i].id;
                     console.log('Hiding  ' + sections[i].id);
-                    if ($.events[sections[i].id + '_hide']) {
-                        $.events[sections[i].id + '_hide'](id === sections[i].id);
-                    }
+                    $.call($.events[sections[i].id + '_hide'], id === sections[i].id);
                 }
                 sections[i].style.display = 'none';
             }
@@ -1180,9 +1162,11 @@ var Nav = {};(function ($) {
 
         _('#' + id).style.display = 'block';
         console.log('Showing ' + id);
-        if ($.events[id + '_show']) {
-            $.events[id + '_show'](previous);
-        }
+        $.call($.events[id + '_show'], previous);
+    };
+
+    $.call = function (func, param) {
+        return func && func(param);
     };
 
     $.goTab = function (id, index) {
@@ -1310,7 +1294,6 @@ var Search = {};(function ($) {
             Nav.navigate('#spot/' + text);
         } else {
             search.data = { search: text, limit: more ? search.data.limit + 25 : 25 };
-            console.log(search);
             Http.get('//map.parkour.org/api/v1/spots/search', search.data, { Authorization: false }).then($.showPage);
         }
     };
@@ -1320,13 +1303,13 @@ var Search = {};(function ($) {
         if (result.length === 0) {
             text += t('no_results_found');
         }
-        var _iteratorNormalCompletion7 = true;
-        var _didIteratorError7 = false;
-        var _iteratorError7 = undefined;
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
 
         try {
-            for (var _iterator7 = result[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-                var spot = _step7.value;
+            for (var _iterator5 = result[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                var spot = _step5.value;
 
                 text += '<article onclick="Nav.navigate(\'#spot/' + spot.id + '\');">';
                 if (spot.p0) {
@@ -1341,25 +1324,24 @@ var Search = {};(function ($) {
                 text += '</article>';
             }
         } catch (err) {
-            _didIteratorError7 = true;
-            _iteratorError7 = err;
+            _didIteratorError5 = true;
+            _iteratorError5 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion7 && _iterator7.return) {
-                    _iterator7.return();
+                if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                    _iterator5.return();
                 }
             } finally {
-                if (_didIteratorError7) {
-                    throw _iteratorError7;
+                if (_didIteratorError5) {
+                    throw _iteratorError5;
                 }
             }
         }
 
         if (result.length >= search.data.limit) {
             text += '<article onclick="Search.loadSearch(true);"><div class="in-place title"><h1>' + t('search_show_more') + '</h1></div></article>';
-            text += '</div>';
         }
-        _('#search-page').innerHTML = text;
+        _('#search-page').innerHTML = text + '</div>';
     };
 })(Search);
 // Source: src/scripts/spot.js
@@ -1367,9 +1349,11 @@ var Spot = {};(function ($) {
     $.spot = {};
 
     ready.push(function () {
-        return Nav.events.spot_hide = function () {
+        Nav.events.spot_hide = function () {
             return _('#map').className = '';
         };
+        _('#spot-lat').title = t('label_lat');
+        _('#spot-lng').title = t('label_lng');
     });
 
     $.loadSpot = function (id) {
@@ -1388,52 +1372,46 @@ var Spot = {};(function ($) {
             _('#spot-type').innerText = type;
             var text = '';
             var date = new Date(spot.created * 1000).toLocaleString();
-            if (spot.user_created) {
-                text = t('node_created_by', spot.user_created) + ' ' + t('node_created_by_at', date);
-            } else {
-                text = '' + t('node_created_at', date);
-            }
+            text += spot.user_created ? t('node_created_by', spot.user_created) + ' ' + t('node_created_by_at', date) : '' + t('node_created_at', date);
             if (spot.changed > spot.created) {
                 var _date = new Date(spot.changed * 1000).toLocaleString();
-                if (spot.user_changed) {
-                    text += t('node_changed_by', spot.user_changed) + ' ' + t('node_changed_by_at', _date);
-                } else {
-                    text += '' + t('node_changed_at', _date);
-                }
+                text += spot.user_changed ? t('node_changed_by', spot.user_changed) + ' ' + t('node_changed_by_at', _date) : '' + t('node_changed_at', _date);
             }
             _('#spot-meta').innerText = text;
             _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-body').style.display = spot.description ? 'block' : 'none';
             _('#spot-lat').innerHTML = spot.lat;
             _('#spot-lng').innerHTML = spot.lng;
             $.spot.lat = parseFloat(spot.lat);
             $.spot.lng = parseFloat(spot.lng);
             text = '';
-            var _iteratorNormalCompletion8 = true;
-            var _didIteratorError8 = false;
-            var _iteratorError8 = undefined;
+            var _iteratorNormalCompletion6 = true;
+            var _didIteratorError6 = false;
+            var _iteratorError6 = undefined;
 
             try {
-                for (var _iterator8 = data.images[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-                    var image = _step8.value;
+                for (var _iterator6 = data.images[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+                    var image = _step6.value;
 
                     text += '<a href="//map.parkour.org/images/spots/' + image.filename + '" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/' + image.filename + '" /></a>';
                 }
             } catch (err) {
-                _didIteratorError8 = true;
-                _iteratorError8 = err;
+                _didIteratorError6 = true;
+                _iteratorError6 = err;
             } finally {
                 try {
-                    if (!_iteratorNormalCompletion8 && _iterator8.return) {
-                        _iterator8.return();
+                    if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                        _iterator6.return();
                     }
                 } finally {
-                    if (_didIteratorError8) {
-                        throw _iteratorError8;
+                    if (_didIteratorError6) {
+                        throw _iteratorError6;
                     }
                 }
             }
 
             _('#spot-images').innerHTML = text || t('no_images');
+            _('#spot-images').style.display = text ? 'block' : 'none';
 
             Nav.goTab('spot');
 
@@ -1449,18 +1427,19 @@ var Spot = {};(function ($) {
                 _('#map').style.display = 'block';
                 _('#map').className = 'half';
                 Maps.panToPosition = false;
-                google.maps.event.addListenerOnce(Maps.map, 'idle', function () {
+                if (window.mapLoaded) {
+                    if (Nav.isLite) {
+                        Maps.newMarker($.spot, true);
+                    }
+                    google.maps.event.addListenerOnce(Maps.map, 'idle', function () {
+                        google.maps.event.trigger(Maps.map, 'resize');
+                        Maps.map.setCenter($.spot);
+                        Maps.map.setZoom(15);
+                    });
                     google.maps.event.trigger(Maps.map, 'resize');
                     Maps.map.setCenter($.spot);
                     Maps.map.setZoom(15);
-                });
-                console.log($.spot);
-                if (Nav.isLite) {
-                    Maps.newMarker($.spot, true);
                 }
-                google.maps.event.trigger(Maps.map, 'resize');
-                Maps.map.setCenter($.spot);
-                Maps.map.setZoom(15);
             } else {
                 _('#spot-geo').style.display = 'none';
                 _('#spot-map').style.display = 'none';
@@ -1469,83 +1448,25 @@ var Spot = {};(function ($) {
                     return item.style.display = 'none';
                 });
             }
-        }, function (data) {
+        }, function (ignored) {
             return Nav.error(t('error_load_spot'));
         });
     };
 
-    $.find = function (path, json) {
-        var jsons = [json];
-        path = path.split('|');
-        var _iteratorNormalCompletion9 = true;
-        var _didIteratorError9 = false;
-        var _iteratorError9 = undefined;
-
-        try {
-            for (var _iterator9 = path[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-                var p = _step9.value;
-
-                var pr = new RegExp('^' + p + '$'),
-                    list = [];
-                var _iteratorNormalCompletion10 = true;
-                var _didIteratorError10 = false;
-                var _iteratorError10 = undefined;
-
-                try {
-                    for (var _iterator10 = jsons[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-                        var j = _step10.value;
-
-                        for (var n in j) {
-                            if (j.hasOwnProperty(n)) {
-                                if (pr.test(n)) {
-                                    list.push(j[n]);
-                                }
-                            }
-                        }
-                    }
-                } catch (err) {
-                    _didIteratorError10 = true;
-                    _iteratorError10 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion10 && _iterator10.return) {
-                            _iterator10.return();
-                        }
-                    } finally {
-                        if (_didIteratorError10) {
-                            throw _iteratorError10;
-                        }
-                    }
-                }
-
-                jsons = list;
-            }
-        } catch (err) {
-            _didIteratorError9 = true;
-            _iteratorError9 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion9 && _iterator9.return) {
-                    _iterator9.return();
-                }
-            } finally {
-                if (_didIteratorError9) {
-                    throw _iteratorError9;
-                }
-            }
-        }
-
-        return jsons;
-    };
-
     _('#spot-map').onclick = function () {
-        Nav.navigate('');
-        Maps.map.setCenter($.spot);
-        Maps.map.setZoom(15);
+        if (window.mapLoaded) {
+            Nav.navigate('');
+            Maps.map.setCenter($.spot);
+            Maps.map.setZoom(15);
+        }
     };
 
     _('#spot-web').onclick = function () {
-        location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias;
+        return location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias;
+    };
+
+    _('#spot-edit').onclick = function () {
+        return location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias + '/edit';
     };
 })(Spot);
 // Source: src/scripts/z.js

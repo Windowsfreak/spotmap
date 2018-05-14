@@ -15,9 +15,7 @@ const Nav = {}; ($ => {
                 if (sections[i].style.display === 'block') {
                     previous = sections[i].id;
                     console.log('Hiding  ' + sections[i].id);
-                    if ($.events[sections[i].id + '_hide']) {
-                        $.events[sections[i].id + '_hide'](id === sections[i].id);
-                    }
+                    $.call($.events[sections[i].id + '_hide'], id === sections[i].id);
                 }
                 sections[i].style.display = 'none';
             }
@@ -33,10 +31,10 @@ const Nav = {}; ($ => {
 
         _('#' + id).style.display = 'block';
         console.log('Showing ' + id);
-        if ($.events[id + '_show']) {
-            $.events[id + '_show'](previous);
-        }
+        $.call($.events[id + '_show'], previous);
     };
+
+    $.call = (func, param) => func && func(param);
 
     $.goTab = (id, index) => $.openTab(id, index !== undefined ? {currentTarget: _('button')[index]} : undefined);
     $.resetTab = () => $.navigate('');

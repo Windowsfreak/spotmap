@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.5 - 2018-05-08
+/*! spotmap - v0.2.6 - 2018-05-14
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -48,9 +48,15 @@
         const s = $.dom('script');
         s.type = 'text/javascript';
         s.async = true;
+        s.defer = true;
         s.src = url;
         const p = $._('head')[0];
-        if (callback) { s.addEventListener('load', callback, false); }
+        s.addEventListener('load', e => {
+            if (callback) {
+                callback(e);
+            }
+            $.runLater();
+        }, false);
         p.appendChild(s);
     };
 
@@ -512,38 +518,33 @@ const Geotile = {}; ($ => {
 const Help = {}; ($ => {
     ready.push(() => Nav.events.help_show = (previous) => $.previous = previous !== 'help' ? previous : $.previous);
 
-    $.show = id => {
+    $.show = id =>
         Http.get(`./static/${id}_${l}.json`, undefined, {Authorization: false}).then(data => {
-            _('#help-title').innerText = t('no_title');
-            for (const s of Spot.find('title', data)) {
-                _('#help-title').innerText = s;
-            }
-
-            _('#help-body').innerText = t('no_body');
-            for (const s of Spot.find('body', data)) {
-                _('#help-body').innerHTML = s;
-            }
-
+            _('#help-title').innerText = data.title || t('no_title');
+            _('#help-body').innerHTML = data.body || strip(t('no_body'));
             Nav.goTab('help');
-        }, data => Nav.error(t('no_results_found')));
-    };
+        }, ignored => Nav.error(t('no_results_found')));
+
+    $.close = () => Help.previous ? Nav.goTab(Help.previous) : Nav.resetTab();
 })(Help);
 // Source: src/scripts/http.js
 const Http = {}; ($ => {
     $.b64a = text => btoa(encodeURIComponent(text).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
+    $.retr = key => localStorage.getItem(key);
+
+    $.stor = (key, value) => localStorage.setItem(key, value);
+
     $.getUser = () => localStorage.getItem('d8_user');
 
-    $.getCredentials = () => localStorage.getItem('d8_auth') || 'Basic Og==';
+    $.getCredentials = () => 'Basic Og==';
 
-    $.setCredentials = (user, pass) => {
+    $.setCredentials = (user) => {
         localStorage.setItem('d8_user', user);
-        //localStorage.setItem('d8_auth', 'Basic ' + $.b64a(user + ':' + pass));
     };
 
     $.deleteCredentials = () => {
         localStorage.removeItem('d8_user');
-        //localStorage.removeItem('d8_auth');
     };
 
     $.http = function(method, url, params, headers = {}) {
@@ -632,19 +633,10 @@ const Login = {}; ($ => {
 
     _('#login-submit').onclick = () => {
         let user = _('#login-username');
-        /*let pass = _('#login-password');*/
-        Http.setCredentials(user.value, ''/*pass.value*/);
-        //Http.get('//map.parkour.org/api/v1/auth', null, {Authorization: true}).then(function(data) {
-            Nav.success(t('logged_in_as', user.value));
-            user.value = '';
-            //pass.value = '';
-            Nav.events.login_show();
-        /*}, function() {
-            Nav.error(t('error_login'));
-            Http.deleteCredentials();
-            pass.value = '';
-            pass.focus();
-        });*/
+        Http.setCredentials(user.value);
+        Nav.success(t('logged_in_as', user.value));
+        user.value = '';
+        Nav.events.login_show();
     };
 
     _('#logout-submit').onclick = () => {
@@ -660,12 +652,16 @@ const Maps = {}; ($ => {
                 const pos = $.map.getCenter();
                 google.maps.event.trigger($.map, 'resize');
                 $.map.setCenter(pos);
+            } else {
+                $.gdpr();
             }
         };
 
         window.mapScripts = true;
         if (window.mapLoaded) {
             $.initMapInternal();
+        } else {
+            $.gdpr();
         }
     });
 
@@ -677,6 +673,22 @@ const Maps = {}; ($ => {
     let gpsObj;
     $.icons = {};
     $.shapes = {};
+
+    $.gdpr = () => {
+        if (parseInt(Http.retr('gdpr')) !== 1) {
+            Help.show('gdpr');
+        } else {
+            $.accept();
+        }
+    };
+
+    $.accept = () => {
+        if (!window.mapLoaded && !window.mapLoading) {
+            script('//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap');
+            window.mapLoading = true;
+        }
+        Http.stor('gdpr', 1);
+    };
 
     $.setGpsObj = position => {
         if (gpsObj) {
@@ -697,6 +709,9 @@ const Maps = {}; ($ => {
     };
 
     $.updateGpsObj = position => {
+        if (!window.mapLoaded) {
+            return false;
+        }
         if (!gpsObj || gpsObj.position.coords.accuracy > position.coords.accuracy || gpsObj.position.timestamp < position.timestamp - 3000) {
             $.setGpsObj(position);
             return true;
@@ -719,7 +734,6 @@ const Maps = {}; ($ => {
             Nav.goTab('map', 0);
         }
         const checkPan = position => {
-            console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
                 if (force === 'yes' || (!$.mapped(location.hash) || window.panToPosition)) {
                     $.pan(position);
@@ -808,14 +822,21 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         }
     };
 
+    let boundsTimer = null;
+
     $.handleBoundsChanged = () => {
         const bounds = $.map.getBounds();
         Geotile.loadBounds(bounds, $.loadAll);
-        const center = $.map.getCenter();
-        const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
-        if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
-            history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
-        }
+        clearTimeout( boundsTimer );
+        boundsTimer = setTimeout( function() {
+            if (location.hash.startsWith('#map/') || location.hash === '') {
+                const center = $.map.getCenter();
+                const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
+                if (location.hash !== coords) {
+                    history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
+                }
+            }
+        }, 400 );
     };
 
     $.initMapInternal = () => {
@@ -1021,9 +1042,7 @@ const Nav = {}; ($ => {
                 if (sections[i].style.display === 'block') {
                     previous = sections[i].id;
                     console.log('Hiding  ' + sections[i].id);
-                    if ($.events[sections[i].id + '_hide']) {
-                        $.events[sections[i].id + '_hide'](id === sections[i].id);
-                    }
+                    $.call($.events[sections[i].id + '_hide'], id === sections[i].id);
                 }
                 sections[i].style.display = 'none';
             }
@@ -1039,10 +1058,10 @@ const Nav = {}; ($ => {
 
         _('#' + id).style.display = 'block';
         console.log('Showing ' + id);
-        if ($.events[id + '_show']) {
-            $.events[id + '_show'](previous);
-        }
+        $.call($.events[id + '_show'], previous);
     };
+
+    $.call = (func, param) => func && func(param);
 
     $.goTab = (id, index) => $.openTab(id, index !== undefined ? {currentTarget: _('button')[index]} : undefined);
     $.resetTab = () => $.navigate('');
@@ -1156,7 +1175,6 @@ const Search = {}; ($ => {
             Nav.navigate('#spot/' + text);
         } else {
             search.data = {search: text, limit: more ? search.data.limit + 25 : 25};
-            console.log(search);
             Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
         }
     };
@@ -1181,16 +1199,19 @@ const Search = {}; ($ => {
         }
         if (result.length >= search.data.limit) {
             text += `<article onclick="Search.loadSearch(true);"><div class="in-place title"><h1>${t('search_show_more')}</h1></div></article>`;
-            text += '</div>';
         }
-        _('#search-page').innerHTML = text;
+        _('#search-page').innerHTML = text + '</div>';
     };
 })(Search);
 // Source: src/scripts/spot.js
 const Spot = {}; ($ => {
     $.spot = {};
 
-    ready.push(() => Nav.events.spot_hide = () => _('#map').className = '');
+    ready.push(() => {
+        Nav.events.spot_hide = () => _('#map').className = '';
+        _('#spot-lat').title = t('label_lat');
+        _('#spot-lng').title = t('label_lng');
+    });
 
     $.loadSpot = id => {
         Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
@@ -1206,21 +1227,14 @@ const Spot = {}; ($ => {
             _('#spot-type').innerText = type;
             let text = '';
             const date = new Date(spot.created * 1000).toLocaleString();
-            if (spot.user_created) {
-                text = `${t('node_created_by', spot.user_created)} ${t('node_created_by_at', date)}`;
-            } else {
-                text = `${t('node_created_at', date)}`;
-            }
+            text += spot.user_created ? `${t('node_created_by', spot.user_created)} ${t('node_created_by_at', date)}` : `${t('node_created_at', date)}`;
             if (spot.changed > spot.created) {
                 const date = new Date(spot.changed * 1000).toLocaleString();
-                if (spot.user_changed) {
-                    text += `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}`;
-                } else {
-                  text += `${t('node_changed_at', date)}`;
-                }
+                text += spot.user_changed ? `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}` : `${t('node_changed_at', date)}`;
             }
             _('#spot-meta').innerText = text;
             _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-body').style.display = spot.description ? 'block' : 'none';
             _('#spot-lat').innerHTML = spot.lat;
             _('#spot-lng').innerHTML = spot.lng;
             $.spot.lat = parseFloat(spot.lat);
@@ -1230,6 +1244,7 @@ const Spot = {}; ($ => {
                 text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
             }
             _('#spot-images').innerHTML = text || t('no_images');
+            _('#spot-images').style.display = text ? 'block' : 'none';
 
             Nav.goTab('spot');
 
@@ -1243,55 +1258,39 @@ const Spot = {}; ($ => {
                 _('#map').style.display = 'block';
                 _('#map').className = 'half';
                 Maps.panToPosition = false;
-                google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
+                if (window.mapLoaded) {
+                    if (Nav.isLite) {
+                        Maps.newMarker($.spot, true);
+                    }
+                    google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
+                        google.maps.event.trigger(Maps.map, 'resize');
+                        Maps.map.setCenter($.spot);
+                        Maps.map.setZoom(15);
+                    });
                     google.maps.event.trigger(Maps.map, 'resize');
                     Maps.map.setCenter($.spot);
                     Maps.map.setZoom(15);
-                });
-                console.log($.spot);
-                if (Nav.isLite) {
-                    Maps.newMarker($.spot, true);
                 }
-                google.maps.event.trigger(Maps.map, 'resize');
-                Maps.map.setCenter($.spot);
-                Maps.map.setZoom(15);
             } else {
                 _('#spot-geo').style.display = 'none';
                 _('#spot-map').style.display = 'none';
                 _('#spot-maps-form').style.display = 'none';
                 _('.add-here').forEach(item => item.style.display = 'none');
             }
-        }, data => Nav.error(t('error_load_spot')));
-    };
-
-    $.find = (path, json) => {
-        let jsons = [json];
-        path = path.split('|');
-        for (const p of path) {
-            const pr = new RegExp(`^${p}$`), list = [];
-            for (const j of jsons) {
-                for (const n in j) {
-                    if (j.hasOwnProperty(n)) {
-                        if (pr.test(n)) {
-                            list.push(j[n]);
-                        }
-                    }
-                }
-            }
-            jsons = list;
-        }
-        return jsons;
+        }, ignored => Nav.error(t('error_load_spot')));
     };
 
     _('#spot-map').onclick = () => {
-        Nav.navigate('');
-        Maps.map.setCenter($.spot);
-        Maps.map.setZoom(15);
+        if (window.mapLoaded) {
+            Nav.navigate('');
+            Maps.map.setCenter($.spot);
+            Maps.map.setZoom(15);
+        }
     };
 
-    _('#spot-web').onclick = () => {
-        location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
-    };
+    _('#spot-web').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
+
+    _('#spot-edit').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}/edit`;
 })(Spot);
 // Source: src/scripts/z.js
 (() => {

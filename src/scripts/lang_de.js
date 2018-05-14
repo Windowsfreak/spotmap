@@ -22,6 +22,7 @@ const lang = {
     form_features: 'Merkmale',
     form_images: 'Bilder',
     label_complete_later: 'Weitere Details können nach dem Speichern ergänzt werden.',
+    btn_edit: 'Bearbeiten',
     btn_save: 'Speichern',
     btn_delete: 'Entwurf löschen',
     locate: 'Standort über GPS suchen',

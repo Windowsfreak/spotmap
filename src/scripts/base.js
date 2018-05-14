@@ -44,9 +44,15 @@
         const s = $.dom('script');
         s.type = 'text/javascript';
         s.async = true;
+        s.defer = true;
         s.src = url;
         const p = $._('head')[0];
-        if (callback) { s.addEventListener('load', callback, false); }
+        s.addEventListener('load', e => {
+            if (callback) {
+                callback(e);
+            }
+            $.runLater();
+        }, false);
         p.appendChild(s);
     };
 

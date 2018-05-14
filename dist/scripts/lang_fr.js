@@ -22,6 +22,7 @@ const lang = {
     form_features: 'Features',
     form_images: 'Images',
     label_complete_later: 'Plus de détails peuvent être ajoutés après l\'enregistrement.',
+    btn_edit: 'Edit',
     btn_save: 'Enregistrer',
     btn_delete: 'Effacer l\'ébauche',
     locate: 'trouver par GPS',

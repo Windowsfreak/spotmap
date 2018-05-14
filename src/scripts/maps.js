@@ -1,10 +1,12 @@
-/* globals _, t, dom, ready, Form, Geotile, Nav, Proximity, Spot */
+/* globals _, t, dom, ready, script, Form, Geotile, Help, Http, Nav, Proximity, Spot */
 const Maps = {}; ($ => {
     'use strict';
 
     // require('./base.js');
     // require('./form.js');
     // require('./geotile.js');
+    // require('./help.js');
+    // require('./http.js');
     // require('./nav.js');
     // require('./proximity.js');
     // require('./spot.js');
@@ -15,12 +17,16 @@ const Maps = {}; ($ => {
                 const pos = $.map.getCenter();
                 google.maps.event.trigger($.map, 'resize');
                 $.map.setCenter(pos);
+            } else {
+                $.gdpr();
             }
         };
 
         window.mapScripts = true;
         if (window.mapLoaded) {
             $.initMapInternal();
+        } else {
+            $.gdpr();
         }
     });
 
@@ -32,6 +38,22 @@ const Maps = {}; ($ => {
     let gpsObj;
     $.icons = {};
     $.shapes = {};
+
+    $.gdpr = () => {
+        if (parseInt(Http.retr('gdpr')) !== 1) {
+            Help.show('gdpr');
+        } else {
+            $.accept();
+        }
+    };
+
+    $.accept = () => {
+        if (!window.mapLoaded && !window.mapLoading) {
+            script('//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap');
+            window.mapLoading = true;
+        }
+        Http.stor('gdpr', 1);
+    };
 
     $.setGpsObj = position => {
         if (gpsObj) {
@@ -52,6 +74,9 @@ const Maps = {}; ($ => {
     };
 
     $.updateGpsObj = position => {
+        if (!window.mapLoaded) {
+            return false;
+        }
         if (!gpsObj || gpsObj.position.coords.accuracy > position.coords.accuracy || gpsObj.position.timestamp < position.timestamp - 3000) {
             $.setGpsObj(position);
             return true;
@@ -74,7 +99,6 @@ const Maps = {}; ($ => {
             Nav.goTab('map', 0);
         }
         const checkPan = position => {
-            console.log(position);
             if ($.updateGpsObj(position) && (force || Date.now() < initial + 10000)) {
                 if (force === 'yes' || (!$.mapped(location.hash) || window.panToPosition)) {
                     $.pan(position);
@@ -163,14 +187,21 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         }
     };
 
+    let boundsTimer = null;
+
     $.handleBoundsChanged = () => {
         const bounds = $.map.getBounds();
         Geotile.loadBounds(bounds, $.loadAll);
-        const center = $.map.getCenter();
-        const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
-        if (location.hash !== coords && (location.hash.startsWith('#map/') || location.hash === '')) {
-            history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
-        }
+        clearTimeout( boundsTimer );
+        boundsTimer = setTimeout( function() {
+            if (location.hash.startsWith('#map/') || location.hash === '') {
+                const center = $.map.getCenter();
+                const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
+                if (location.hash !== coords) {
+                    history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
+                }
+            }
+        }, 400 );
     };
 
     $.initMapInternal = () => {

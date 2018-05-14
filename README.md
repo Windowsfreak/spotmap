@@ -136,6 +136,21 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.6] - 2018-05-14
+Added:
+- GDPR prompt on first load
+
+Changed:
+- Better alt text for magnifiers
+
+Removed:
+- Unneccessary log messages
+
+Fixed:
+- Language not properly detected
+- Panning updates Location URL with delays due to issues with Safari on iOS
+- Avoid JavaScript errors when Map not loaded
+- Cleaner injection of scripts
 ### [0.2.5] - 2018-05-06
 Added:
 - Backend code to perform regional pinpoint updates

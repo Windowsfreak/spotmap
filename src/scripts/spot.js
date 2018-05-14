@@ -9,7 +9,11 @@ const Spot = {}; ($ => {
 
     $.spot = {};
 
-    ready.push(() => Nav.events.spot_hide = () => _('#map').className = '');
+    ready.push(() => {
+        Nav.events.spot_hide = () => _('#map').className = '';
+        _('#spot-lat').title = t('label_lat');
+        _('#spot-lng').title = t('label_lng');
+    });
 
     $.loadSpot = id => {
         Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
@@ -25,21 +29,14 @@ const Spot = {}; ($ => {
             _('#spot-type').innerText = type;
             let text = '';
             const date = new Date(spot.created * 1000).toLocaleString();
-            if (spot.user_created) {
-                text = `${t('node_created_by', spot.user_created)} ${t('node_created_by_at', date)}`;
-            } else {
-                text = `${t('node_created_at', date)}`;
-            }
+            text += spot.user_created ? `${t('node_created_by', spot.user_created)} ${t('node_created_by_at', date)}` : `${t('node_created_at', date)}`;
             if (spot.changed > spot.created) {
                 const date = new Date(spot.changed * 1000).toLocaleString();
-                if (spot.user_changed) {
-                    text += `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}`;
-                } else {
-                  text += `${t('node_changed_at', date)}`;
-                }
+                text += spot.user_changed ? `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}` : `${t('node_changed_at', date)}`;
             }
             _('#spot-meta').innerText = text;
             _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-body').style.display = spot.description ? 'block' : 'none';
             _('#spot-lat').innerHTML = spot.lat;
             _('#spot-lng').innerHTML = spot.lng;
             $.spot.lat = parseFloat(spot.lat);
@@ -49,6 +46,7 @@ const Spot = {}; ($ => {
                 text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
             }
             _('#spot-images').innerHTML = text || t('no_images');
+            _('#spot-images').style.display = text ? 'block' : 'none';
 
             Nav.goTab('spot');
 
@@ -62,53 +60,37 @@ const Spot = {}; ($ => {
                 _('#map').style.display = 'block';
                 _('#map').className = 'half';
                 Maps.panToPosition = false;
-                google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
+                if (window.mapLoaded) {
+                    if (Nav.isLite) {
+                        Maps.newMarker($.spot, true);
+                    }
+                    google.maps.event.addListenerOnce(Maps.map, 'idle', () => {
+                        google.maps.event.trigger(Maps.map, 'resize');
+                        Maps.map.setCenter($.spot);
+                        Maps.map.setZoom(15);
+                    });
                     google.maps.event.trigger(Maps.map, 'resize');
                     Maps.map.setCenter($.spot);
                     Maps.map.setZoom(15);
-                });
-                console.log($.spot);
-                if (Nav.isLite) {
-                    Maps.newMarker($.spot, true);
                 }
-                google.maps.event.trigger(Maps.map, 'resize');
-                Maps.map.setCenter($.spot);
-                Maps.map.setZoom(15);
             } else {
                 _('#spot-geo').style.display = 'none';
                 _('#spot-map').style.display = 'none';
                 _('#spot-maps-form').style.display = 'none';
                 _('.add-here').forEach(item => item.style.display = 'none');
             }
-        }, data => Nav.error(t('error_load_spot')));
-    };
-
-    $.find = (path, json) => {
-        let jsons = [json];
-        path = path.split('|');
-        for (const p of path) {
-            const pr = new RegExp(`^${p}$`), list = [];
-            for (const j of jsons) {
-                for (const n in j) {
-                    if (j.hasOwnProperty(n)) {
-                        if (pr.test(n)) {
-                            list.push(j[n]);
-                        }
-                    }
-                }
-            }
-            jsons = list;
-        }
-        return jsons;
+        }, ignored => Nav.error(t('error_load_spot')));
     };
 
     _('#spot-map').onclick = () => {
-        Nav.navigate('');
-        Maps.map.setCenter($.spot);
-        Maps.map.setZoom(15);
+        if (window.mapLoaded) {
+            Nav.navigate('');
+            Maps.map.setCenter($.spot);
+            Maps.map.setZoom(15);
+        }
     };
 
-    _('#spot-web').onclick = () => {
-        location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
-    };
+    _('#spot-web').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
+
+    _('#spot-edit').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}/edit`;
 })(Spot);

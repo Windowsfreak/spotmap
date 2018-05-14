@@ -17,7 +17,7 @@
 
 <!-- This is the top navigation bar -->
 <nav class="navbar" role="navigation">
-    <button type="button" onclick="Nav.navigate('')">&#x1f30d;</button>
+    <button type="button" onclick="Nav.resetTab()">&#x1f30d;</button>
     <button type="button" onclick="Nav.navigate('#search')">&#x1f50d;</button>
     <button type="button" onclick="Nav.navigate('#login')">&#x1f464;</button>
     <button type="button" onclick="Nav.goTab('menu', 3)">&#9776;</button>
@@ -45,10 +45,6 @@
                     <label for="login-username" data-translate="username"></label>
                     <input id="login-username" type="text" placeholder="Benutzername" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
                 </div>
-                <!--<div class="form">
-                    <label for="login-password" data-translate="password"></label>
-                    <input id="login-password" type="password" placeholder="Passwort" data-translate="password" onkeydown="if (event.keyCode == 13) _('#login-password').focus();">
-                </div>-->
                 <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_login">login</span></button>
                 <button type="button" class="no-grow" onclick="Help.show('login')">&#10067;</button>
             </div>
@@ -60,7 +56,7 @@
     </section>
 
     <section id="help">
-        <button type="button" onclick="Help.previous ? Nav.goTab(Help.previous) : Nav.resetTab()">&#10060;</button>
+        <button type="button" onclick="Help.close()">&#10060;</button>
         <h1 id="help-title"></h1>
         <p id="help-body"></p>
     </section>
@@ -104,13 +100,13 @@
     </section>
 
     <section id="menu">
-        <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } else { Nav.goTab('map', 0) }">&#10060;</button>
+        <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.resetTab(); } else { Nav.goTab('map', 0) }">&#10060;</button>
         <div class="grid">
             <button type="button" style="font-size: 24px; padding: 0" onclick="location.href='//www.parkour.org/';"><img src="images/logo32.png" style="vertical-align: text-bottom;"> www.parkour.org</button>
         </div>
         <div class="grid menu">
             <button onclick="Nav.navigate('#login')">&#x1f464; <span data-translate="btn_login">Login</span></button>
-            <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.navigate(''); } Maps.track('yes');">&#9974; <span data-translate="locate"></span></button>
+            <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.resetTab(); } Maps.track('yes');">&#9974; <span data-translate="locate"></span></button>
             <button type="button" onclick="Help.show('help')">&#10067; <span data-translate="btn_help">Show Help</span></button>
         </div>
         <div class="grid menu">
@@ -161,6 +157,7 @@
     }
     if (!localStorage || !localStorage.getItem) { localStorage = {getItem: function() {}, setItem: function() {}}; }
     var l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
+    if (l) l = l.substring(0, 2);
     l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
     document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
 </script>
@@ -183,11 +180,9 @@
 <script defer src="scripts/search.js"></script>
 <script defer src="scripts/spot.js"></script>
 <script defer src="scripts/z.js"></script>
-<script async defer src="//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap"></script>
 <!-- /development -->
 <!-- production
 <script defer src="spotmap.es5.js"></script>
-<script async defer src="//maps.google.com/maps/api/js?key=AIzaSyDWsl8SdI_0q21fkJRM6dwxr11uO23bihw&callback=initMap"></script>
 /production -->
 </body>
 </html>

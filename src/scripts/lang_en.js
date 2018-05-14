@@ -22,6 +22,7 @@ const lang = {
     form_features: 'Features',
     form_images: 'Images',
     label_complete_later: 'More details can be added after saving.',
+    btn_edit: 'Edit',
     btn_save: 'Save',
     btn_delete: 'Delete draft',
     locate: 'Locate using GPS',

@@ -267,6 +267,7 @@ h1 {
 }
 .title p {
     padding: 0 2px 0 2px;
+    margin: 0;
     width: 100%;
     overflow: hidden;
     max-height: 33px;
@@ -371,6 +372,11 @@ button, a[onclick], .clickable, .filterBtn, article
 }
 h2 {
     font-size: 125%;
+    margin-top: .8em;
+    margin-bottom: .2em;
+}
+p {
+    margin: .1em 0 .4em;
 }
 select {
     height: 43px;

@@ -23,7 +23,6 @@ const Search = {}; ($ => {
             Nav.navigate('#spot/' + text);
         } else {
             search.data = {search: text, limit: more ? search.data.limit + 25 : 25};
-            console.log(search);
             Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
         }
     };
@@ -48,8 +47,7 @@ const Search = {}; ($ => {
         }
         if (result.length >= search.data.limit) {
             text += `<article onclick="Search.loadSearch(true);"><div class="in-place title"><h1>${t('search_show_more')}</h1></div></article>`;
-            text += '</div>';
         }
-        _('#search-page').innerHTML = text;
+        _('#search-page').innerHTML = text + '</div>';
     };
 })(Search);
