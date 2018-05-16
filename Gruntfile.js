@@ -31,7 +31,7 @@ module.exports = function(grunt) {
         }
       },
       dist: {
-        src: ['src/scripts/*.js', '!src/scripts/lang*.js', '!src/scripts/tictactoe.js'],
+        src: ['src/scripts/*.js', '!src/scripts/lang*.js', '!src/scripts/tictactoe.js', '!src/scripts/testing.js'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
           // includes files within path
           {expand: true, cwd: 'src/', src: ['*.php', 'manifest.json', '.htaccess', '*.css', '*.js'], dest: 'dist/', filter: 'isFile'},
           // includes files within path and its sub-directories
-          {expand: true, cwd: 'src/', src: ['flags/*', 'static/*', 'images/*', 'scripts/lang*.js'], dest: 'dist/'}
+          {expand: true, cwd: 'src/', src: ['flags/*', 'static/*', 'images/*', 'scripts/lang*.js', 'scripts/tictactoe.js', 'scripts/testing.js'], dest: 'dist/'}
         ]
       },
       html: {

@@ -136,6 +136,14 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.7] - 2018-05-16
+Added:
+- Translation files for IT, NL and DA
+- Injectable files in distribution folder for experimental features
+
+Removed:
+- Invisible error messages for missing content, etc.
+- Unused translations
 ### [0.2.6] - 2018-05-14
 Added:
 - GDPR prompt on first load

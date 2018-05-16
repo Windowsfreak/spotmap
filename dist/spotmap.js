@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.6 - 2018-05-14
+/*! spotmap - v0.2.7 - 2018-05-16
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -518,12 +518,14 @@ const Geotile = {}; ($ => {
 const Help = {}; ($ => {
     ready.push(() => Nav.events.help_show = (previous) => $.previous = previous !== 'help' ? previous : $.previous);
 
+    $.display = data => {
+        _('#help-title').innerText = data.title || '';
+        _('#help-body').innerHTML = data.body || '';
+        Nav.goTab('help');
+    };
+
     $.show = id =>
-        Http.get(`./static/${id}_${l}.json`, undefined, {Authorization: false}).then(data => {
-            _('#help-title').innerText = data.title || t('no_title');
-            _('#help-body').innerHTML = data.body || strip(t('no_body'));
-            Nav.goTab('help');
-        }, ignored => Nav.error(t('no_results_found')));
+        Http.get(`./static/${id}_${l}.json`, undefined, {Authorization: false}).then($.display, ignored => Nav.error(t('no_results_found')));
 
     $.close = () => Help.previous ? Nav.goTab(Help.previous) : Nav.resetTab();
 })(Help);
@@ -1218,7 +1220,7 @@ const Spot = {}; ($ => {
             const spot = data.spot;
             $.spot = {id: id, type: spot.type, url_alias: spot.url_alias};
 
-            _('#spot-title').innerText = spot.title || t('no_title');
+            _('#spot-title').innerText = spot.title || '';
             _('#spot').className = `spot-type-${spot.type}`;
             let type = t(`${spot.type}_type_${spot.category}`);
             if (data.spot_category_details && data.spot_category_details.length) {
@@ -1233,7 +1235,7 @@ const Spot = {}; ($ => {
                 text += spot.user_changed ? `${t('node_changed_by', spot.user_changed)} ${t('node_changed_by_at', date)}` : `${t('node_changed_at', date)}`;
             }
             _('#spot-meta').innerText = text;
-            _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-body').innerHTML = spot.description || '';
             _('#spot-body').style.display = spot.description ? 'block' : 'none';
             _('#spot-lat').innerHTML = spot.lat;
             _('#spot-lng').innerHTML = spot.lng;
@@ -1243,7 +1245,7 @@ const Spot = {}; ($ => {
             for (const image of data.images) {
                 text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
             }
-            _('#spot-images').innerHTML = text || t('no_images');
+            _('#spot-images').innerHTML = text || '';
             _('#spot-images').style.display = text ? 'block' : 'none';
 
             Nav.goTab('spot');

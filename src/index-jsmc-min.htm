@@ -127,6 +127,9 @@
             <button type="button" class="no-grow" onclick="setLang('de')"><img src="flags/de.png"></button>
             <button type="button" class="no-grow" onclick="setLang('en')"><img src="flags/en.png"></button>
             <button type="button" class="no-grow" onclick="setLang('fr')"><img src="flags/fr.png"></button>
+            <button type="button" class="no-grow" onclick="setLang('it')"><img src="flags/it.png"></button>
+            <button type="button" class="no-grow" onclick="setLang('nl')"><img src="flags/nl.png"></button>
+            <button type="button" class="no-grow" onclick="setLang('da')"><img src="flags/da.png"></button>
         </div>
         <p>
         </p>
@@ -156,7 +159,7 @@
     if (!localStorage || !localStorage.getItem) { localStorage = {getItem: function() {}, setItem: function() {}}; }
     var l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
     if (l) l = l.substring(0, 2);
-    l = ['de', 'en', 'fr'].indexOf(l) >= 0 ? l : 'en';
+    l = ['de', 'en', 'fr', 'it', 'nl', 'da'].indexOf(l) >= 0 ? l : 'en';
     document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
 </script>
 <!-- development -->

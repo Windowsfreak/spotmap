@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.6 - 2018-05-14
+/*! spotmap - v0.2.7 - 2018-05-16
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -565,12 +565,14 @@ var Help = {};(function ($) {
         };
     });
 
+    $.display = function (data) {
+        _('#help-title').innerText = data.title || '';
+        _('#help-body').innerHTML = data.body || '';
+        Nav.goTab('help');
+    };
+
     $.show = function (id) {
-        return Http.get('./static/' + id + '_' + l + '.json', undefined, { Authorization: false }).then(function (data) {
-            _('#help-title').innerText = data.title || t('no_title');
-            _('#help-body').innerHTML = data.body || strip(t('no_body'));
-            Nav.goTab('help');
-        }, function (ignored) {
+        return Http.get('./static/' + id + '_' + l + '.json', undefined, { Authorization: false }).then($.display, function (ignored) {
             return Nav.error(t('no_results_found'));
         });
     };
@@ -1361,7 +1363,7 @@ var Spot = {};(function ($) {
             var spot = data.spot;
             $.spot = { id: id, type: spot.type, url_alias: spot.url_alias };
 
-            _('#spot-title').innerText = spot.title || t('no_title');
+            _('#spot-title').innerText = spot.title || '';
             _('#spot').className = 'spot-type-' + spot.type;
             var type = t(spot.type + '_type_' + spot.category);
             if (data.spot_category_details && data.spot_category_details.length) {
@@ -1378,7 +1380,7 @@ var Spot = {};(function ($) {
                 text += spot.user_changed ? t('node_changed_by', spot.user_changed) + ' ' + t('node_changed_by_at', _date) : '' + t('node_changed_at', _date);
             }
             _('#spot-meta').innerText = text;
-            _('#spot-body').innerHTML = spot.description || t('no_body');
+            _('#spot-body').innerHTML = spot.description || '';
             _('#spot-body').style.display = spot.description ? 'block' : 'none';
             _('#spot-lat').innerHTML = spot.lat;
             _('#spot-lng').innerHTML = spot.lng;
@@ -1410,7 +1412,7 @@ var Spot = {};(function ($) {
                 }
             }
 
-            _('#spot-images').innerHTML = text || t('no_images');
+            _('#spot-images').innerHTML = text || '';
             _('#spot-images').style.display = text ? 'block' : 'none';
 
             Nav.goTab('spot');

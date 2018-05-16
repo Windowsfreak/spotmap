@@ -1,0 +1,4 @@
+{
+  "title": "Benvenuti nello Spotmap di Parkour.org",
+  "body": "<p>Questo sito web utilizza Google Maps per mostrare i luoghi su una mappa.<br/>Il tuo dispositivo potrebbe trasmettere la tua posizione stimata a Google.<br/>La ricerca funziona anche senza Google Maps.</p><button type='button' onclick='Maps.accept(); Help.close();'>&#9989; Accetto, usa Google Maps</button> <button type='button' onclick='Help.show(\"disclaimer\");'>&#10067; Norme sulla privacy</button>"
+}
