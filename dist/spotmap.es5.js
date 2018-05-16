@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.7 - 2018-05-16
+/*! spotmap - v0.2.8 - 2018-05-16
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -231,6 +231,8 @@ var Form = {};(function ($) {
                 Nav.success(t('node_added'));
                 Nav.navigate('#spot/' + data.id);
                 $.remove(true);
+                Geotile.update(Spot.marker.lat, Spot.marker.lng);
+                Maps.handleBoundsChanged();
             }, function (data) {
                 return Nav.error(t(data.status === 403 || data.status === 401 ? 'error_forbidden' : 'error_add_node') + ' ' + data.message);
             });
@@ -417,6 +419,22 @@ var Geotile = {};(function ($) {
         }
 
         return result;
+    };
+
+    $.update = function (lat, lng) {
+        var geohash = Geohash.encode(lat, lng);
+        for (var i = 0; i < 16; i++) {
+            var hash = geohash.substring(0, i);
+            for (var z = -1; z <= 5; z++) {
+                if (cache[z]) {
+                    delete cache[z][hash];
+                }
+            }
+        }
+    };
+
+    $.getCache = function () {
+        return cache;
     };
 
     $.loadBounds = function (bounds, callback) {

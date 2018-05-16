@@ -1,4 +1,4 @@
-/* globals _, t, html, ready, Http, Spot, Maps, Nav, script, grecaptcha */
+/* globals _, t, html, ready, Http, Spot, Maps, Nav, Geotile, script, grecaptcha */
 const Form = {}; ($ => {
     'use strict';
 
@@ -172,6 +172,8 @@ const Form = {}; ($ => {
                 Nav.success(t('node_added'));
                 Nav.navigate('#spot/' + data.id);
                 $.remove(true);
+                Geotile.update(Spot.marker.lat, Spot.marker.lng);
+                Maps.handleBoundsChanged();
             }, data => Nav.error(t((data.status === 403 || data.status === 401) ? 'error_forbidden' : 'error_add_node') + ' ' + data.message));
         };
         const token = grecaptcha.getResponse();

@@ -136,6 +136,12 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.8] - 2018-05-16
+Added:
+- Link to Github project in help text
+
+Fixed:
+- Show new marker on map after creation
 ### [0.2.7] - 2018-05-16
 Added:
 - Translation files for IT, NL and DA

@@ -1,4 +1,4 @@
 {
   "title": "Hilfe",
-  "body": "<h2>Hilfethemen</h2><button type='button' onclick='Help.show(\"map\")'>&#x1f30d; Karte</button><button type='button' onclick='Help.show(\"search\")'>&#x1f50d; Suche</button><button type='button' onclick='Help.show(\"login\")'>&#x1f464; Login</button><button type='button' onclick='Help.show(\"gdpr\")'>&#9878; DSGVO</button>"
+  "body": "<h2>Hilfethemen</h2><p><button type='button' onclick='Help.show(\"map\")'>&#x1f30d; Karte</button><button type='button' onclick='Help.show(\"search\")'>&#x1f50d; Suche</button><button type='button' onclick='Help.show(\"login\")'>&#x1f464; Login</button><button type='button' onclick='Help.show(\"gdpr\")'>&#9878; DSGVO</button></p><p>Parkour.org ist ein quelloffenes Projekt. <a href=\"https://github.com/windowsfreak/spotmap\">Beteilige dich</a> an der Weiterentwicklung und Übersetzung.</p>"
 }

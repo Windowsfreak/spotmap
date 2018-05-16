@@ -49,6 +49,20 @@ const Geotile = {}; ($ => {
         return result;
     };
 
+    $.update = (lat, lng) => {
+        const geohash = Geohash.encode(lat, lng);
+        for (let i = 0; i < 16; i++) {
+            const hash = geohash.substring(0, i);
+            for (let z = -1; z <= 5; z++) {
+                if (cache[z]) {
+                    delete cache[z][hash];
+                }
+            }
+        }
+    };
+
+    $.getCache = () => cache;
+
     $.loadBounds = (bounds, callback) => {
         let b;
         if (bounds.lat) {
