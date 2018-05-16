@@ -1,4 +1,4 @@
 {
-  "title": "Welcome to the Spotmap of Parkour.org",
-  "body": "<p>This website uses Google Maps to show places on a map.<br/>Your device might transmit your estimated location to Google.<br/>The search also works without Google Maps.</p><button type='button' onclick='Maps.accept(); Help.close();'>&#9989; I agree, use Google Maps</button> <button type='button' onclick='Help.show(\"disclaimer\");'>&#10067; Privacy policy</button>"
+  "title": "Welkom bij de Spotmap van Parkour.org",
+  "body": "<p>Deze website gebruikt Google Maps om plaatsen op een kaart te tonen. <br/>Uw apparaat kan uw geschatte locatie naar Google verzenden.<br/>De zoekopdracht werkt ook zonder Google Maps.</p><button type='button' onclick='Maps.accept(); Help.close();'>&#9989; Ik ga akkoord, gebruik Google Maps</button> <button type='button' onclick='Help.show(\"disclaimer\");'>&#10067; Privacybeleid</button>"
 }
