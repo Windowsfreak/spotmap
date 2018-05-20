@@ -13,7 +13,17 @@ const Spot = {}; ($ => {
         Nav.events.spot_hide = () => _('#map').className = '';
         _('#spot-lat').title = t('label_lat');
         _('#spot-lng').title = t('label_lng');
+        _('#spot-map').onclick = $.map;
+        _('#spot-edit').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}/edit`;
     });
+
+    $.map = () => {
+        if (window.mapLoaded) {
+            Nav.navigate('');
+            Maps.map.setCenter($.spot);
+            Maps.map.setZoom(15);
+        }
+    };
 
     $.loadSpot = id => {
         Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
@@ -81,16 +91,4 @@ const Spot = {}; ($ => {
             }
         }, ignored => Nav.error(t('error_load_spot')));
     };
-
-    _('#spot-map').onclick = () => {
-        if (window.mapLoaded) {
-            Nav.navigate('');
-            Maps.map.setCenter($.spot);
-            Maps.map.setZoom(15);
-        }
-    };
-
-    _('#spot-web').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
-
-    _('#spot-edit').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}/edit`;
 })(Spot);

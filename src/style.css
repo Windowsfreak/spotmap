@@ -24,9 +24,6 @@ article, aside, details, figcaption, figure,
 footer, header, menu, nav, section {
     display: block;
 }
-ol, ul {
-    list-style: none;
-}
 table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -91,7 +88,6 @@ button, input, select, textarea {
     vertical-align: middle;
     cursor: pointer;
     min-width: 43px;
-    height: 100%;
     padding: 9px 10px;
     background-color: transparent;
     border: solid transparent;
@@ -153,6 +149,24 @@ button.active, button:focus {
 #map.half {
     height: 50%;
     min-height: 50%;
+}
+@media (min-width: 800px) and (orientation: landscape) {
+    #content.spot-page {
+        flex-direction: row;
+        flex-wrap: wrap;
+        }
+    #spot {
+        min-width: 400px;
+        width: 50%;
+        height: 100%;
+        overflow-y: auto;
+    }
+    #spot, #map.half {
+        min-height: 100%;
+    }
+    #map.half {
+        height: 100%;
+    }
 }
 article {
     position: relative;
@@ -380,4 +394,34 @@ p {
 }
 select {
     height: 43px;
+}
+ul, ol {
+    list-style-position: inside;
+    margin: .1em 0 .4em .5em;
+}
+blockquote {
+    padding: 1em;
+    position: relative;
+    background: #ddd;
+    margin: .5em 0;
+}
+blockquote p {
+    margin: 0;
+}
+blockquote p::before, blockquote p::after {
+    font-size: 3em;
+    position: absolute;
+    color: #fff;
+}
+blockquote p::before {
+    top: -20px;
+    left: 8px;
+    content: '“';
+    text-shadow: -3px 0 #ddd;
+}
+blockquote p::after {
+    right: 8px;
+    content: '”';
+    bottom: -44px;
+    text-shadow: 3px 0 #ddd;
 }

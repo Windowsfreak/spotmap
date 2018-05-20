@@ -1,7 +1,7 @@
 {
   "name": "spotmap",
   "description": "Parkour.org Spotmap",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "homepage": "https://github.com/windowsfreak/spotmap",
   "author": {
     "name": "Björn Eberhardt",
@@ -32,6 +32,7 @@
     "grunt-babel": "^7.0.0",
     "grunt-contrib-concat": ">=1.0.1",
     "grunt-contrib-copy": ">=1.0.0",
+    "grunt-contrib-cssmin": "^2.2.1",
     "grunt-contrib-jshint": ">=1.1.0",
     "grunt-contrib-uglify": ">=2.1.0",
     "grunt-contrib-watch": ">=1.0.0",

@@ -10,7 +10,6 @@ var lang = {
     label_lng: 'Longitude',
     btn_show_on_map: 'Show on map',
     btn_show_on_maps: 'Open in Google Maps',
-    btn_show_on_web: 'Open website',
     add_event_here: 'add event here',
     add_group_here: 'add group here',
     add_spot_here: 'add spot here',

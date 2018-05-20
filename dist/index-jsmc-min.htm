@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
+<head><base href="https://map.parkour.org/" target="_blank">
     <title>Parkour.org Spotmap</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +8,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="theme-color" content="#acf">
+    <meta property="og:title" content="Parkour.org Spotmap" />
+    <meta property="og:description" content="Find and share your best Parkour spots with the world - for free!" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://map.parkour.org/" />
+    <meta property="og:image" content="https://map.parkour.org/images/map.jpg" />
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="images/logo64.png" type="image/png">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.min.css">
     <link rel="stylesheet" href="./mobile-console.min.css">
 </head>
 <body>
@@ -25,118 +30,117 @@
 <nav id="notice" onclick="Nav.noticeHide(true)" class="show hide vanish"><span id="notice-text"></span></nav>
 
 <section id="content">
-    <section id="search">
-        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+<section id="search">
+    <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+    <div class="grid">
+        <input id="search-text" type="text" placeholder="Suchbegriff" data-translate="search_keyword" onkeydown="if (event.keyCode == 13) _('#search-submit').click();">
+        <button id="search-submit" type="button" class="no-grow">&#x1f50d;</button>
+        <button id="search-geocode" type="button" class="no-grow">&#x1f30d;</button>
+        <button type="button" class="no-grow" onclick="Help.show('search')">&#10067;</button>
+    </div>
+    <div id="search-page"></div>
+</section>
+
+<section id="login">
+    <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+    <section id="login-form">
+        <p><span data-translate="login_text"></span></p>
         <div class="grid">
-            <input id="search-text" type="text" placeholder="Suchbegriff" data-translate="search_keyword" onkeydown="if (event.keyCode == 13) _('#search-submit').click();">
-            <button id="search-submit" type="button" class="no-grow">&#x1f50d;</button>
-            <button id="search-geocode" type="button" class="no-grow">&#x1f30d;</button>
-            <button type="button" class="no-grow" onclick="Help.show('search')">&#10067;</button>
-        </div>
-        <div id="search-page"></div>
-    </section>
-
-    <section id="login">
-        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
-        <section id="login-form">
-            <p><span data-translate="login_text"></span></p>
-            <div class="grid">
-                <div class="form">
-                    <label for="login-username" data-translate="username"></label>
-                    <input id="login-username" type="text" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
-                </div>
-                <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_save"></span></button>
-                <button type="button" class="no-grow" onclick="Help.show('login')">&#10067;</button>
+            <div class="form">
+                <label for="login-username" data-translate="username"></label>
+                <input id="login-username" type="text" data-translate="username" onkeydown="if (event.keyCode == 13) _('#login-submit').click();">
             </div>
-        </section>
-        <section id="logout-form">
-            <p><span data-translate="label_username">Hi</span> <span id="username"></span>.</p>
-            <button id="logout-submit" type="button">&#x1f3c3; <span data-translate="btn_logout"></span></button>
-        </section>
-    </section>
-
-    <section id="help">
-        <button type="button" onclick="Help.close()">&#10060;</button>
-        <h1 id="help-title"></h1>
-        <p id="help-body"></p>
-    </section>
-
-    <section id="spot">
-        <button type="button" onclick="Nav.resetTab()">&#10060;</button>
-        <h1 id="spot-title"></h1>
-        <p id="spot-type"></p>
-        <p id="spot-meta"></p>
-        <p id="spot-body"></p>
-        <p id="spot-images"></p>
-
-        <div id="spot-geo">
-            <p><span data-translate="label_location"></span> <span id="spot-lat"></span>, <span id="spot-lng"></span></p>
-        </div>
-        <div class="grid">
-            <button id="spot-map" type="button">&#x1f30d; <span data-translate="btn_show_on_map"></span></button>
-            <form id="spot-maps-form" action="//maps.google.com/maps" target="_blank" method="get">
-                <input type="hidden" name="q" id="spot-maps-formdata">
-                <button id="spot-maps" type="submit">&#x1f30d; <span data-translate="btn_show_on_maps"></span></button>
-            </form>
-            <button id="spot-web" type="button">&#x261e; <span data-translate="btn_show_on_web"></span></button>
-            <button id="spot-edit" type="button">&#9997; <span data-translate="btn_edit"></span></button>
-            <button id="spot-add-event" class="add-here" onclick="Form.add_here('event')">&#x2795; <span data-translate="add_event_here"></span></button>
-            <button id="spot-add-group" class="add-here" onclick="Form.add_here('group')">&#x2795; <span data-translate="add_group_here"></span></button>
-            <button id="spot-add-spot" class="add-here" onclick="Form.add_here('spot')">&#x2795; <span data-translate="add_spot_here"></span></button>
+            <button id="login-submit" type="button">&#x1f511; <span data-translate="btn_save"></span></button>
+            <button type="button" class="no-grow" onclick="Help.show('login')">&#10067;</button>
         </div>
     </section>
-
-    <section id="form">
-        <button type="button" onclick="Nav.goTab('map', 0)">&#10060;</button>
-        <h1><span id="form-type"></span> <input id="form-title" oninput="Form.backup()" type="text" placeholder="Name" data-translate="form_name"></h1>
-        <h1><span data-translate="form_category"></span> <select required id="form-category" data-translate="form_category">
-        </select></h1>
-        <textarea id="form-text" oninput="Form.backup()" data-translate="form_description"></textarea>
-        <p data-translate="label_complete_later"></p>
-        <div id="form-captcha" data-size="invisible"></div>
-        <button id="form-save" type="button" onclick="Form.save()">&#9997; <span data-translate="btn_save"></span></button>
-        <button id="form-delete" type="button" onclick="Form.remove()">&#10060; <span data-translate="btn_delete"></span></button>
+    <section id="logout-form">
+        <p><span data-translate="label_username">Hi</span> <span id="username"></span>.</p>
+        <button id="logout-submit" type="button">&#x1f3c3; <span data-translate="btn_logout"></span></button>
     </section>
+</section>
 
-    <section id="menu">
-        <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.resetTab(); } else { Nav.goTab('map', 0) }">&#10060;</button>
-        <div class="grid">
-            <button type="button" style="font-size: 24px; padding: 0" onclick="location.href='//www.parkour.org/';"><img src="images/logo32.png" style="vertical-align: text-bottom;"> www.parkour.org</button>
-        </div>
-        <div class="grid menu">
-            <button onclick="Nav.navigate('#login')">&#x1f464; <span data-translate="username"></span></button>
-            <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.resetTab(); } Maps.track('yes');">&#128205; <span data-translate="locate"></span></button>
-            <button type="button" onclick="Help.show('help')">&#10067; <span data-translate="btn_help"></span></button>
-        </div>
-        <div class="grid menu">
-            <div class="half">
-                <h1>Discover</h1>
-                <button onclick="location.href='//map.parkour.org/events';">&#x1f30d; <span data-translate="btn_events"></span></button>
-                <button onclick="location.href='//map.parkour.org/spots';">&#x1f30d; <span data-translate="btn_spots"></span></button>
-                <button onclick="location.href='//map.parkour.org/groups';">&#x1f30d; <span data-translate="btn_groups"></span></button>
-            </div>
-            <div class="half">
-                <h1>Inspire</h1>
-                <button onclick="location.href='//www.parkour.org/articles';">&#x1f30d; <span data-translate="btn_articles"></span></button>
-                <button onclick="location.href='//www.parkour.org/moves';">&#x1f30d; <span data-translate="btn_moves"></span></button>
-                <button onclick="location.href='//www.parkour.org/videos';">&#x1f30d; <span data-translate="btn_videos"></span></button>
-            </div>
-        </div>
-        <div class="grid language">
-            <h1>Language</h1>
-            <button type="button" class="no-grow" onclick="setLang('de')"><img src="flags/de.png"></button>
-            <button type="button" class="no-grow" onclick="setLang('en')"><img src="flags/en.png"></button>
-            <button type="button" class="no-grow" onclick="setLang('fr')"><img src="flags/fr.png"></button>
-            <button type="button" class="no-grow" onclick="setLang('it')"><img src="flags/it.png"></button>
-            <button type="button" class="no-grow" onclick="setLang('nl')"><img src="flags/nl.png"></button>
-            <button type="button" class="no-grow" onclick="setLang('da')"><img src="flags/da.png"></button>
-        </div>
-        <p>
-        </p>
-    </section>
+<section id="help">
+    <button type="button" onclick="Help.close()">&#10060;</button>
+    <h1 id="help-title"></h1>
+    <p id="help-body"></p>
+</section>
 
-    <section id="map">
-    </section>
+<section id="spot">
+    <button type="button" onclick="Nav.resetTab()">&#10060;</button>
+    <h1 id="spot-title"></h1>
+    <p id="spot-type"></p>
+    <p id="spot-meta"></p>
+    <p id="spot-body"></p>
+    <p id="spot-images"></p>
+
+    <div id="spot-geo">
+        <p><span data-translate="label_location"></span> <span id="spot-lat"></span>, <span id="spot-lng"></span></p>
+    </div>
+    <div class="grid">
+        <button id="spot-map" type="button">&#x1f30d; <span data-translate="btn_show_on_map"></span></button>
+        <form id="spot-maps-form" action="//maps.google.com/maps" target="_blank" method="get">
+            <input type="hidden" name="q" id="spot-maps-formdata">
+            <button id="spot-maps" type="submit">&#x1f30d; <span data-translate="btn_show_on_maps"></span></button>
+        </form>
+        <button id="spot-edit" type="button">&#9997; <span data-translate="btn_edit"></span></button>
+        <button id="spot-add-event" class="add-here" onclick="Form.add_here('event')">&#x2795; <span data-translate="add_event_here"></span></button>
+        <button id="spot-add-group" class="add-here" onclick="Form.add_here('group')">&#x2795; <span data-translate="add_group_here"></span></button>
+        <button id="spot-add-spot" class="add-here" onclick="Form.add_here('spot')">&#x2795; <span data-translate="add_spot_here"></span></button>
+    </div>
+</section>
+
+<section id="form">
+    <button type="button" onclick="Nav.goTab('map', 0)">&#10060;</button>
+    <h1><span id="form-type"></span> <input id="form-title" oninput="Form.backup()" type="text" placeholder="Name" data-translate="form_name"></h1>
+    <h1><span data-translate="form_category"></span> <select required id="form-category" data-translate="form_category">
+    </select></h1>
+    <textarea id="form-text" oninput="Form.backup()" data-translate="form_description"></textarea>
+    <p data-translate="label_complete_later"></p>
+    <div id="form-captcha" data-size="invisible"></div>
+    <button id="form-save" type="button" onclick="Form.save()">&#9997; <span data-translate="btn_save"></span></button>
+    <button id="form-delete" type="button" onclick="Form.remove()">&#10060; <span data-translate="btn_delete"></span></button>
+</section>
+
+<section id="menu">
+    <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.resetTab(); } else { Nav.goTab('map', 0) }">&#10060;</button>
+    <div class="grid">
+        <button type="button" style="font-size: 24px; padding: 0" onclick="location.href='//www.parkour.org/';"><img src="images/logo32.png" style="vertical-align: text-bottom;"> www.parkour.org</button>
+    </div>
+    <div class="grid menu">
+        <button onclick="Nav.navigate('#login')">&#x1f464; <span data-translate="username"></span></button>
+        <button type="button" onclick="if (!location.hash.startsWith('#map/')) { Nav.resetTab(); } Maps.track('yes');">&#128205; <span data-translate="locate"></span></button>
+        <button type="button" onclick="Help.show('help')">&#10067; <span data-translate="btn_help"></span></button>
+    </div>
+    <div class="grid menu">
+        <div class="half">
+            <h1>Discover</h1>
+            <button onclick="location.href='//map.parkour.org/events';">&#x1f30d; <span data-translate="btn_events"></span></button>
+            <button onclick="location.href='//map.parkour.org/spots';">&#x1f30d; <span data-translate="btn_spots"></span></button>
+            <button onclick="location.href='//map.parkour.org/groups';">&#x1f30d; <span data-translate="btn_groups"></span></button>
+        </div>
+        <div class="half">
+            <h1>Inspire</h1>
+            <button onclick="location.href='//www.parkour.org/articles';">&#x1f30d; <span data-translate="btn_articles"></span></button>
+            <button onclick="location.href='//www.parkour.org/moves';">&#x1f30d; <span data-translate="btn_moves"></span></button>
+            <button onclick="location.href='//www.parkour.org/videos';">&#x1f30d; <span data-translate="btn_videos"></span></button>
+        </div>
+    </div>
+    <div class="grid language">
+        <h1>Language</h1>
+        <button type="button" class="no-grow" onclick="setLang('de')"><img src="flags/de.png"></button>
+        <button type="button" class="no-grow" onclick="setLang('en')"><img src="flags/en.png"></button>
+        <button type="button" class="no-grow" onclick="setLang('fr')"><img src="flags/fr.png"></button>
+        <button type="button" class="no-grow" onclick="setLang('it')"><img src="flags/it.png"></button>
+        <button type="button" class="no-grow" onclick="setLang('nl')"><img src="flags/nl.png"></button>
+        <button type="button" class="no-grow" onclick="setLang('da')"><img src="flags/da.png"></button>
+    </div>
+    <p>
+    </p>
+</section>
+
+<section id="map">
+</section>
 </section>
 
 <!-- Always put your scripts at the bottom of the page -->

@@ -35,6 +35,17 @@ module.exports = function(grunt) {
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
+    cssmin: {
+      options: {
+        mergeIntoShorthands: false,
+        roundingPrecision: -1
+      },
+      target: {
+        files: {
+          'src/style.min.css': ['src/style.css']
+        }
+      }
+    },
     copy: {
       main: {
         files: [
@@ -50,10 +61,14 @@ module.exports = function(grunt) {
         ],
         options: {
           process: function(src) {
+            const sections = grunt.file.read('src/sections.htm');
             return src
                 .replace(/<!-- development[\s\S]*\/development -->\s+/g, '')
+                .replace(/<!-- replace[\s\S]*\/replace -->/g, sections)
                 .replace(/<!-- production\s+/g, '')
-                .replace(/\/production -->\s+/g, '');
+                .replace(/\/production -->\s+/g, '')
+                .replace(/style.css/g, 'style.min.css')
+                .replace(/<head>/g, '<head><base href="https://map.parkour.org/" target="_blank">');
           }
         }
       },
@@ -137,9 +152,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
 
   // Default task.
-  grunt.registerTask('default', ['jshint', 'mochaTest:test', 'copy', 'concat', 'babel', 'uglify', 'mochaTest:dist']);
+  grunt.registerTask('default', ['jshint', 'mochaTest:test', 'cssmin', 'copy', 'concat', 'babel', 'uglify', 'mochaTest:dist']);
   grunt.registerTask('test', ['jshint', 'mochaTest']);
 
 };

@@ -1,11 +1,13 @@
 'use strict';
-/*! spotmap - v0.2.8 - 2018-05-16
+/*! spotmap - v0.2.9 - 2018-05-20
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
 // Source: src/scripts/base.js
 // global
 /* globals lang */
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -100,13 +102,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var Form = {};(function ($) {
     var captchaCode = false;
 
-    var categories = {
-        spot: ['outdoor', 'gym', 'parkourpark', 'parkourgym', 'climbinggym', 'pool', 'cliff'],
-        event: ['training', 'workshop', 'jam', 'trip', 'competition'],
-        group: ['private', 'community', 'club', 'company'],
-        move: ['moves', 'conditioning', 'games', 'jumps', 'vaults', 'bar', 'flips', 'combinations', 'freezes', 'beginner', 'intermediate', 'advanced']
-    };
-
     window.captcha = function () {
         grecaptcha.render('form-captcha', {
             'sitekey': '6LdRg1cUAAAAAFjzUokSQB6egcNS_o9EF_KAmW7i',
@@ -143,6 +138,7 @@ var Form = {};(function ($) {
     });
 
     $.add_here = function (type) {
+        Spot.map();
         Maps.newMarker(Spot.spot, true);
         $.add(type);
     };
@@ -154,7 +150,7 @@ var Form = {};(function ($) {
             event: t('new_event')
         };
         _('#form-type').innerText = formTypes[type];
-        _('#form-category').innerHTML = '<option value="" disabled selected hidden>' + t('form_category') + '</option>' + categories[type].map(function (item) {
+        _('#form-category').innerHTML = '<option value="" disabled selected hidden>' + t('form_category') + '</option>' + Maps.categories[type].map(function (item) {
             return '<option value="' + item + '">' + t(type + '_type_' + item) + '</option>';
         }).join('');
         _('#form-category').value = '';
@@ -433,10 +429,6 @@ var Geotile = {};(function ($) {
         }
     };
 
-    $.getCache = function () {
-        return cache;
-    };
-
     $.loadBounds = function (bounds, callback) {
         var b = void 0;
         if (bounds.lat) {
@@ -649,10 +641,11 @@ var Http = {};(function ($) {
             xhr.onload = function () {
                 if (this.status >= 200 && this.status < 300) {
                     try {
-                        resolve(JSON.parse(xhr.response));
+                        resolve(headers.accept === 'text/html' ? xhr.response : JSON.parse(xhr.response));
                     } catch (e) {
+                        //xhr.onerror();
                         Nav.error(t('error_server_request'));
-                        resolve({
+                        reject({
                             method: method,
                             url: url,
                             params: params,
@@ -668,7 +661,7 @@ var Http = {};(function ($) {
             };
             xhr.onerror = function () {
                 Nav.error(t('error_server_request'));
-                var data = {
+                reject({
                     method: method,
                     url: url,
                     params: params,
@@ -676,8 +669,7 @@ var Http = {};(function ($) {
                     status: this.status,
                     statusText: xhr.statusText,
                     message: xhr.response
-                };
-                reject(data);
+                });
             };
             if (headers) {
                 Object.keys(headers).forEach(function (key) {
@@ -727,20 +719,18 @@ var Login = {};(function ($) {
                 Nav.goTab('login-form');
             }
         };
+        _('#login-submit').onclick = function () {
+            var user = _('#login-username');
+            Http.setCredentials(user.value);
+            Nav.success(t('logged_in_as', user.value));
+            user.value = '';
+            Nav.events.login_show();
+        };
+        _('#logout-submit').onclick = function () {
+            Http.deleteCredentials();
+            Nav.events.login_show();
+        };
     });
-
-    _('#login-submit').onclick = function () {
-        var user = _('#login-username');
-        Http.setCredentials(user.value);
-        Nav.success(t('logged_in_as', user.value));
-        user.value = '';
-        Nav.events.login_show();
-    };
-
-    _('#logout-submit').onclick = function () {
-        Http.deleteCredentials();
-        Nav.events.login_show();
-    };
 })(Login);
 // Source: src/scripts/maps.js
 var Maps = {};(function ($) {
@@ -768,8 +758,18 @@ var Maps = {};(function ($) {
     };
 
     var initial = Date.now;
+
+    $.categories = {
+        spot: ['outdoor', 'gym', 'parkourpark', 'parkourgym', 'climbinggym', 'pool', 'cliff'],
+        event: ['training', 'workshop', 'jam', 'trip', 'competition'],
+        group: ['private', 'community', 'club', 'company'],
+        move: ['moves', 'conditioning', 'games', 'jumps', 'vaults', 'bar', 'flips', 'combinations', 'freezes', 'beginner', 'intermediate', 'advanced']
+    };
+
     window.panToPosition = !$.mapped(location.hash);
-    $.filter = ['spot', 'event', 'group'];
+    $.filter = Object.values($.categories).reduce(function (acc, s) {
+        return acc.concat(s);
+    }, []);
     var gpsObj = void 0;
     $.icons = {};
     $.shapes = {};
@@ -1027,7 +1027,9 @@ var Maps = {};(function ($) {
             pixelOffset: new google.maps.Size(0, -31)
         });
 
-        $.track(true);
+        if (!$.mapped(location.hash) || window.panToPosition) {
+            $.track(true);
+        }
         Form.restore();
     };
 
@@ -1096,7 +1098,67 @@ var Maps = {};(function ($) {
         var filterBox = dom('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
-        filterBox.innerHTML = 'Zeige:<br />\n            <span class="yes" id="filter-spot" onclick="Maps.toggleFilter(\'spot\')">' + t('spot') + '</span><br />\n            <span class="yes" id="filter-event" onclick="Maps.toggleFilter(\'event\')">' + t('event') + '</span><br />\n            <span class="yes" id="filter-group" onclick="Maps.toggleFilter(\'group\')">' + t('group') + '</span>';
+        var s = 'Zeige:<br />';
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+            for (var _iterator4 = Object.entries($.categories)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                var _ref = _step4.value;
+
+                var _ref2 = _slicedToArray(_ref, 2);
+
+                var key = _ref2[0];
+                var value = _ref2[1];
+
+                if (key === 'move') {
+                    continue;
+                }
+                s += '<p><b>' + t('type_' + key) + '</b><br />';
+                var _iteratorNormalCompletion5 = true;
+                var _didIteratorError5 = false;
+                var _iteratorError5 = undefined;
+
+                try {
+                    for (var _iterator5 = value[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                        var v = _step5.value;
+
+                        s += '<span class="yes" id="filter-' + v + '" onclick="Maps.toggleFilter(\'' + v + '\')">' + t(key + '_type_' + v) + '</span><br />';
+                    }
+                } catch (err) {
+                    _didIteratorError5 = true;
+                    _iteratorError5 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                            _iterator5.return();
+                        }
+                    } finally {
+                        if (_didIteratorError5) {
+                            throw _iteratorError5;
+                        }
+                    }
+                }
+
+                s += '</p>';
+            }
+        } catch (err) {
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                    _iterator4.return();
+                }
+            } finally {
+                if (_didIteratorError4) {
+                    throw _iteratorError4;
+                }
+            }
+        }
+
+        filterBox.innerHTML = s;
         controlUI.addEventListener('click', function () {
             var elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
@@ -1121,29 +1183,29 @@ var Maps = {};(function ($) {
     };
 
     $.matchesFilter = function (entry) {
-        var _iteratorNormalCompletion4 = true;
-        var _didIteratorError4 = false;
-        var _iteratorError4 = undefined;
+        var _iteratorNormalCompletion6 = true;
+        var _didIteratorError6 = false;
+        var _iteratorError6 = undefined;
 
         try {
-            for (var _iterator4 = $.filter[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                var f = _step4.value;
+            for (var _iterator6 = $.filter[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+                var f = _step6.value;
 
-                if (entry.type.indexOf(f) !== -1) {
+                if (entry.category.indexOf(f) !== -1) {
                     return true;
                 }
             }
         } catch (err) {
-            _didIteratorError4 = true;
-            _iteratorError4 = err;
+            _didIteratorError6 = true;
+            _iteratorError6 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                    _iterator4.return();
+                if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                    _iterator6.return();
                 }
             } finally {
-                if (_didIteratorError4) {
-                    throw _iteratorError4;
+                if (_didIteratorError6) {
+                    throw _iteratorError6;
                 }
             }
         }
@@ -1157,7 +1219,7 @@ var Nav = {};(function ($) {
     $.isLite = false;
 
     $.openTab = function (id, evt) {
-        var parent = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _('#' + id).parentNode;
+        var parent = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _('#' + id).parentNode || _('#content');
 
         var sections = _('section');
         var previous = void 0;
@@ -1180,9 +1242,14 @@ var Nav = {};(function ($) {
             evt.currentTarget.className += ' active';
         }
 
-        _('#' + id).style.display = 'block';
-        console.log('Showing ' + id);
-        $.call($.events[id + '_show'], previous);
+        var obj = _('#' + id);
+        if (obj) {
+            obj.style.display = 'block';
+            parent.className = id + '-page';
+            console.log('Showing ' + id);
+            $.call($.events[id + '_show'], previous);
+        }
+        return obj;
     };
 
     $.call = function (func, param) {
@@ -1255,14 +1322,16 @@ var Nav = {};(function ($) {
         }
     };
 
-    $.goTab('map', 0);
-    _('body')[0].onkeyup = function (e) {
-        return e.which !== 27 || $.goTab('map', 0);
-    };
+    if (!window.doNotLoad) {
+        $.goTab('map', 0);
+    }
     ready.push(function () {
         return function () {
             document.addEventListener('DOMContentLoaded', $.navigate, false);
             window.onhashchange = $.navigate;
+            _('body')[0].onkeyup = function (e) {
+                return e.which !== 27 || $.goTab('map', 0);
+            };
         };
     });
 })(Nav);
@@ -1298,15 +1367,17 @@ var Proximity = {};(function ($) {
 // Source: src/scripts/search.js
 var Search = {};(function ($) {
     var search = {};
-    _('#search-submit').onclick = function () {
-        var text = _('#search-text').value;
-        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
-    };
-    _('#search-geocode').onclick = function () {
-        var text = _('#search-text').value;
-        Maps.geocode(text);
-        Nav.navigate('');
-    };
+    ready.push(function () {
+        _('#search-submit').onclick = function () {
+            var text = _('#search-text').value;
+            Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
+        };
+        _('#search-geocode').onclick = function () {
+            var text = _('#search-text').value;
+            Maps.geocode(text);
+            Nav.navigate('');
+        };
+    });
 
     $.loadSearch = function (more) {
         var text = _('#search-text').value;
@@ -1323,13 +1394,13 @@ var Search = {};(function ($) {
         if (result.length === 0) {
             text += t('no_results_found');
         }
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
+        var _iteratorNormalCompletion7 = true;
+        var _didIteratorError7 = false;
+        var _iteratorError7 = undefined;
 
         try {
-            for (var _iterator5 = result[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-                var spot = _step5.value;
+            for (var _iterator7 = result[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+                var spot = _step7.value;
 
                 text += '<article onclick="Nav.navigate(\'#spot/' + spot.id + '\');">';
                 if (spot.p0) {
@@ -1344,16 +1415,16 @@ var Search = {};(function ($) {
                 text += '</article>';
             }
         } catch (err) {
-            _didIteratorError5 = true;
-            _iteratorError5 = err;
+            _didIteratorError7 = true;
+            _iteratorError7 = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                    _iterator5.return();
+                if (!_iteratorNormalCompletion7 && _iterator7.return) {
+                    _iterator7.return();
                 }
             } finally {
-                if (_didIteratorError5) {
-                    throw _iteratorError5;
+                if (_didIteratorError7) {
+                    throw _iteratorError7;
                 }
             }
         }
@@ -1374,7 +1445,19 @@ var Spot = {};(function ($) {
         };
         _('#spot-lat').title = t('label_lat');
         _('#spot-lng').title = t('label_lng');
+        _('#spot-map').onclick = $.map;
+        _('#spot-edit').onclick = function () {
+            return location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias + '/edit';
+        };
     });
+
+    $.map = function () {
+        if (window.mapLoaded) {
+            Nav.navigate('');
+            Maps.map.setCenter($.spot);
+            Maps.map.setZoom(15);
+        }
+    };
 
     $.loadSpot = function (id) {
         Http.get('//map.parkour.org/api/v1/spot/' + id, null, { Authorization: false }).then(function (data) {
@@ -1405,27 +1488,27 @@ var Spot = {};(function ($) {
             $.spot.lat = parseFloat(spot.lat);
             $.spot.lng = parseFloat(spot.lng);
             text = '';
-            var _iteratorNormalCompletion6 = true;
-            var _didIteratorError6 = false;
-            var _iteratorError6 = undefined;
+            var _iteratorNormalCompletion8 = true;
+            var _didIteratorError8 = false;
+            var _iteratorError8 = undefined;
 
             try {
-                for (var _iterator6 = data.images[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                    var image = _step6.value;
+                for (var _iterator8 = data.images[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                    var image = _step8.value;
 
                     text += '<a href="//map.parkour.org/images/spots/' + image.filename + '" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/' + image.filename + '" /></a>';
                 }
             } catch (err) {
-                _didIteratorError6 = true;
-                _iteratorError6 = err;
+                _didIteratorError8 = true;
+                _iteratorError8 = err;
             } finally {
                 try {
-                    if (!_iteratorNormalCompletion6 && _iterator6.return) {
-                        _iterator6.return();
+                    if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                        _iterator8.return();
                     }
                 } finally {
-                    if (_didIteratorError6) {
-                        throw _iteratorError6;
+                    if (_didIteratorError8) {
+                        throw _iteratorError8;
                     }
                 }
             }
@@ -1472,26 +1555,12 @@ var Spot = {};(function ($) {
             return Nav.error(t('error_load_spot'));
         });
     };
-
-    _('#spot-map').onclick = function () {
-        if (window.mapLoaded) {
-            Nav.navigate('');
-            Maps.map.setCenter($.spot);
-            Maps.map.setZoom(15);
-        }
-    };
-
-    _('#spot-web').onclick = function () {
-        return location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias;
-    };
-
-    _('#spot-edit').onclick = function () {
-        return location.href = '//map.parkour.org/' + $.spot.type + '/' + $.spot.url_alias + '/edit';
-    };
 })(Spot);
 // Source: src/scripts/z.js
 (function () {
-    window.runLater();
+    if (!window.doNotLoad) {
+        window.runLater();
+    }
     window.addEventListener("load", function () {
         return setTimeout(function () {
             return window.scrollTo(0, 1);

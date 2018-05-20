@@ -61,8 +61,6 @@ const Geotile = {}; ($ => {
         }
     };
 
-    $.getCache = () => cache;
-
     $.loadBounds = (bounds, callback) => {
         let b;
         if (bounds.lat) {

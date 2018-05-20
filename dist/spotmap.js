@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.8 - 2018-05-16
+/*! spotmap - v0.2.9 - 2018-05-20
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -67,45 +67,6 @@ const Form = {}; ($ => {
     let captchaCode = false;
 
 
-    const categories = {
-        spot: [
-            'outdoor',
-            'gym',
-            'parkourpark',
-            'parkourgym',
-            'climbinggym',
-            'pool',
-            'cliff'
-        ],
-        event: [
-            'training',
-            'workshop',
-            'jam',
-            'trip',
-            'competition'
-        ],
-        group: [
-            'private',
-            'community',
-            'club',
-            'company'
-        ],
-        move: [
-            'moves',
-            'conditioning',
-            'games',
-            'jumps',
-            'vaults',
-            'bar',
-            'flips',
-            'combinations',
-            'freezes',
-            'beginner',
-            'intermediate',
-            'advanced'
-        ]
-    };
-
     window.captcha = () => {
         grecaptcha.render('form-captcha', {
             'sitekey' : '6LdRg1cUAAAAAFjzUokSQB6egcNS_o9EF_KAmW7i',
@@ -142,6 +103,7 @@ const Form = {}; ($ => {
     });
 
     $.add_here = type => {
+        Spot.map();
         Maps.newMarker(Spot.spot, true);
         $.add(type);
     };
@@ -154,7 +116,7 @@ const Form = {}; ($ => {
         };
         _('#form-type').innerText = formTypes[type];
         _('#form-category').innerHTML = `<option value="" disabled selected hidden>${t('form_category')}</option>` +
-            categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
+            Maps.categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
         _('#form-category').value = '';
         Spot.marker = {lat: Maps.marker.getPosition().lat(), lng: Maps.marker.getPosition().lng(), type: type};
         Nav.goTab('form');
@@ -417,8 +379,6 @@ const Geotile = {}; ($ => {
         }
     };
 
-    $.getCache = () => cache;
-
     $.loadBounds = (bounds, callback) => {
         let b;
         if (bounds.lat) {
@@ -581,10 +541,11 @@ const Http = {}; ($ => {
             xhr.onload = function () {
                 if (this.status >= 200 && this.status < 300) {
                     try {
-                        resolve(JSON.parse(xhr.response));
+                        resolve(headers.accept === 'text/html' ? xhr.response : JSON.parse(xhr.response));
                     } catch (e) {
+                        //xhr.onerror();
                         Nav.error(t('error_server_request'));
-                        resolve({
+                        reject({
                             method,
                             url,
                             params,
@@ -600,7 +561,7 @@ const Http = {}; ($ => {
             };
             xhr.onerror = function() {
                 Nav.error(t('error_server_request'));
-                const data = {
+                reject({
                     method,
                     url,
                     params,
@@ -608,8 +569,7 @@ const Http = {}; ($ => {
                     status: this.status,
                     statusText: xhr.statusText,
                     message: xhr.response
-                };
-                reject(data);
+                });
             };
             if (headers) {
                 Object.keys(headers).forEach(key => xhr.setRequestHeader(key, headers[key]));
@@ -647,20 +607,18 @@ const Login = {}; ($ => {
                 Nav.goTab('login-form');
             }
         };
+        _('#login-submit').onclick = () => {
+            let user = _('#login-username');
+            Http.setCredentials(user.value);
+            Nav.success(t('logged_in_as', user.value));
+            user.value = '';
+            Nav.events.login_show();
+        };
+        _('#logout-submit').onclick = () => {
+            Http.deleteCredentials();
+            Nav.events.login_show();
+        };
     });
-
-    _('#login-submit').onclick = () => {
-        let user = _('#login-username');
-        Http.setCredentials(user.value);
-        Nav.success(t('logged_in_as', user.value));
-        user.value = '';
-        Nav.events.login_show();
-    };
-
-    _('#logout-submit').onclick = () => {
-        Http.deleteCredentials();
-        Nav.events.login_show();
-    };
 })(Login);
 // Source: src/scripts/maps.js
 const Maps = {}; ($ => {
@@ -686,8 +644,48 @@ const Maps = {}; ($ => {
     $.mapped = hash => hash.startsWith('#map/') || hash.startsWith('#spot/');
 
     const initial = Date.now;
+
+    $.categories = {
+        spot: [
+            'outdoor',
+            'gym',
+            'parkourpark',
+            'parkourgym',
+            'climbinggym',
+            'pool',
+            'cliff'
+        ],
+        event: [
+            'training',
+            'workshop',
+            'jam',
+            'trip',
+            'competition'
+        ],
+        group: [
+            'private',
+            'community',
+            'club',
+            'company'
+        ],
+        move: [
+            'moves',
+            'conditioning',
+            'games',
+            'jumps',
+            'vaults',
+            'bar',
+            'flips',
+            'combinations',
+            'freezes',
+            'beginner',
+            'intermediate',
+            'advanced'
+        ]
+    };
+
     window.panToPosition = !$.mapped(location.hash);
-    $.filter = ['spot', 'event', 'group'];
+    $.filter = Object.values($.categories).reduce((acc, s) => acc.concat(s), []);
     let gpsObj;
     $.icons = {};
     $.shapes = {};
@@ -945,7 +943,9 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
             pixelOffset: new google.maps.Size(0, -31)
         });
 
-        $.track(true);
+        if ((!$.mapped(location.hash) || window.panToPosition)) {
+            $.track(true);
+        }
         Form.restore();
     };
 
@@ -1010,10 +1010,18 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         const filterBox = dom('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
-        filterBox.innerHTML = `Zeige:<br />
-            <span class="yes" id="filter-spot" onclick="Maps.toggleFilter('spot')">${t('spot')}</span><br />
-            <span class="yes" id="filter-event" onclick="Maps.toggleFilter('event')">${t('event')}</span><br />
-            <span class="yes" id="filter-group" onclick="Maps.toggleFilter('group')">${t('group')}</span>`;
+        let s = 'Zeige:<br />';
+        for (const [key, value] of Object.entries($.categories)) {
+            if (key === 'move') {
+                continue;
+            }
+            s += `<p><b>${t('type_' + key)}</b><br />`;
+            for (const v of value) {
+                s += `<span class="yes" id="filter-${v}" onclick="Maps.toggleFilter('${v}')">${t(`${key}_type_${v}`)}</span><br />`;
+            }
+            s += '</p>';
+        }
+        filterBox.innerHTML = s;
         controlUI.addEventListener('click', () => {
             const elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
@@ -1039,20 +1047,19 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
 
     $.matchesFilter = entry => {
         for (const f of $.filter) {
-            if (entry.type.indexOf(f) !== -1) {
+            if (entry.category.indexOf(f) !== -1) {
                 return true;
             }
         }
         return false;
     };
-
 })(Maps);
 // Source: src/scripts/nav.js
 const Nav = {}; ($ => {
     $.events = {};
     $.isLite = false;
 
-    $.openTab = (id, evt, parent = _('#' + id).parentNode) => {
+    $.openTab = (id, evt, parent = _('#' + id).parentNode || _('#content')) => {
         const sections = _('section');
         let previous;
         for (let i = 0; i < sections.length; i++) {
@@ -1074,9 +1081,14 @@ const Nav = {}; ($ => {
             evt.currentTarget.className += ' active';
         }
 
-        _('#' + id).style.display = 'block';
-        console.log('Showing ' + id);
-        $.call($.events[id + '_show'], previous);
+        const obj = _('#' + id);
+        if (obj) {
+            obj.style.display = 'block';
+            parent.className = id + '-page';
+            console.log('Showing ' + id);
+            $.call($.events[id + '_show'], previous);
+        }
+        return obj;
     };
 
     $.call = (func, param) => func && func(param);
@@ -1139,11 +1151,13 @@ const Nav = {}; ($ => {
         }
     };
 
-    $.goTab('map', 0);
-    _('body')[0].onkeyup = e => (e.which !== 27) || $.goTab('map', 0);
+    if (!window.doNotLoad) {
+        $.goTab('map', 0);
+    }
     ready.push(() => () => {
         document.addEventListener('DOMContentLoaded', $.navigate, false);
         window.onhashchange = $.navigate;
+        _('body')[0].onkeyup = e => (e.which !== 27) || $.goTab('map', 0);
     });
 
 })(Nav);
@@ -1177,15 +1191,17 @@ const Proximity = {}; ($ => {
 // Source: src/scripts/search.js
 const Search = {}; ($ => {
     const search = {};
-    _('#search-submit').onclick = () => {
-        const text = _('#search-text').value;
-        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
-    };
-    _('#search-geocode').onclick = () => {
-        const text = _('#search-text').value;
-        Maps.geocode(text);
-        Nav.navigate('');
-    };
+    ready.push(() => {
+        _('#search-submit').onclick = () => {
+            const text = _('#search-text').value;
+            Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
+        };
+        _('#search-geocode').onclick = () => {
+            const text = _('#search-text').value;
+            Maps.geocode(text);
+            Nav.navigate('');
+        };
+    });
 
     $.loadSearch = more => {
         const text = _('#search-text').value;
@@ -1229,7 +1245,17 @@ const Spot = {}; ($ => {
         Nav.events.spot_hide = () => _('#map').className = '';
         _('#spot-lat').title = t('label_lat');
         _('#spot-lng').title = t('label_lng');
+        _('#spot-map').onclick = $.map;
+        _('#spot-edit').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}/edit`;
     });
+
+    $.map = () => {
+        if (window.mapLoaded) {
+            Nav.navigate('');
+            Maps.map.setCenter($.spot);
+            Maps.map.setZoom(15);
+        }
+    };
 
     $.loadSpot = id => {
         Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
@@ -1297,21 +1323,11 @@ const Spot = {}; ($ => {
             }
         }, ignored => Nav.error(t('error_load_spot')));
     };
-
-    _('#spot-map').onclick = () => {
-        if (window.mapLoaded) {
-            Nav.navigate('');
-            Maps.map.setCenter($.spot);
-            Maps.map.setZoom(15);
-        }
-    };
-
-    _('#spot-web').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}`;
-
-    _('#spot-edit').onclick = () => location.href = `//map.parkour.org/${$.spot.type}/${$.spot.url_alias}/edit`;
 })(Spot);
 // Source: src/scripts/z.js
 (() => {
-    window.runLater();
+    if (!window.doNotLoad) {
+        window.runLater();
+    }
     window.addEventListener("load", () => setTimeout(() => window.scrollTo(0, 1), 0));
 })();

@@ -10,7 +10,6 @@ var lang = {
     label_lng: 'Breedtegraad',
     btn_show_on_map: 'Toon op kaart',
     btn_show_on_maps: 'Open in Google Maps',
-    btn_show_on_web: 'Open de website',
     add_event_here: 'evenement toevoegen hier',
     add_group_here: 'de groep toe te voegen hier',
     add_spot_here: 'toevoegen plek hier',

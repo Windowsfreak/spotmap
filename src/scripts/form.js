@@ -10,45 +10,6 @@ const Form = {}; ($ => {
     // require('./nav.js');
     // require('./spot.js');
 
-    const categories = {
-        spot: [
-            'outdoor',
-            'gym',
-            'parkourpark',
-            'parkourgym',
-            'climbinggym',
-            'pool',
-            'cliff'
-        ],
-        event: [
-            'training',
-            'workshop',
-            'jam',
-            'trip',
-            'competition'
-        ],
-        group: [
-            'private',
-            'community',
-            'club',
-            'company'
-        ],
-        move: [
-            'moves',
-            'conditioning',
-            'games',
-            'jumps',
-            'vaults',
-            'bar',
-            'flips',
-            'combinations',
-            'freezes',
-            'beginner',
-            'intermediate',
-            'advanced'
-        ]
-    };
-
     window.captcha = () => {
         grecaptcha.render('form-captcha', {
             'sitekey' : '6LdRg1cUAAAAAFjzUokSQB6egcNS_o9EF_KAmW7i',
@@ -85,6 +46,7 @@ const Form = {}; ($ => {
     });
 
     $.add_here = type => {
+        Spot.map();
         Maps.newMarker(Spot.spot, true);
         $.add(type);
     };
@@ -97,7 +59,7 @@ const Form = {}; ($ => {
         };
         _('#form-type').innerText = formTypes[type];
         _('#form-category').innerHTML = `<option value="" disabled selected hidden>${t('form_category')}</option>` +
-            categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
+            Maps.categories[type].map(item => `<option value="${item}">${t(`${type}_type_${item}`)}</option>`).join('');
         _('#form-category').value = '';
         Spot.marker = {lat: Maps.marker.getPosition().lat(), lng: Maps.marker.getPosition().lng(), type: type};
         Nav.goTab('form');

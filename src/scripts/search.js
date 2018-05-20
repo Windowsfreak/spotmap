@@ -1,4 +1,4 @@
-/* globals _, t, strip, Http, Maps, Nav, Spot */
+/* globals _, t, ready, strip, Http, Maps, Nav, Spot */
 const Search = {}; ($ => {
     'use strict';
     // require('./base.js');
@@ -7,15 +7,17 @@ const Search = {}; ($ => {
     // require('./nav.js');
     // require('./spot.js');
     const search = {};
-    _('#search-submit').onclick = () => {
-        const text = _('#search-text').value;
-        Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
-    };
-    _('#search-geocode').onclick = () => {
-        const text = _('#search-text').value;
-        Maps.geocode(text);
-        Nav.navigate('');
-    };
+    ready.push(() => {
+        _('#search-submit').onclick = () => {
+            const text = _('#search-text').value;
+            Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
+        };
+        _('#search-geocode').onclick = () => {
+            const text = _('#search-text').value;
+            Maps.geocode(text);
+            Nav.navigate('');
+        };
+    });
 
     $.loadSearch = more => {
         const text = _('#search-text').value;

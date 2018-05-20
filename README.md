@@ -136,6 +136,25 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.9] - 2018-05-20
+Added:
+- Link to Github project in help text
+- Description for Social Media Pages
+- Load HTML content into page
+- CSS minification
+- JS minification now live
+
+Changed:
+- Script injection can be controlled and lazy
+- Finer control of filters
+- Horizontal map mode on spot details page
+
+Removed:
+- 'Show on web' button
+
+Fixed:
+- Abort Creation from existing spot prevents opening spot again.
+- Unexpected scrolling to geolocation
 ### [0.2.8] - 2018-05-16
 Added:
 - Link to Github project in help text

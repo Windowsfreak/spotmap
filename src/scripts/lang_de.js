@@ -10,7 +10,6 @@ var lang = {
     label_lng: 'Längengrad',
     btn_show_on_map: 'Auf Karte zeigen',
     btn_show_on_maps: 'In Google Maps öffnen',
-    btn_show_on_web: 'Webseite öffnen',
     add_event_here: 'Hier Event hinzufügen',
     add_group_here: 'Hier Gruppe hinzufügen',
     add_spot_here: 'Hier Spot hinzufügen',

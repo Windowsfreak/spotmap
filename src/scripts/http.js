@@ -39,10 +39,11 @@ const Http = {}; ($ => {
             xhr.onload = function () {
                 if (this.status >= 200 && this.status < 300) {
                     try {
-                        resolve(JSON.parse(xhr.response));
+                        resolve(headers.accept === 'text/html' ? xhr.response : JSON.parse(xhr.response));
                     } catch (e) {
+                        //xhr.onerror();
                         Nav.error(t('error_server_request'));
-                        resolve({
+                        reject({
                             method,
                             url,
                             params,
@@ -58,7 +59,7 @@ const Http = {}; ($ => {
             };
             xhr.onerror = function() {
                 Nav.error(t('error_server_request'));
-                const data = {
+                reject({
                     method,
                     url,
                     params,
@@ -66,8 +67,7 @@ const Http = {}; ($ => {
                     status: this.status,
                     statusText: xhr.statusText,
                     message: xhr.response
-                };
-                reject(data);
+                });
             };
             if (headers) {
                 Object.keys(headers).forEach(key => xhr.setRequestHeader(key, headers[key]));

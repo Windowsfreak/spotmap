@@ -14,18 +14,16 @@ const Login = {}; ($ => {
                 Nav.goTab('login-form');
             }
         };
+        _('#login-submit').onclick = () => {
+            let user = _('#login-username');
+            Http.setCredentials(user.value);
+            Nav.success(t('logged_in_as', user.value));
+            user.value = '';
+            Nav.events.login_show();
+        };
+        _('#logout-submit').onclick = () => {
+            Http.deleteCredentials();
+            Nav.events.login_show();
+        };
     });
-
-    _('#login-submit').onclick = () => {
-        let user = _('#login-username');
-        Http.setCredentials(user.value);
-        Nav.success(t('logged_in_as', user.value));
-        user.value = '';
-        Nav.events.login_show();
-    };
-
-    _('#logout-submit').onclick = () => {
-        Http.deleteCredentials();
-        Nav.events.login_show();
-    };
 })(Login);

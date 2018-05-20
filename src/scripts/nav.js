@@ -7,7 +7,7 @@ const Nav = {}; ($ => {
     $.events = {};
     $.isLite = false;
 
-    $.openTab = (id, evt, parent = _('#' + id).parentNode) => {
+    $.openTab = (id, evt, parent = _('#' + id).parentNode || _('#content')) => {
         const sections = _('section');
         let previous;
         for (let i = 0; i < sections.length; i++) {
@@ -29,9 +29,14 @@ const Nav = {}; ($ => {
             evt.currentTarget.className += ' active';
         }
 
-        _('#' + id).style.display = 'block';
-        console.log('Showing ' + id);
-        $.call($.events[id + '_show'], previous);
+        const obj = _('#' + id);
+        if (obj) {
+            obj.style.display = 'block';
+            parent.className = id + '-page';
+            console.log('Showing ' + id);
+            $.call($.events[id + '_show'], previous);
+        }
+        return obj;
     };
 
     $.call = (func, param) => func && func(param);
@@ -94,11 +99,13 @@ const Nav = {}; ($ => {
         }
     };
 
-    $.goTab('map', 0);
-    _('body')[0].onkeyup = e => (e.which !== 27) || $.goTab('map', 0);
+    if (!window.doNotLoad) {
+        $.goTab('map', 0);
+    }
     ready.push(() => () => {
         document.addEventListener('DOMContentLoaded', $.navigate, false);
         window.onhashchange = $.navigate;
+        _('body')[0].onkeyup = e => (e.which !== 27) || $.goTab('map', 0);
     });
 
 })(Nav);

@@ -1,35 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head><base href="https://map.parkour.org/" target="_blank">
-    <title>Parkour.org Spotmap</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="theme-color" content="#acf">
-    <meta property="og:title" content="Parkour.org Spotmap" />
-    <meta property="og:description" content="Find and share your best Parkour spots with the world - for free!" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://map.parkour.org/" />
-    <meta property="og:image" content="https://map.parkour.org/images/map.jpg" />
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="images/logo64.png" type="image/png">
-    <link rel="stylesheet" href="style.min.css">
-    <link rel="stylesheet" href="./mobile-console.css">
-</head>
-<body>
-
-<!-- This is the top navigation bar -->
-<nav class="navbar" role="navigation">
-    <button type="button" onclick="Nav.resetTab()">&#x1f30d;</button>
-    <button type="button" onclick="Nav.navigate('#search')">&#x1f50d;</button>
-    <button type="button" onclick="Nav.navigate('#login')">&#x1f464;</button>
-    <button type="button" onclick="Nav.goTab('menu', 3)">&#9776;</button>
-</nav>
-<nav id="notice" onclick="Nav.noticeHide(true)" class="show hide vanish"><span id="notice-text"></span></nav>
-
-<section id="content">
 <section id="search">
     <button type="button" onclick="Nav.resetTab()">&#10060;</button>
     <div class="grid">
@@ -141,31 +109,3 @@
 
 <section id="map">
 </section>
-</section>
-
-<!-- Always put your scripts at the bottom of the page -->
-<script src="scripts/polyfill.min.js"></script>
-<script src="./mobile-console.js"></script>
-<script>
-    mobileConsole.options({
-        showOnError: true,
-        proxyConsole: true,
-        isCollapsed: true,
-        catchErrors: true
-    });
-    mobileConsole.show();
-</script>
-<script>
-    function initMap() {
-        window.mapLoaded = true;
-        if (window.mapScripts) Maps.initMapInternal();
-    }
-    if (!localStorage || !localStorage.getItem) { localStorage = {getItem: function() {}, setItem: function() {}}; }
-    var l = localStorage.getItem('lang') || navigator.language || navigator.userLanguage;
-    if (l) l = l.substring(0, 2);
-    l = ['de', 'en', 'fr', 'it', 'nl', 'da'].indexOf(l) >= 0 ? l : 'en';
-    document.write('<sc' + 'ript defer src="scripts/lang_' + l + '.js"><\/script>');
-</script>
-<script defer src="spotmap.es5.js"></script>
-</body>
-</html>

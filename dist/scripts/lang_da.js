@@ -10,7 +10,6 @@ var lang = {
     label_lng: 'Længde',
     btn_show_on_map: 'Vis på kort',
     btn_show_on_maps: 'Åbne i Google Maps',
-    btn_show_on_web: 'Åben hjemmeside',
     add_event_here: 'tilføj begivenhed her',
     add_group_here: 'tilføj gruppe her',
     add_spot_here: 'føje spot her',

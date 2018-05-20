@@ -33,8 +33,48 @@ const Maps = {}; ($ => {
     $.mapped = hash => hash.startsWith('#map/') || hash.startsWith('#spot/');
 
     const initial = Date.now;
+
+    $.categories = {
+        spot: [
+            'outdoor',
+            'gym',
+            'parkourpark',
+            'parkourgym',
+            'climbinggym',
+            'pool',
+            'cliff'
+        ],
+        event: [
+            'training',
+            'workshop',
+            'jam',
+            'trip',
+            'competition'
+        ],
+        group: [
+            'private',
+            'community',
+            'club',
+            'company'
+        ],
+        move: [
+            'moves',
+            'conditioning',
+            'games',
+            'jumps',
+            'vaults',
+            'bar',
+            'flips',
+            'combinations',
+            'freezes',
+            'beginner',
+            'intermediate',
+            'advanced'
+        ]
+    };
+
     window.panToPosition = !$.mapped(location.hash);
-    $.filter = ['spot', 'event', 'group'];
+    $.filter = Object.values($.categories).reduce((acc, s) => acc.concat(s), []);
     let gpsObj;
     $.icons = {};
     $.shapes = {};
@@ -292,7 +332,9 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
             pixelOffset: new google.maps.Size(0, -31)
         });
 
-        $.track(true);
+        if ((!$.mapped(location.hash) || window.panToPosition)) {
+            $.track(true);
+        }
         Form.restore();
     };
 
@@ -357,10 +399,18 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         const filterBox = dom('div');
         filterBox.className = 'filterBox vanish';
         filterDiv.appendChild(filterBox);
-        filterBox.innerHTML = `Zeige:<br />
-            <span class="yes" id="filter-spot" onclick="Maps.toggleFilter('spot')">${t('spot')}</span><br />
-            <span class="yes" id="filter-event" onclick="Maps.toggleFilter('event')">${t('event')}</span><br />
-            <span class="yes" id="filter-group" onclick="Maps.toggleFilter('group')">${t('group')}</span>`;
+        let s = 'Zeige:<br />';
+        for (const [key, value] of Object.entries($.categories)) {
+            if (key === 'move') {
+                continue;
+            }
+            s += `<p><b>${t('type_' + key)}</b><br />`;
+            for (const v of value) {
+                s += `<span class="yes" id="filter-${v}" onclick="Maps.toggleFilter('${v}')">${t(`${key}_type_${v}`)}</span><br />`;
+            }
+            s += '</p>';
+        }
+        filterBox.innerHTML = s;
         controlUI.addEventListener('click', () => {
             const elem = _('.filterBox')[0];
             elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
@@ -386,11 +436,10 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
 
     $.matchesFilter = entry => {
         for (const f of $.filter) {
-            if (entry.type.indexOf(f) !== -1) {
+            if (entry.category.indexOf(f) !== -1) {
                 return true;
             }
         }
         return false;
     };
-
 })(Maps);
