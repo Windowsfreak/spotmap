@@ -81,6 +81,9 @@ nav.success {
     visibility: hidden;
     opacity: 0;
 }
+.none {
+    display: none !important;
+}
 button, input, select, textarea {
     font-weight: normal;
     text-align: center;

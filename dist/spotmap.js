@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.9 - 2018-05-20
+/*! spotmap - v0.2.10 - 2018-05-23
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -1008,7 +1008,7 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         controlUI.innerHTML = '&#9881;';
         filterDiv.appendChild(controlUI);
         const filterBox = dom('div');
-        filterBox.className = 'filterBox vanish';
+        filterBox.className = 'filterBox none';
         filterDiv.appendChild(filterBox);
         let s = 'Zeige:<br />';
         for (const [key, value] of Object.entries($.categories)) {
@@ -1024,7 +1024,7 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         filterBox.innerHTML = s;
         controlUI.addEventListener('click', () => {
             const elem = _('.filterBox')[0];
-            elem.className = elem.className === 'filterBox' ? 'filterBox vanish' : 'filterBox';
+            elem.className = elem.className === 'filterBox' ? 'filterBox none' : 'filterBox';
         });
     };
 

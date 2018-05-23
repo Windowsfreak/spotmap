@@ -136,6 +136,9 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.10] - 2018-05-23
+Fixed:
+- Non-clickable area in map behind vanished filter
 ### [0.2.9] - 2018-05-20
 Added:
 - Link to Github project in help text
