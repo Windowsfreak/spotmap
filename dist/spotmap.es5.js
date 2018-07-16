@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.10 - 2018-05-23
+/*! spotmap - v0.2.10 - 2018-07-16
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -20,6 +20,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             return item;
         })).length && $.runLater();
     };
+    /** @return {IXMLDOMNodeList|IXMLDOMNode} element */
     $._ = function (s) {
         return s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
     };

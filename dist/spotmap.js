@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.10 - 2018-05-23
+/*! spotmap - v0.2.10 - 2018-07-16
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -9,6 +9,7 @@
 ($ => {
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
+    /** @return {IXMLDOMNodeList|IXMLDOMNode} element */
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
     $.dom = t => document.createElement(t);
 
