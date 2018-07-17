@@ -1,5 +1,5 @@
 'use strict';
-/*! spotmap - v0.2.10 - 2018-07-16
+/*! spotmap - v0.2.11 - 2018-07-17
 * https://github.com/windowsfreak/spotmap
 * Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
 
@@ -398,8 +398,10 @@ const Geotile = {}; ($ => {
         }
         const d = [c.lat[1] - c.lat[0], c.lng[1] - c.lng[0]];
 
+        const mapObj = _('#map');
+
         let zoom;
-        const zx = Math.min(d[0], d[1]);
+        const zx = Math.min(d[0] * 2400 / mapObj.offsetHeight, d[1] * 2400 / mapObj.offsetWidth);
         if (zx > 23) {
             zoom = 0;
         } else if (zx > 2.8) {
@@ -805,7 +807,7 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
             $.map.setZoom($.map.getZoom() + 2);
         } else {
             const icon = marker.data.type.startsWith('multi') ? $.icons.zoom : (marker.data.type.includes('group') ? $.icons.group : (marker.data.type.includes('event') ? $.icons.event : $.icons.spot));
-            $.infoWindow.setContent(`<a onclick="Nav.navigate('#spot/${marker.data.id}');"><img class="type" src="${icon.url}">${marker.data.title}</a>`);
+            $.infoWindow.setContent(`<a onclick="Nav.navigate('#spot/${marker.data.id}');" class="entry"><img class="type" src="${icon.url}">${marker.data.title}</a>`);
             $.infoWindow.setPosition(marker.getPosition());
             $.infoWindow.open($.map);
             Proximity.getCloseNodes(marker.data.lat, marker.data.lng);
@@ -846,13 +848,14 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
         Geotile.loadBounds(bounds, $.loadAll);
         clearTimeout( boundsTimer );
         boundsTimer = setTimeout( function() {
+            const center = $.map.getCenter();
+            const coords = `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`;
             if (location.hash.startsWith('#map/') || location.hash === '') {
-                const center = $.map.getCenter();
-                const coords = '#map/' + center.lat() + '/' + center.lng() + '/' + $.map.getZoom();
                 if (location.hash !== coords) {
-                    history.replaceState({}, '', `#map/${center.lat().toFixed(5)}/${center.lng().toFixed(5)}/${$.map.getZoom()}`);
+                    history.replaceState({}, '', coords);
                 }
             }
+            localStorage.setItem('pos', coords);
         }, 400 );
     };
 
@@ -880,7 +883,13 @@ ${data.category.replace(/^multi,/, '').replace(/,/g, ', ')}`) : data.title,
                 $.map.setCenter(Spot.spot);
             }
         } else {
-            $.map.fitBounds(bounds);
+            if (localStorage.getItem('pos')) {
+                const pos = localStorage.getItem('pos').split('/');
+                $.map.setCenter({lat: parseFloat(pos[1]), lng: parseFloat(pos[2])});
+                $.map.setZoom(parseInt(pos[3]));
+            } else {
+                $.map.fitBounds(bounds);
+            }
         }
 
         google.maps.event.addDomListener(window, 'resize', () => {

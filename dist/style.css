@@ -306,6 +306,9 @@ h1 {
 }
 .gm-style-iw .entry {
     display: block;
+    color: blue;
+    text-decoration: underline;
+    padding: 3px 0;
 }
 .gm-style-iw img.type {
     width: 16px;

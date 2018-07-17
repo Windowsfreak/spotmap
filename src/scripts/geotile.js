@@ -1,4 +1,4 @@
-/* globals t, Geohash, Http, Nav */
+/* globals _, t, Geohash, Http, Nav */
 const Geotile = {}; ($ => {
     'use strict';
 
@@ -79,8 +79,10 @@ const Geotile = {}; ($ => {
         }
         const d = [c.lat[1] - c.lat[0], c.lng[1] - c.lng[0]];
 
+        const mapObj = _('#map');
+
         let zoom;
-        const zx = Math.min(d[0], d[1]);
+        const zx = Math.min(d[0] * 2400 / mapObj.offsetHeight, d[1] * 2400 / mapObj.offsetWidth);
         if (zx > 23) {
             zoom = 0;
         } else if (zx > 2.8) {

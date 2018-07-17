@@ -5,6 +5,7 @@
     // require('./lang_en.js');
     $.ready = [];
     $.runLater = () => ($.ready = $.ready.map(item => (typeof item === 'function') && item()).filter(item => item)).length && $.runLater();
+    /** @return {IXMLDOMNodeList|IXMLDOMNode} element */
     $._ = s => s[0] === '#' ? document.getElementById(s.slice(1)) : document.querySelectorAll(s);
     $.dom = t => document.createElement(t);
 

@@ -136,6 +136,13 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
+### [0.2.11] - 2018-06-17
+Added:
+- CSS minification now live
+- Much smaller loading image
+- Clustering takes the amount of available pixels into account
+- Map remembers last position, unless Geolocation is used
+- Spot titles are shown in blue to encourage clicking
 ### [0.2.10] - 2018-05-23
 Fixed:
 - Non-clickable area in map behind vanished filter
