@@ -136,7 +136,7 @@ Many features are yet to be improved. Updates to
 this repository will be reflected on our server
 hosted at [map.parkour.org](https://map.parkour.org/).
 ## Release History
-### [0.2.11] - 2018-06-17
+### [0.2.11] - 2018-07-17
 Added:
 - CSS minification now live
 - Much smaller loading image
