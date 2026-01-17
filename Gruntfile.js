@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   // Project configuration.
   grunt.initConfig({
     // Metadata.
@@ -12,22 +12,22 @@ module.exports = function(grunt) {
       ' Licensed MIT */\n',
     footer: '',
     // Task configuration.
-	concat: {
+    concat: {
       options: {
         // Remove RequireJS and CommonJS features for the dist version, to make the result runnable standalone in a browser.
         banner: "'use strict';\n<%= banner %>\n",
         footer: '<%= footer %>',
-        stripBanners: {all: true},
-        process: function(src, filepath) {
+        stripBanners: { all: true },
+        process: function (src, filepath) {
           const classname = /^(?:.*\/)(.*?)(?:\.js)$/.exec(filepath)[1].replace(/[.-]/, '_');
           const isGlobal = src.includes('// global');
           return '// Source: ' + filepath + '\n' +
             src.replace(/^[ \t]*\/\*[\s\S]*?\*\/\s*/, '')
-               .replace(/(^|\n)[ \t]*(\(\s*function\s*\(\s*exports\s*\)\s*\{\s*)/g, isGlobal ? `(function ($) {\n` : `const ${classname} = {}; (function (exports) {\n`)
-               .replace(/(^|\n)[ \t]*((let|var|const|\/\/) .*)?require\(.*\);?/g, '')
-               .replace(/(^|\n)[ \t]*const .* = window/g, '')
-               .replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*\n/g, '$1')
-               .replace(/\(\s*typeof\s+exports[^)]*this\)\s*\)\s*;\s*/g, isGlobal ? `(window));` : `(${classname})); if (typeof exports !== 'undefined') exports.${classname} = ${classname};`);
+              .replace(/(^|\n)[ \t]*(\(\s*function\s*\(\s*exports\s*\)\s*\{\s*)/g, isGlobal ? `(function ($) {\n` : `const ${classname} = {}; (function (exports) {\n`)
+              .replace(/(^|\n)[ \t]*((let|var|const|\/\/) .*)?require\(.*\);?/g, '')
+              .replace(/(^|\n)[ \t]*const .* = window/g, '')
+              .replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*\n/g, '$1')
+              .replace(/\(\s*typeof\s+exports[^)]*this\)\s*\)\s*;\s*/g, isGlobal ? `(window));` : `(${classname})); if (typeof exports !== 'undefined') exports.${classname} = ${classname};`);
         }
       },
       dist: {
@@ -50,31 +50,31 @@ module.exports = function(grunt) {
       main: {
         files: [
           // includes files within path
-          {expand: true, cwd: 'src/', src: ['*.php', 'manifest.json', '.htaccess', '*.css', '*.js'], dest: 'dist/', filter: 'isFile'},
+          { expand: true, cwd: 'src/', src: ['*.php', 'manifest.json', '.htaccess', '*.css', '*.js'], dest: 'dist/', filter: 'isFile' },
           // includes files within path and its sub-directories
-          {expand: true, cwd: 'src/', src: ['flags/*', 'static/*', 'images/*', 'scripts/lang*.js', 'scripts/tictactoe.js', 'scripts/testing.js'], dest: 'dist/'}
+          { expand: true, cwd: 'src/', src: ['flags/*', 'static/*', 'images/*', 'scripts/lang*.js', 'scripts/tictactoe.js', 'scripts/testing.js'], dest: 'dist/' }
         ]
       },
       html: {
         files: [
-          {expand: true, cwd: 'src/', src: ['index*.htm'], dest: 'dist/', filter: 'isFile'}
+          { expand: true, cwd: 'src/', src: ['index*.htm'], dest: 'dist/', filter: 'isFile' }
         ],
         options: {
-          process: function(src) {
+          process: function (src) {
             const sections = grunt.file.read('src/sections.htm');
             return src
-                .replace(/<!-- development[\s\S]*\/development -->\s+/g, '')
-                .replace(/<!-- replace[\s\S]*\/replace -->/g, sections)
-                .replace(/<!-- production\s+/g, '')
-                .replace(/\/production -->\s+/g, '')
-                .replace(/style.css/g, 'style.min.css')
-                .replace(/<head>/g, '<head><base href="https://map.parkour.org/" target="_blank">');
+              .replace(/<!-- development[\s\S]*\/development -->\s+/g, '')
+              .replace(/<!-- replace[\s\S]*\/replace -->/g, sections)
+              .replace(/<!-- production\s+/g, '')
+              .replace(/\/production -->\s+/g, '')
+              .replace(/style.css/g, 'style.min.css')
+              .replace(/<head>/g, '<head><base target="_blank">');
           }
         }
       },
       babel: {
         files: [
-            {expand: true, cwd: 'node_modules/babel-polyfill/dist/', src: ['polyfill.min.js'], dest: 'dist/scripts/', filter: 'isFile'}
+          { expand: true, cwd: 'node_modules/babel-polyfill/dist/', src: ['polyfill.min.js'], dest: 'dist/scripts/', filter: 'isFile' }
         ]
       }
     },

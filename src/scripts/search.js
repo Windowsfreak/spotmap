@@ -10,7 +10,7 @@ const Search = {}; ($ => {
     ready.push(() => {
         _('#search-submit').onclick = () => {
             const text = _('#search-text').value;
-            Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
+            Nav.navigate((/^(0|[1-9]\d*|[a-zA-Z0-9]{15,})$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
         };
         _('#search-geocode').onclick = () => {
             const text = _('#search-text').value;
@@ -21,11 +21,11 @@ const Search = {}; ($ => {
 
     $.loadSearch = more => {
         const text = _('#search-text').value;
-        if (/^(0|[1-9]\d*)$/.test(text)) {
+        if (/^(0|[1-9]\d*|[a-zA-Z0-9]{15,})$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = {search: text, limit: more ? search.data.limit + 25 : 25};
-            Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
+            search.data = { search: text, limit: more ? search.data.limit + 25 : 25 };
+            Http.get('//map.parkour.org/api/v1/spots/search', search.data, { Authorization: false }).then($.showPage);
         }
     };
 
@@ -37,7 +37,7 @@ const Search = {}; ($ => {
         for (const spot of result) {
             text += `<article onclick="Nav.navigate('#spot/${spot.id}');">`;
             if (spot.p0) {
-              text += `<div class="in-place cover" style="background-image: url(//map.parkour.org/images/spots/thumbnails/320px/${spot.p0});"></div>`;
+                text += `<div class="in-place cover" style="background-image: url(//map.parkour.org/images/spots/thumbnails/320px/${spot.p0});"></div>`;
             }
 
             text += '<div class="in-place title">';

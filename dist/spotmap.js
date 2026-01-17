@@ -1,7 +1,7 @@
 'use strict';
-/*! spotmap - v0.2.11 - 2018-07-17
+/*! spotmap - v0.2.11 - 2026-01-17
 * https://github.com/windowsfreak/spotmap
-* Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
+* Copyright (c) 2026 Björn Eberhardt; Licensed MIT */
 
 // Source: src/scripts/base.js
 // global
@@ -385,10 +385,10 @@ const Geotile = {}; ($ => {
         if (bounds.lat) {
             b = bounds;
         } else {
-            b = {sw: bounds.getSouthWest(), ne: bounds.getNorthEast()};
-            b = {lat: [b.sw.lat(), b.ne.lat()], lng: [b.sw.lng(), b.ne.lng()]};
+            b = { sw: bounds.getSouthWest(), ne: bounds.getNorthEast() };
+            b = { lat: [b.sw.lat(), b.ne.lat()], lng: [b.sw.lng(), b.ne.lng()] };
         }
-        let c = {lat: b.lat.slice(0), lng: b.lng.slice(0)};
+        let c = { lat: b.lat.slice(0), lng: b.lng.slice(0) };
         if (c.lng[1] < c.lng[0]) {
             c.lng[1] += 360;
         }
@@ -482,10 +482,48 @@ const Geotile = {}; ($ => {
         }
 
         let tmp = Object.keys($.filter(result, (key, val) => (val === undefined) ? key : undefined)).map(key => key);
+        window.SpotCache = window.SpotCache || {};
+        const fetchTile = (tile) => {
+            const q = Geohash.decode(tile);
+            const payload = {
+                data: {
+                    minLat: q.lat[0],
+                    maxLat: q.lat[1],
+                    minLng: q.lng[0],
+                    maxLng: q.lng[1],
+                    limit: 100
+                }
+            };
+            return Http.post('https://europe-west1-parkourspot-93c90.cloudfunctions.net/getTopSpotsInBounds', payload, {
+                'Content-Type': 'application/json',
+                Authorization: false
+            }).then(resp => {
+                const spots = (resp.result && resp.result.spots) ? resp.result.spots : [];
+                const legacySpots = spots.map(spot => {
+                    // Cache the original spot data
+                    window.SpotCache[spot.id] = spot;
+
+                    // Return legacy format
+                    return {
+                        lat: spot.latitude,
+                        lng: spot.longitude,
+                        id: spot.id,
+                        title: spot.name,
+                        p0: (spot.imageUrls && spot.imageUrls.length) ? spot.imageUrls[0] : null,
+                        type: 'spot', // Assuming default values as per query5j sample
+                        category: 'outdoor'
+                    };
+                });
+                const tileData = {};
+                tileData[tile] = legacySpots;
+                Object.assign(cache[zoom], tileData);
+                Object.assign(result, tileData);
+                return tileData;
+            });
+        };
+
         if (tmp.length) {
-            Http.get('//map.parkour.org/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
-                Object.assign(cache[zoom], data);
-                Object.assign(result, data);
+            Promise.all(tmp.map(fetchTile)).then(() => {
                 callback(result);
             }, () => Nav.error(t('error_load_spotmap')));
         }
@@ -528,7 +566,7 @@ const Http = {}; ($ => {
         localStorage.removeItem('d8_user');
     };
 
-    $.http = function(method, url, params, headers = {}) {
+    $.http = function (method, url, params, headers = {}) {
         if (headers.Authorization === false) {
             delete headers.Authorization;
         } else if (headers.user) {
@@ -562,7 +600,7 @@ const Http = {}; ($ => {
                     xhr.onerror();
                 }
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 Nav.error(t('error_server_request'));
                 reject({
                     method,
@@ -579,7 +617,11 @@ const Http = {}; ($ => {
             }
             // stringify params if object:
             if (params && typeof params === 'object') {
-                xhr.send(Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&'));
+                if (headers['Content-Type'] === 'application/json') {
+                    xhr.send(JSON.stringify(params));
+                } else {
+                    xhr.send(Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&'));
+                }
             } else {
                 xhr.send(params);
             }
@@ -1103,7 +1145,7 @@ const Nav = {}; ($ => {
 
     $.call = (func, param) => func && func(param);
 
-    $.goTab = (id, index) => $.openTab(id, index !== undefined ? {currentTarget: _('button')[index]} : undefined);
+    $.goTab = (id, index) => $.openTab(id, index !== undefined ? { currentTarget: _('button')[index] } : undefined);
     $.resetTab = () => $.navigate('');
 
     $.notice = (text, type) => {
@@ -1132,7 +1174,7 @@ const Nav = {}; ($ => {
         }
         h = location.hash;
         if (h.startsWith('#event/') || h.startsWith('#group/') || h.startsWith('#move/') || h.startsWith('#page/') || h.startsWith('#post/') || h.startsWith('#spot/')) {
-            const match = /#(\w+)\/(\d+)(?:\/(.*))?/g.exec(h);
+            const match = /#(\w+)\/(\w+)(?:\/(.*))?/g.exec(h);
             if (match[3] === 'lite') {
                 _('body')[0].className = 'lite';
                 $.isLite = true;
@@ -1152,7 +1194,7 @@ const Nav = {}; ($ => {
                 const coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
                 // console.log([coords[2], coords[3], coords[4]]);
                 if (Map.map) {
-                    Map.map.panTo({lat: parseFloat(coords[2]), lng: parseFloat(coords[3])});
+                    Map.map.panTo({ lat: parseFloat(coords[2]), lng: parseFloat(coords[3]) });
                     if (coords[4]) {
                         Map.map.setZoom(parseInt(coords[4], 10));
                     }
@@ -1204,7 +1246,7 @@ const Search = {}; ($ => {
     ready.push(() => {
         _('#search-submit').onclick = () => {
             const text = _('#search-text').value;
-            Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
+            Nav.navigate((/^(0|[1-9]\d*|[a-zA-Z0-9]{15,})$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
         };
         _('#search-geocode').onclick = () => {
             const text = _('#search-text').value;
@@ -1215,11 +1257,11 @@ const Search = {}; ($ => {
 
     $.loadSearch = more => {
         const text = _('#search-text').value;
-        if (/^(0|[1-9]\d*)$/.test(text)) {
+        if (/^(0|[1-9]\d*|[a-zA-Z0-9]{15,})$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
-            search.data = {search: text, limit: more ? search.data.limit + 25 : 25};
-            Http.get('//map.parkour.org/api/v1/spots/search', search.data, {Authorization: false}).then($.showPage);
+            search.data = { search: text, limit: more ? search.data.limit + 25 : 25 };
+            Http.get('//map.parkour.org/api/v1/spots/search', search.data, { Authorization: false }).then($.showPage);
         }
     };
 
@@ -1231,7 +1273,7 @@ const Search = {}; ($ => {
         for (const spot of result) {
             text += `<article onclick="Nav.navigate('#spot/${spot.id}');">`;
             if (spot.p0) {
-              text += `<div class="in-place cover" style="background-image: url(//map.parkour.org/images/spots/thumbnails/320px/${spot.p0});"></div>`;
+                text += `<div class="in-place cover" style="background-image: url(//map.parkour.org/images/spots/thumbnails/320px/${spot.p0});"></div>`;
             }
 
             text += '<div class="in-place title">';
@@ -1268,9 +1310,9 @@ const Spot = {}; ($ => {
     };
 
     $.loadSpot = id => {
-        Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
+        const render = data => {
             const spot = data.spot;
-            $.spot = {id: id, type: spot.type, url_alias: spot.url_alias};
+            $.spot = { id: id, type: spot.type, url_alias: spot.url_alias };
 
             _('#spot-title').innerText = spot.title || '';
             _('#spot').className = `spot-type-${spot.type}`;
@@ -1294,8 +1336,10 @@ const Spot = {}; ($ => {
             $.spot.lat = parseFloat(spot.lat);
             $.spot.lng = parseFloat(spot.lng);
             text = '';
-            for (const image of data.images) {
-                text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
+            for (const image of (data.images || [])) {
+                const url = (image.filename && image.filename.startsWith('http')) ? image.filename : `//map.parkour.org/images/spots/${image.filename}`;
+                const thumb = (image.filename && image.filename.startsWith('http')) ? image.filename : `//map.parkour.org/images/spots/thumbnails/320px/${image.filename}`;
+                text += `<a href="${url}" target="_blank" /><img src="${thumb}" /></a>`;
             }
             _('#spot-images').innerHTML = text || '';
             _('#spot-images').style.display = text ? 'block' : 'none';
@@ -1331,7 +1375,29 @@ const Spot = {}; ($ => {
                 _('#spot-maps-form').style.display = 'none';
                 _('.add-here').forEach(item => item.style.display = 'none');
             }
-        }, ignored => Nav.error(t('error_load_spot')));
+        };
+
+        if (window.SpotCache && window.SpotCache[id]) {
+            const rawSpot = SpotCache[id];
+            render({
+                spot: {
+                    title: rawSpot.name,
+                    type: 'spot',
+                    url_alias: rawSpot.id,
+                    category: 'outdoor',
+                    created: new Date(rawSpot.createdAt).getTime() / 1000,
+                    changed: new Date(rawSpot.updatedAt || rawSpot.createdAt).getTime() / 1000,
+                    description: rawSpot.description,
+                    lat: rawSpot.latitude.toString(),
+                    lng: rawSpot.longitude.toString()
+                },
+                images: (rawSpot.imageUrls || []).map(url => ({ filename: url })),
+                spot_category_details: []
+            });
+            return;
+        }
+
+        Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, { Authorization: false }).then(render, ignored => Nav.error(t('error_load_spot')));
     };
 })(Spot);
 // Source: src/scripts/z.js

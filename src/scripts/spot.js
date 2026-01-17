@@ -1,4 +1,4 @@
-/* globals l, _, strip, t, ready, Http, Maps, Nav */
+/* globals l, _, strip, t, ready, Http, Maps, Nav, SpotCache */
 const Spot = {}; ($ => {
     'use strict';
 
@@ -26,9 +26,9 @@ const Spot = {}; ($ => {
     };
 
     $.loadSpot = id => {
-        Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, {Authorization: false}).then(data => {
+        const render = data => {
             const spot = data.spot;
-            $.spot = {id: id, type: spot.type, url_alias: spot.url_alias};
+            $.spot = { id: id, type: spot.type, url_alias: spot.url_alias };
 
             _('#spot-title').innerText = spot.title || '';
             _('#spot').className = `spot-type-${spot.type}`;
@@ -52,8 +52,10 @@ const Spot = {}; ($ => {
             $.spot.lat = parseFloat(spot.lat);
             $.spot.lng = parseFloat(spot.lng);
             text = '';
-            for (const image of data.images) {
-                text += `<a href="//map.parkour.org/images/spots/${image.filename}" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/${image.filename}" /></a>`;
+            for (const image of (data.images || [])) {
+                const url = (image.filename && image.filename.startsWith('http')) ? image.filename : `//map.parkour.org/images/spots/${image.filename}`;
+                const thumb = (image.filename && image.filename.startsWith('http')) ? image.filename : `//map.parkour.org/images/spots/thumbnails/320px/${image.filename}`;
+                text += `<a href="${url}" target="_blank" /><img src="${thumb}" /></a>`;
             }
             _('#spot-images').innerHTML = text || '';
             _('#spot-images').style.display = text ? 'block' : 'none';
@@ -89,6 +91,28 @@ const Spot = {}; ($ => {
                 _('#spot-maps-form').style.display = 'none';
                 _('.add-here').forEach(item => item.style.display = 'none');
             }
-        }, ignored => Nav.error(t('error_load_spot')));
+        };
+
+        if (window.SpotCache && window.SpotCache[id]) {
+            const rawSpot = SpotCache[id];
+            render({
+                spot: {
+                    title: rawSpot.name,
+                    type: 'spot',
+                    url_alias: rawSpot.id,
+                    category: 'outdoor',
+                    created: new Date(rawSpot.createdAt).getTime() / 1000,
+                    changed: new Date(rawSpot.updatedAt || rawSpot.createdAt).getTime() / 1000,
+                    description: rawSpot.description,
+                    lat: rawSpot.latitude.toString(),
+                    lng: rawSpot.longitude.toString()
+                },
+                images: (rawSpot.imageUrls || []).map(url => ({ filename: url })),
+                spot_category_details: []
+            });
+            return;
+        }
+
+        Http.get(`//map.parkour.org/api/v1/spot/${id}`, null, { Authorization: false }).then(render, ignored => Nav.error(t('error_load_spot')));
     };
 })(Spot);

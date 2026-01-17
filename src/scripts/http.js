@@ -23,7 +23,7 @@ const Http = {}; ($ => {
         localStorage.removeItem('d8_user');
     };
 
-    $.http = function(method, url, params, headers = {}) {
+    $.http = function (method, url, params, headers = {}) {
         if (headers.Authorization === false) {
             delete headers.Authorization;
         } else if (headers.user) {
@@ -57,7 +57,7 @@ const Http = {}; ($ => {
                     xhr.onerror();
                 }
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 Nav.error(t('error_server_request'));
                 reject({
                     method,
@@ -74,7 +74,11 @@ const Http = {}; ($ => {
             }
             // stringify params if object:
             if (params && typeof params === 'object') {
-                xhr.send(Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&'));
+                if (headers['Content-Type'] === 'application/json') {
+                    xhr.send(JSON.stringify(params));
+                } else {
+                    xhr.send(Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&'));
+                }
             } else {
                 xhr.send(params);
             }

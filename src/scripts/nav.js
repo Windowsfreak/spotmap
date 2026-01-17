@@ -41,7 +41,7 @@ const Nav = {}; ($ => {
 
     $.call = (func, param) => func && func(param);
 
-    $.goTab = (id, index) => $.openTab(id, index !== undefined ? {currentTarget: _('button')[index]} : undefined);
+    $.goTab = (id, index) => $.openTab(id, index !== undefined ? { currentTarget: _('button')[index] } : undefined);
     $.resetTab = () => $.navigate('');
 
     $.notice = (text, type) => {
@@ -70,7 +70,7 @@ const Nav = {}; ($ => {
         }
         h = location.hash;
         if (h.startsWith('#event/') || h.startsWith('#group/') || h.startsWith('#move/') || h.startsWith('#page/') || h.startsWith('#post/') || h.startsWith('#spot/')) {
-            const match = /#(\w+)\/(\d+)(?:\/(.*))?/g.exec(h);
+            const match = /#(\w+)\/(\w+)(?:\/(.*))?/g.exec(h);
             if (match[3] === 'lite') {
                 _('body')[0].className = 'lite';
                 $.isLite = true;
@@ -90,7 +90,7 @@ const Nav = {}; ($ => {
                 const coords = /#(\w+)\/([^/]*)\/([^/]*)(?:\/([^/]*))?/g.exec(h);
                 // console.log([coords[2], coords[3], coords[4]]);
                 if (Map.map) {
-                    Map.map.panTo({lat: parseFloat(coords[2]), lng: parseFloat(coords[3])});
+                    Map.map.panTo({ lat: parseFloat(coords[2]), lng: parseFloat(coords[3]) });
                     if (coords[4]) {
                         Map.map.setZoom(parseInt(coords[4], 10));
                     }

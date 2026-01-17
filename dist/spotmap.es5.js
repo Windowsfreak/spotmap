@@ -1,7 +1,7 @@
 'use strict';
-/*! spotmap - v0.2.11 - 2018-07-17
+/*! spotmap - v0.2.11 - 2026-01-17
 * https://github.com/windowsfreak/spotmap
-* Copyright (c) 2018 Björn Eberhardt; Licensed MIT */
+* Copyright (c) 2026 Björn Eberhardt; Licensed MIT */
 
 // Source: src/scripts/base.js
 // global
@@ -557,10 +557,48 @@ var Geotile = {};(function ($) {
         })).map(function (key) {
             return key;
         });
+        window.SpotCache = window.SpotCache || {};
+        var fetchTile = function fetchTile(tile) {
+            var q = Geohash.decode(tile);
+            var payload = {
+                data: {
+                    minLat: q.lat[0],
+                    maxLat: q.lat[1],
+                    minLng: q.lng[0],
+                    maxLng: q.lng[1],
+                    limit: 100
+                }
+            };
+            return Http.post('https://europe-west1-parkourspot-93c90.cloudfunctions.net/getTopSpotsInBounds', payload, {
+                'Content-Type': 'application/json',
+                Authorization: false
+            }).then(function (resp) {
+                var spots = resp.result && resp.result.spots ? resp.result.spots : [];
+                var legacySpots = spots.map(function (spot) {
+                    // Cache the original spot data
+                    window.SpotCache[spot.id] = spot;
+
+                    // Return legacy format
+                    return {
+                        lat: spot.latitude,
+                        lng: spot.longitude,
+                        id: spot.id,
+                        title: spot.name,
+                        p0: spot.imageUrls && spot.imageUrls.length ? spot.imageUrls[0] : null,
+                        type: 'spot', // Assuming default values as per query5j sample
+                        category: 'outdoor'
+                    };
+                });
+                var tileData = {};
+                tileData[tile] = legacySpots;
+                Object.assign(cache[zoom], tileData);
+                Object.assign(result, tileData);
+                return tileData;
+            });
+        };
+
         if (tmp.length) {
-            Http.get('//map.parkour.org/query5j.php', { tiles: tmp.join(','), zoom: zoom }, { Authorization: false }).then(function (data) {
-                Object.assign(cache[zoom], data);
-                Object.assign(result, data);
+            Promise.all(tmp.map(fetchTile)).then(function () {
                 callback(result);
             }, function () {
                 return Nav.error(t('error_load_spotmap'));
@@ -681,9 +719,13 @@ var Http = {};(function ($) {
             }
             // stringify params if object:
             if (params && (typeof params === 'undefined' ? 'undefined' : _typeof(params)) === 'object') {
-                xhr.send(Object.keys(params).map(function (key) {
-                    return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
-                }).join('&'));
+                if (headers['Content-Type'] === 'application/json') {
+                    xhr.send(JSON.stringify(params));
+                } else {
+                    xhr.send(Object.keys(params).map(function (key) {
+                        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+                    }).join('&'));
+                }
             } else {
                 xhr.send(params);
             }
@@ -1303,7 +1345,7 @@ var Nav = {};(function ($) {
         }
         h = location.hash;
         if (h.startsWith('#event/') || h.startsWith('#group/') || h.startsWith('#move/') || h.startsWith('#page/') || h.startsWith('#post/') || h.startsWith('#spot/')) {
-            var match = /#(\w+)\/(\d+)(?:\/(.*))?/g.exec(h);
+            var match = /#(\w+)\/(\w+)(?:\/(.*))?/g.exec(h);
             if (match[3] === 'lite') {
                 _('body')[0].className = 'lite';
                 $.isLite = true;
@@ -1380,7 +1422,7 @@ var Search = {};(function ($) {
     ready.push(function () {
         _('#search-submit').onclick = function () {
             var text = _('#search-text').value;
-            Nav.navigate((/^(0|[1-9]\d*)$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
+            Nav.navigate((/^(0|[1-9]\d*|[a-zA-Z0-9]{15,})$/.test(text) ? '#spot/' : '#search/') + encodeURIComponent(text));
         };
         _('#search-geocode').onclick = function () {
             var text = _('#search-text').value;
@@ -1391,7 +1433,7 @@ var Search = {};(function ($) {
 
     $.loadSearch = function (more) {
         var text = _('#search-text').value;
-        if (/^(0|[1-9]\d*)$/.test(text)) {
+        if (/^(0|[1-9]\d*|[a-zA-Z0-9]{15,})$/.test(text)) {
             Nav.navigate('#spot/' + text);
         } else {
             search.data = { search: text, limit: more ? search.data.limit + 25 : 25 };
@@ -1470,7 +1512,7 @@ var Spot = {};(function ($) {
     };
 
     $.loadSpot = function (id) {
-        Http.get('//map.parkour.org/api/v1/spot/' + id, null, { Authorization: false }).then(function (data) {
+        var render = function render(data) {
             var spot = data.spot;
             $.spot = { id: id, type: spot.type, url_alias: spot.url_alias };
 
@@ -1503,10 +1545,12 @@ var Spot = {};(function ($) {
             var _iteratorError8 = undefined;
 
             try {
-                for (var _iterator8 = data.images[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                for (var _iterator8 = (data.images || [])[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
                     var image = _step8.value;
 
-                    text += '<a href="//map.parkour.org/images/spots/' + image.filename + '" target="_blank" /><img src="//map.parkour.org/images/spots/thumbnails/320px/' + image.filename + '" /></a>';
+                    var url = image.filename && image.filename.startsWith('http') ? image.filename : '//map.parkour.org/images/spots/' + image.filename;
+                    var thumb = image.filename && image.filename.startsWith('http') ? image.filename : '//map.parkour.org/images/spots/thumbnails/320px/' + image.filename;
+                    text += '<a href="' + url + '" target="_blank" /><img src="' + thumb + '" /></a>';
                 }
             } catch (err) {
                 _didIteratorError8 = true;
@@ -1561,7 +1605,31 @@ var Spot = {};(function ($) {
                     return item.style.display = 'none';
                 });
             }
-        }, function (ignored) {
+        };
+
+        if (window.SpotCache && window.SpotCache[id]) {
+            var rawSpot = SpotCache[id];
+            render({
+                spot: {
+                    title: rawSpot.name,
+                    type: 'spot',
+                    url_alias: rawSpot.id,
+                    category: 'outdoor',
+                    created: new Date(rawSpot.createdAt).getTime() / 1000,
+                    changed: new Date(rawSpot.updatedAt || rawSpot.createdAt).getTime() / 1000,
+                    description: rawSpot.description,
+                    lat: rawSpot.latitude.toString(),
+                    lng: rawSpot.longitude.toString()
+                },
+                images: (rawSpot.imageUrls || []).map(function (url) {
+                    return { filename: url };
+                }),
+                spot_category_details: []
+            });
+            return;
+        }
+
+        Http.get('//map.parkour.org/api/v1/spot/' + id, null, { Authorization: false }).then(render, function (ignored) {
             return Nav.error(t('error_load_spot'));
         });
     };

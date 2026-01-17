@@ -66,10 +66,10 @@ const Geotile = {}; ($ => {
         if (bounds.lat) {
             b = bounds;
         } else {
-            b = {sw: bounds.getSouthWest(), ne: bounds.getNorthEast()};
-            b = {lat: [b.sw.lat(), b.ne.lat()], lng: [b.sw.lng(), b.ne.lng()]};
+            b = { sw: bounds.getSouthWest(), ne: bounds.getNorthEast() };
+            b = { lat: [b.sw.lat(), b.ne.lat()], lng: [b.sw.lng(), b.ne.lng()] };
         }
-        let c = {lat: b.lat.slice(0), lng: b.lng.slice(0)};
+        let c = { lat: b.lat.slice(0), lng: b.lng.slice(0) };
         if (c.lng[1] < c.lng[0]) {
             c.lng[1] += 360;
         }
@@ -163,10 +163,48 @@ const Geotile = {}; ($ => {
         }
 
         let tmp = Object.keys($.filter(result, (key, val) => (val === undefined) ? key : undefined)).map(key => key);
+        window.SpotCache = window.SpotCache || {};
+        const fetchTile = (tile) => {
+            const q = Geohash.decode(tile);
+            const payload = {
+                data: {
+                    minLat: q.lat[0],
+                    maxLat: q.lat[1],
+                    minLng: q.lng[0],
+                    maxLng: q.lng[1],
+                    limit: 100
+                }
+            };
+            return Http.post('https://europe-west1-parkourspot-93c90.cloudfunctions.net/getTopSpotsInBounds', payload, {
+                'Content-Type': 'application/json',
+                Authorization: false
+            }).then(resp => {
+                const spots = (resp.result && resp.result.spots) ? resp.result.spots : [];
+                const legacySpots = spots.map(spot => {
+                    // Cache the original spot data
+                    window.SpotCache[spot.id] = spot;
+
+                    // Return legacy format
+                    return {
+                        lat: spot.latitude,
+                        lng: spot.longitude,
+                        id: spot.id,
+                        title: spot.name,
+                        p0: (spot.imageUrls && spot.imageUrls.length) ? spot.imageUrls[0] : null,
+                        type: 'spot', // Assuming default values as per query5j sample
+                        category: 'outdoor'
+                    };
+                });
+                const tileData = {};
+                tileData[tile] = legacySpots;
+                Object.assign(cache[zoom], tileData);
+                Object.assign(result, tileData);
+                return tileData;
+            });
+        };
+
         if (tmp.length) {
-            Http.get('//map.parkour.org/query5j.php', {tiles: tmp.join(','), zoom: zoom}, {Authorization: false}).then(data =>{
-                Object.assign(cache[zoom], data);
-                Object.assign(result, data);
+            Promise.all(tmp.map(fetchTile)).then(() => {
                 callback(result);
             }, () => Nav.error(t('error_load_spotmap')));
         }
